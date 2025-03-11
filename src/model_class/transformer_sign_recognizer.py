@@ -7,6 +7,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
+import onnxruntime as ort
 
 from src.datasamples import *
 
@@ -211,3 +212,35 @@ class SignRecognizerTransformerDataset(Dataset):
         - Y : Label associé
         """
         return self.data[idx], self.labels[idx]
+
+class SignRecognizerTransformerONNX(nn.Module):
+    def __init__(self, model_dir: str):
+
+        json_files = glob.glob(f"{model_dir}/*.json")
+        if len(json_files) == 0:
+            raise FileNotFoundError(f"No .json file found in {model_dir}")
+        self.info: ModelInfo = ModelInfo.from_json_file(json_files[0])
+
+        onnx_files = glob.glob(f"{model_dir}/*.onnx")
+        if len(onnx_files) == 0:
+            raise FileNotFoundError(f"No .onnx file found in {model_dir}")
+
+
+        self.session: ort.InferenceSession = ort.InferenceSession(onnx_files[0])
+        self.input_name: str = self.session.get_inputs()[0].name  # First input layer name
+        self.input_shape = self.session.get_inputs()[0].shape
+        self.input_dtype = self.session.get_inputs()[0].type
+
+    def predict(self, data: np.ndarray) -> int:
+        out: any = self.session.run(None, {self.input_name: data})
+        flat_out = np.nditer(out)
+
+        best_idx: int = 0
+        best_score: float = flat_out[0]
+
+        for idx, score in enumerate(flat_out):
+            if score > best_score:
+                best_score = score
+                best_idx = idx
+
+        return best_idx
