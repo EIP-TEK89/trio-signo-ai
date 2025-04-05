@@ -34,18 +34,23 @@ from src.model_class.transformer_sign_recognizer import *
 
 HAND_TRACKING_MODEL_PATH = "models/hand_tracking/google/hand_landmarker.task"
 
+
 def load_hand_landmarker(num_hand: int) -> HandLandmarker:
-    base_options = python.BaseOptions(model_asset_path=HAND_TRACKING_MODEL_PATH)
+    base_options = python.BaseOptions(
+        model_asset_path=HAND_TRACKING_MODEL_PATH)
     options: HandLandmarkerOptions = vision.HandLandmarkerOptions(base_options=base_options,
                                                                   num_hands=num_hand)
-    recognizer: HandLandmarker = vision.HandLandmarker.create_from_options(options)
+    recognizer: HandLandmarker = vision.HandLandmarker.create_from_options(
+        options)
     return recognizer
+
 
 def track_hand(image: cv2.typing.MatLike, hand_tracker: HandLandmarker) -> tuple[HandLandmarkerResult, float]:
     start_time = time.time()
     rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_image)
     return hand_tracker.detect(mp_image), time.time() - start_time
+
 
 def draw_land_marks(image: cv2.typing.MatLike, hand_landmarks: HandLandmarkerResult) -> cv2.typing.MatLike:
     img_cpy: cv2.typing.MatLike = image.copy()
@@ -70,23 +75,25 @@ def draw_land_marks(image: cv2.typing.MatLike, hand_landmarks: HandLandmarkerRes
         # Draw hand landmarks on the frame
         hand_landmarks_proto = landmark_pb2.NormalizedLandmarkList()
         hand_landmarks_proto.landmark.extend([
-          landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y,
-                                          z=landmark.z) for landmark in
-          hand_landmarks
+            landmark_pb2.NormalizedLandmark(x=landmark.x, y=landmark.y,
+                                            z=landmark.z) for landmark in
+            hand_landmarks
         ])
         mp_drawing.draw_landmarks(
-          img_cpy,
-          hand_landmarks_proto,
-          mp_hands.HAND_CONNECTIONS,
-          mp_drawing_styles.get_default_hand_landmarks_style(),
-          mp_drawing_styles.get_default_hand_connections_style())
+            img_cpy,
+            hand_landmarks_proto,
+            mp_hands.HAND_CONNECTIONS,
+            mp_drawing_styles.get_default_hand_landmarks_style(),
+            mp_drawing_styles.get_default_hand_connections_style())
     return img_cpy
+
 
 def recognize_sign(sample: DataSample2, sign_recognition_model: SignRecognizerTransformer, valid_fields: list[str] = None) -> tuple[int, float]:
     start_time = time.time()
-    out = sign_recognition_model.predict(sample.to_tensor(sign_recognition_model.info.memory_frame, valid_fields))
-    print(out)
+    out = sign_recognition_model.predict(sample.toTensor(
+        sign_recognition_model.info.memory_frame, valid_fields))
     return out, time.time() - start_time
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -151,7 +158,8 @@ if __name__ == '__main__':
             frame_history.gestures.pop(-1)
 
         # frame_history.gestures.reverse()
-        recognized_sign, sign_rec_time = recognize_sign(frame_history, sign_rec, valid_fields)
+        recognized_sign, sign_rec_time = recognize_sign(
+            frame_history, sign_rec, valid_fields)
         # frame_history.gestures.reverse()
         sign_rec_times.append(sign_rec_time)
         if len(sign_rec_times) > 10:
@@ -166,12 +174,15 @@ if __name__ == '__main__':
             prev_display = prev_sign
             prev_sign = recognized_sign
         if recognized_sign != -1:
-            text = f"{sign_rec.info.labels[recognized_sign]} prev({sign_rec.info.labels[prev_display]})"
-        cv2.putText(image, text, (49, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.01, (0,0,0), 2, cv2.LINE_AA)
-        cv2.putText(image, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
-        print(f"\r\033[KTrack time: {(handtrack_time * 1000):.3f}ms Recognition time: {(sign_rec_time * 1000):.3f}ms Output: {text}", end=" ")
+            text = f"{sign_rec.info.labels[recognized_sign]} prev({
+                sign_rec.info.labels[prev_display]})"
+        cv2.putText(image, text, (49, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                    1.01, (0, 0, 0), 2, cv2.LINE_AA)
+        cv2.putText(image, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                    1, (255, 255, 255), 2, cv2.LINE_AA)
+        print(f"\r\033[KTrack time: {(handtrack_time * 1000):.3f}ms Recognition time: {
+              (sign_rec_time * 1000):.3f}ms Output: {text}", end=" ")
         cv2.imshow('Run model', image)
-
 
         if cv2.waitKey(1) == 27:
             break

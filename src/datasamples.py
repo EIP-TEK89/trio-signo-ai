@@ -1,67 +1,105 @@
 import cbor2
-import random
 import io
+import torch
+import json
 from collections import deque
-from dataclasses import dataclass, fields
+from dataclasses import dataclass
+from typing import Self, cast, TypeAlias
 
-from src.gesture import *
-from src.datasample import *
+from src.gesture import ActiveGestures, ALL_GESTURES
+from src.datasample import DataSample2
 
-@dataclass
-class TrainTensors:
-    train: tuple[torch.Tensor, torch.Tensor]
-    confusion: tuple[torch.Tensor, torch.Tensor]
-    validation: tuple[torch.Tensor, torch.Tensor]
+TensorPair: TypeAlias = tuple[torch.Tensor, torch.Tensor]
+
+
+def label_int_size(nb_label: int) -> torch.dtype:
+    """
+    Get the size of the label int.
+
+    Args:
+        nb_label (int): Number of labels.
+
+    Returns:
+        torch.dtype: The size of the label int.
+    """
+    if nb_label < 256:
+        return torch.int8
+    elif nb_label < 65536:
+        return torch.int16
+    else:
+        return torch.int32
+
 
 @dataclass
 class DataSamplesInfo:
     labels: list[str]
     label_map: dict[str, int]
-    label_explicit: list[str]
     memory_frame: int
     active_gestures: ActiveGestures
     one_side: bool
+    null_sample_id: int | None
 
-
-    def __init__(self, labels: list[str], label_explicit: list[str], memory_frame: int, active_gestures: ActiveGestures = ALL_GESTURES, one_side: bool = False):
+    def __init__(
+        self,
+        labels: list[str],
+        memory_frame: int,
+        active_gestures: ActiveGestures = ALL_GESTURES,
+        one_side: bool = False,
+        null_sample_id: int | None = None,
+    ):
         self.labels = labels
-        self.label_explicit = label_explicit
         self.memory_frame = memory_frame
         self.active_gestures = active_gestures
-        self.label_map = {label: i for i, label in enumerate(self.label_explicit)}
+        self.label_map = {label: i for i,
+                          label in enumerate(self.labels)}
         self.one_side = one_side
+        self.null_sample_id = null_sample_id
 
     @classmethod
-    def fromDict(cls, data: dict):
-        active_gest_dict: dict = data.get('active_gestures', None)
-        active_gest: ActiveGestures = None
-        if active_gest_dict is not None:
-            active_gest = ActiveGestures(**active_gest_dict)
-        label_explicit: list[str] = data.get('label_explicit', data['labels'])
-        return cls(
-            labels=data['labels'],
-            label_explicit=label_explicit,
-            memory_frame=data['memory_frame'],
-            active_gestures=active_gest,
-            one_side=data.get('one_side', False)
+    def fromDict(cls, data: dict[str, object]) -> Self:
+        assert "labels" in data, "Missing 'labels' field in DataSamplesInfo"
+        assert "memory_frame" in data, "Missing 'memory_frame' field in DataSamplesInfo"
+        assert isinstance(
+            data["labels"], list), "Invalid 'labels' field in DataSamplesInfo"
+        assert isinstance(
+            data["memory_frame"], int), "Invalid 'memory_frame' field in DataSamplesInfo"
+        labels: list[str] = data["labels"]
+        tmp: Self = cls(
+            labels=labels,
+            memory_frame=data["memory_frame"],
         )
+        if "active_gestures" in data and isinstance(data["active_gestures"], dict):
+            active_gest_dict: dict[str, bool | None] = data["active_gestures"]
+            tmp.active_gestures = ActiveGestures(**active_gest_dict)
+        if "one_side" in data and isinstance(data["one_side"], bool):
+            tmp.one_side = data["one_side"]
+        if "null_sample_id" in data and isinstance(data["null_sample_id"], int):
+            tmp.null_sample_id = data["null_sample_id"]
+        return tmp
 
-    def toDict(self):
-        active_gestures = self.active_gestures
-        if self.active_gestures is not None:
-            active_gestures = self.active_gestures.to_dict()
+    def toDict(self) -> dict[str, object]:
         return {
-            'labels': self.labels,
-            'label_explicit': self.label_explicit,
-            'memory_frame': self.memory_frame,
-            'active_gestures': active_gestures,
-            'label_map': self.label_map,
-            'one_side': self.one_side
+            "labels": self.labels,
+            "memory_frame": self.memory_frame,
+            "active_gestures": self.active_gestures.toDict(),
+            "label_map": self.label_map,
+            "one_side": self.one_side,
+            "null_sample_id": self.null_sample_id,
         }
+
+
+IDX_VALID_SAMPLE: int = 0
+IDX_INVALID_SAMPLE: int = 1
+
 
 class DataSamples:
     info: DataSamplesInfo
-    samples: list[dict[int, list[float]]]
+    samples: list[tuple[  # each tuple is a label
+                  # valid sample, each dict entry is a sample
+                  dict[int, list[float]],
+                  # invalid sample, each dict entry is a sample
+                  dict[int, list[float]]
+                  ]]
     sample_count: int
 
     def __init__(self, info: DataSamplesInfo):
@@ -70,220 +108,117 @@ class DataSamples:
 
         self.valid_fields: list[str] = info.active_gestures.getActiveFields()
         self.samples = []
-        while len(self.samples) < len(info.label_explicit):
-            self.samples.append({})
-
+        while len(self.samples) < len(info.labels):
+            self.samples.append(({}, {}))
 
     @classmethod
-    def fromDict(cls, json_data):
-        cls = cls(info=DataSamplesInfo.fromDict(json_data['info']))
-        dict_sample: list[list[list[float]]] = json_data['samples']
+    def fromDict(cls, json_data: dict[str, object]):
+        assert "info" in json_data, "Missing 'info' field in DataSamples"
+        assert "samples" in json_data, "Missing 'samples' field in DataSamples"
+        assert isinstance(
+            json_data["info"], dict), "Invalid 'info' field in DataSamples"
+        assert isinstance(
+            json_data["samples"], list), "Invalid 'samples' field in DataSamples"
+        info_dict: dict[str, object] = json_data["info"]
+        cls = cls(info=DataSamplesInfo.fromDict(info_dict))
+        # (list)labels/(list)un|valid samples/(list)samples/(list[float])data
+        dict_sample: list[list[list[list[float]]]] = json_data["samples"]
         # print(len(cls.samples))
 
         sample_label_id: int = 0
         for labeled_samples in dict_sample:
-            current_label: str = cls.info.label_explicit[sample_label_id]
-            # print(f"\rLoading label: ({current_label}) {cls.info.label_map[current_label]}/{len(cls.info.label_explicit)}", end="", flush=True)
-            for sample in labeled_samples:
-                # new_datasample: DataSample2 = DataSample2.unflat(current_label, sample, cls.valid_fields)
-                cls.samples[sample_label_id][id(sample)] = sample
-                # print(len(cls.samples[sample_label_id]))
+            for i, sample_kind in enumerate(labeled_samples):
+                for sample in sample_kind:
+                    # new_datasample: DataSample2 = DataSample2.unflat(cls.info.label_explicit[sample_label_id], sample, cls.valid_fields)
+                    cls.samples[sample_label_id][i][id(sample)] = sample
             sample_label_id += 1
         cls.getNumberOfSamples()
         return cls
 
     @classmethod
     def fromJsonFile(cls, file_path: str):
-        with open(file_path, 'r', encoding="utf-8") as f:
-            data = json.load(f)
+        with open(file_path, "r", encoding="utf-8") as f:
+            data: dict[str, object] = json.load(f)
         return cls.fromDict(data)
 
     @classmethod
-    def fromCbor(cls, cbor_data):
-        return cls.fromDict(cbor2.loads(cbor_data))
+    def fromCbor(cls, cbor_data: bytes):
+        return cls.fromDict(cast(dict[str, object], cbor2.loads(cbor_data)))
 
     @classmethod
     def fromCborFile(cls, file_path: str):
-        with open(file_path, 'rb') as f:
-            data = f.read()
+        with open(file_path, "rb") as f:
+            data: bytes = f.read()
         return cls.fromCbor(data)
 
     def getNumberOfSamples(self):
-        self.sample_count = sum([len(label_samples) for label_samples in self.samples])
+        self.sample_count = sum([len(label_samples)
+                                for label_samples in self.samples])
         return self.sample_count
 
-    def toDict(self) -> dict:
+    def toDict(self) -> dict[str, object]:
         # self.sample_count = self.getNumberOfSamples()
 
-        samples: list[list[list[float]]] = []
+        # (list)labels/(list)un|valid samples/(list)samples/(list[float])data
+        samples: list[list[list[list[float]]]] = []
         for labeled_samples in self.samples:
-            tmp: list[list[float]] = []
-            for sample in labeled_samples.values():
-                # samples[-1].append(sample.flat(self.valid_fields))
-                tmp.append(sample)
+            tmp: list[list[list[float]]] = [[], []]
+            for i, sample_kind in enumerate(labeled_samples):
+                for sample in sample_kind.values():
+                    # samples[-1].append(sample.flat(self.valid_fields))
+                    tmp[i].append(sample)
             samples.append(tmp)
 
-        return {
-            "info": self.info.toDict(),
-            "samples": samples
-        }
+        return {"info": self.info.toDict(), "samples": samples}
 
     def toJsonFile(self, file_path: str, indent: int | str | None = 0):
-        with open(file_path, 'w', encoding="utf-8") as f:
+        with open(file_path, "w", encoding="utf-8") as f:
             json.dump(self.toDict(), f, indent=indent)
 
     def toCbor(self) -> bytes:
         return cbor2.dumps(self.toDict())
 
     def toCborFile(self, file_path: str):
-        with open(file_path, 'wb') as f:
+        with open(file_path, "wb") as f:
             f.write(self.toCbor())
 
-    def toTensors(self, split_ratio: float = 0, confused_label: list[int] = [], include_confused_label_in_train: bool = True) -> TrainTensors:
-        samples_out_of_dict: list[list[list[float]]] = []
-
-        def convert_to_tensor(samples: list[list[float]]) -> torch.Tensor | None:
-            if len(samples) == 0:
-                return None
-            sub_step: list[torch.Tensor] = []
-            for sample in samples:
-                sub_step.append(DataSample2.unflat("", sample, self.valid_fields).to_tensor(self.info.memory_frame, self.valid_fields))
-            return torch.stack(sub_step)
-
-        for sample_from_label in self.samples:
-            tmp: list[float] = list(sample_from_label.values())
-            random.shuffle(tmp)
-            samples_out_of_dict.append(tmp)
-
-        train_in: list[list[float]] = []
-        train_out: list[int] = []
-        confusion_in: list[list[float]] = []
-        confusion_out: list[int] = []
-        validation_in: list[list[float]] = []
-        validation_out: list[int] = []
-
-        for i in range(len(samples_out_of_dict)):
-            split_index = int(len(samples_out_of_dict[i]) * (1 - split_ratio))
-            if i in confused_label:
-                confusion_in += samples_out_of_dict[i][:split_index]
-                confusion_out += [i] * split_index
-            if include_confused_label_in_train or i not in confused_label:
-                train_in += samples_out_of_dict[i][:split_index]
-                train_out += [i] * split_index
-            validation_in += samples_out_of_dict[i][split_index:]
-            validation_out += [i] * (len(samples_out_of_dict[i]) - split_index)
-
-        return TrainTensors(
-            train=(convert_to_tensor(train_in), torch.tensor(train_out)),
-            confusion=(convert_to_tensor(confusion_in), torch.tensor(confusion_out)),
-            validation=(convert_to_tensor(validation_in), torch.tensor(validation_out))
-        )
-
-    def getTensorsFromLabel(self, label: str, device: torch.device = torch.device("cpu")) -> list[torch.Tensor]:
-        label_id = self.info.label_map.get(label)
-        tensors: list[torch.Tensor] = []
-        if label_id is None:
-            raise ValueError(f"Label {label} is not registered in label_map of this DataSamples class.")
-
-        for sample in self.samples[label_id].values():
-            tensors.append(DataSample2.unflat(label, sample, self.valid_fields).to_tensor(self.info.memory_frame, self.valid_fields, device))
-
-        return tensors
-
-    def getTensorsFromLabelId(self, label_int: int, device: torch.device = torch.device("cpu")) -> list[torch.Tensor]:
-        return self.getTensorsFromLabel(self.info.label_explicit[label_int], device)
-
-    def addDataSample(self, data_sample: DataSample2):
+    def addDataSample(self, data_sample: DataSample2, valid_example: bool = True):
         # Get or cache label_id
         label_id = self.info.label_map.get(data_sample.label)
         if label_id is None:
-            raise ValueError(f"Label {data_sample.label} is not registered in label_map of this DataSamples class.")
+            raise ValueError(
+                f"Label {
+                    data_sample.label} is not registered in label_map of this DataSamples class."
+            )
 
         if self.info.one_side:
             data_sample.move_to_one_side()
 
+        idx: int = IDX_VALID_SAMPLE if valid_example else IDX_INVALID_SAMPLE
         flat_list: list[float] = data_sample.flat(self.valid_fields)
         # Use self.sample_count as a unique identifier instead of len(self.samples[label_id])
-        self.samples[label_id][id(flat_list)] = flat_list
+        self.samples[label_id][idx][id(flat_list)] = flat_list
         # self.samples[label_id].add(sample_data)
 
         # Increment the overall sample count
         self.sample_count += 1
 
-    def addDataSamples(self, data_samples: list[DataSample2]):
+    def addDataSamples(self, data_samples: list[DataSample2], valid: bool = True):
         for data_sample in data_samples:
             # print(type(data_sample))
-            self.addDataSample(data_sample)
+            self.addDataSample(data_sample, valid)
 
-    # def getInputData(self) -> list[list[float]]:
-    #     """Transform the trainset data into a 1 dimension array
-    #     where each list[float] is a sample
+    def getNumberOfSamplesOfLabel(self, label_id: int) -> int:
+        total_length: int = len(self.samples[label_id][IDX_VALID_SAMPLE])
+        if self.info.null_sample_id == label_id:
+            for labels in self.samples:
+                total_length += len(labels[IDX_INVALID_SAMPLE])
+        return total_length
 
-    #     Returns:
-    #         list[list[float]]: _description_
-    #     """
-    #     samples: list[list[float]] = []
-    #     for label_sorted_samples in self.samples:
-    #         for sample in label_sorted_samples: # Get all the sample stored in the "set"
-    #             # Convert the "tuple[int, tuple[float]]" to "list[float]"
-    #             # We discard the id of the sample and convert the "tuple[float]" to "list[float]"
-    #             samples.append(list(sample[1]))
-    #             # samples.append(list(sample))
-    #     return samples
-
-    # def get_output_data(self) -> list[int]:
-    #     labels: list[int] = []
-    #     for i in range(len(self.samples)):
-    #         labels += [i] * len(self.samples[i])
-    #     return labels
-
-    # def splitTrainset(self, ratio: float = 0.8) -> tuple['TrainData2', 'TrainData2']:
-    #     """Split the trainset into two trainset
-
-    #     Args:
-    #         ratio (float, optional): Ratio of the first trainset. Defaults to 0.8.
-
-    #     Returns:
-    #         tuple[TrainData2, TrainData2]: The two trainset
-    #     """
-    #     trainset1 = TrainData2(info=copy.deepcopy(self.info))
-    #     trainset2 = TrainData2(info=copy.deepcopy(self.info))
-
-    #     for i in range(len(self.samples)):
-
-    #         total_label_samples = len(self.samples[i])
-    #         label_sample: set[tuple[int, tuple[float]]] = list(self.samples[i])
-
-    #         while len(label_sample) / total_label_samples > ratio:
-    #             trainset2.samples[i].add(
-    #                 label_sample.pop(random.randint(0, len(label_sample) - 1))
-    #             )
-    #         trainset1.samples[i] = set(label_sample)
-
-    #     trainset1.getNumberOfSamples()
-    #     trainset2.getNumberOfSamples()
-    #     return trainset1, trainset2
-
-    def getClassWeights(self, balance_weight: bool = True, class_weights: dict[str, float] = {}, device: torch.device = torch.device("cpu")) -> torch.Tensor:
-        weigths: list[float] = []
-        if balance_weight:
-            smallest_class = len(self.samples[0])
-            for sample in self.samples:
-                if len(sample) < smallest_class:
-                    smallest_class = len(sample)
-            for sample in self.samples:
-                weigths.append((smallest_class / len(sample)) * class_weights.get(self.info.label_explicit[sample], 1))
-        else:
-            for sample in self.samples:
-                weigths.append(1)
-        total = sum(weigths)
-        weigths = [weight / total for weight in weigths]
-        # print(weigths)
-        return torch.tensor(weigths, dtype=torch.float32, device=device)
 
 class DataSamplesTensors:
     info: DataSamplesInfo
-    samples: list[torch.Tensor]
+    samples: list[tuple[torch.Tensor, torch.Tensor | None]]
     sample_count: int
     valid_fields: list[str] = []
 
@@ -293,32 +228,45 @@ class DataSamplesTensors:
 
         self.valid_fields = info.active_gestures.getActiveFields()
         self.samples = []
-        while len(self.samples) < len(info.label_explicit):
-            self.samples.append(None)
-
+        while len(self.samples) < len(info.labels):
+            self.samples.append((torch.tensor([0]), torch.tensor([0])))
 
     @classmethod
-    def fromDict(cls, json_data):
-        cls = cls(info=DataSamplesInfo.fromDict(json_data['info']))
-        dict_sample: list[list[list[float]]] = json_data['samples']
+    def fromDict(cls, json_data: dict[str, object]):
+        assert "info" in json_data, "Missing 'info' field in DataSamples"
+        assert "samples" in json_data, "Missing 'samples' field in DataSamples"
+        assert isinstance(
+            json_data["info"], dict), "Invalid 'info' field in DataSamples"
+        assert isinstance(
+            json_data["samples"], list), "Invalid 'samples' field in DataSamples"
+        cls = cls(info=DataSamplesInfo.fromDict(json_data["info"]))
+        # (list)labels/(list)un|valid samples/(list)samples/(list[float])data
+        dict_sample: list[list[list[list[float]]]] = json_data["samples"]
         # print(len(cls.samples))
 
-        for sample_label_id in range(len(dict_sample)):
-            current_label: str = cls.info.label_explicit[sample_label_id]
-
-            tensor_samples: list[torch.Tensor] = []
-            for sample in dict_sample[sample_label_id]:
-                tensor_samples.append(DataSample2.unflat(current_label, sample, cls.valid_fields).to_tensor(cls.info.memory_frame, cls.valid_fields))
-            del dict_sample[sample_label_id]
-            dict_sample.insert(0, None)
-            cls.samples[sample_label_id] = torch.stack(tensor_samples)
+        for label_id, label in enumerate(dict_sample):
+            tensor_samples: list[list[torch.Tensor]] = []
+            for sample_kind in label:
+                tensor_sample_kind: list[torch.Tensor] = []
+                for sample in sample_kind:
+                    tensor_sample_kind.append(
+                        DataSample2.unflat(
+                            "", sample, cls.valid_fields
+                        ).toTensor(cls.info.memory_frame, cls.valid_fields)
+                    )
+            del dict_sample[label_id]
+            dict_sample.insert(0, [])
+            cls.samples[label_id] = (
+                torch.stack(tensor_samples[IDX_VALID_SAMPLE]),
+                torch.stack(tensor_samples[IDX_INVALID_SAMPLE])
+            )
             del tensor_samples
         cls.getNumberOfSamples()
         return cls
 
     @classmethod
     def fromJsonFile(cls, file_path: str):
-        with open(file_path, 'r', encoding="utf-8") as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
         return cls.fromDict(data)
 
@@ -326,218 +274,257 @@ class DataSamplesTensors:
     def fromCbor(cls, cbor_data):
         return cls.fromDict(cbor2.loads(cbor_data))
 
+    @staticmethod
+    def readFileHeader(decoder: cbor2.CBORDecoder) -> int:
+        # Decode the CBOR map header
+        initial_byte: int = decoder.read(1)[0]  # Read the first byte
+        # Extract the major type (should be 5 for maps)
+        major_type: int = initial_byte >> 5
+        assert major_type == 5, "The first item is not a CBOR map!"
+
+        # Extract the size of the map
+        map_size: int = initial_byte & 0x1F
+        if map_size == 31:  # Indefinite-length maps not supported in this example
+            raise ValueError(
+                "Indefinite-length maps are not supported in this example!"
+            )
+        return map_size
+
+    @staticmethod
+    def readSampleHeader(decoder: cbor2.CBORDecoder) -> int:
+        header: int = decoder.read(1)[0]  # Read the array header
+        major_type: int = header >> 5
+        additional_info: int = header & 0x1F
+
+        if major_type != 4:
+            raise ValueError(
+                f"Expected array for 'samples', got type {major_type}."
+            )
+
+        # Decode the size of the array based on the additional information
+        if additional_info < 24:
+            return additional_info  # Directly encoded size
+        elif additional_info == 24:
+            # Next byte contains the size
+            return decoder.read(1)[0]
+        elif additional_info == 25:
+            return int.from_bytes(decoder.read(2), "big")  # 16-bit size
+        elif additional_info == 26:
+            return int.from_bytes(decoder.read(4), "big")  # 32-bit size
+        elif additional_info == 27:
+            return int.from_bytes(decoder.read(8), "big")  # 64-bit size
+        raise ValueError("Indefinite-length arrays are not supported.")
 
     @classmethod
     def fromCborDecoder(cls, fd: io.BufferedReader, decoder: cbor2.CBORDecoder):
-        info: DataSamplesInfo = None
-        samples: list[torch.Tensor] = []
+        samples: list[tuple[torch.Tensor, torch.Tensor | None]] = []
+        info: DataSamplesInfo | None = None
+        valid_fields: list[str] | None = None
 
-        valid_fields: list[str] = []
-
-        # Decode the CBOR map header
-        initial_byte = decoder.read(1)[0]  # Read the first byte
-        major_type = initial_byte >> 5     # Extract the major type (should be 5 for maps)
-        if major_type != 5:
-            raise ValueError("The first item is not a CBOR map!")
-
-        # Extract the size of the map
-        map_size = initial_byte & 0x1F
-        if map_size == 31:  # Indefinite-length maps not supported in this example
-            raise ValueError("Indefinite-length maps are not supported in this example!")
-
+        map_size: int = cls.readFileHeader(decoder)
         for _ in range(map_size):
             key = decoder.decode()  # Decode the key
             # print(f"Processing field: {key}")
 
             if key == "info":
                 data = decoder.decode()
+                assert isinstance(
+                    data, dict), "Invalid 'info' field in DataSamples"
                 info = DataSamplesInfo.fromDict(data)
                 valid_fields = info.active_gestures.getActiveFields()
             elif key == "samples":
-                header = decoder.read(1)[0]  # Read the array header
-                major_type = header >> 5
-                additional_info = header & 0x1F
+                assert info is not None, "Missing 'info' field in DataSamples"
+                assert valid_fields is not None, "Missing 'info' field in DataSamples"
 
-                if major_type != 4:
-                    raise ValueError(f"Expected array for 'samples', got type {major_type}.")
+                list_size: int = cls.readSampleHeader(decoder)
 
-                # Decode the size of the array based on the additional information
-                if additional_info < 24:
-                    list_size = additional_info  # Directly encoded size
-                elif additional_info == 24:
-                    list_size = decoder.read(1)[0]  # Next byte contains the size
-                elif additional_info == 25:
-                    list_size = int.from_bytes(decoder.read(2), "big")  # 16-bit size
-                elif additional_info == 26:
-                    list_size = int.from_bytes(decoder.read(4), "big")  # 32-bit size
-                elif additional_info == 27:
-                    list_size = int.from_bytes(decoder.read(8), "big")  # 64-bit size
-                else:
-                    raise ValueError("Indefinite-length arrays are not supported.")
+                print(
+                    f"\r\033[KLoading trainset samples: 0/{list_size}",
+                    end="",
+                    flush=True,
+                )
 
-                print(f"\r\033[KLoading trainset samples: 0/{list_size}", end="", flush=True)
                 for i in range(list_size):
-                    sample_from_label = decoder.decode()
-                    tensor_samples: deque[torch.Tensor] = deque()
-                    for sample in sample_from_label:
-                        tensor_samples.append(DataSample2.unflat("", sample, valid_fields).to_tensor(info.memory_frame, valid_fields))
+                    data = decoder.decode()
+                    assert isinstance(
+                        data, list), "Invalid 'samples' field in DataSamples"
+                    sample_from_label: list[list[list[float]]] = data
+                    tensor_samples: list[deque[torch.Tensor]] = []
+                    for sample_kind in sample_from_label:
+                        tensor_sample_kind: deque[torch.Tensor] = deque()
+                        for sample in sample_kind:
+                            tensor_sample_kind.append(
+                                DataSample2.unflat("", sample, valid_fields).toTensor(
+                                    info.memory_frame, valid_fields
+                                )
+                            )
+                        tensor_samples.append(tensor_sample_kind)
                     del sample_from_label
-                    samples.append(torch.stack(tuple(tensor_samples)))
-                    del tensor_samples
-                    print(f"\r\033[KLoading trainset samples: {i + 1}/{list_size} [{info.label_explicit[i]}]", end="", flush=True)
+                    counter_example: torch.Tensor | None = None
+                    if len(tensor_samples[IDX_INVALID_SAMPLE]) > 0:
+                        counter_example = torch.stack(
+                            list(tensor_samples[IDX_INVALID_SAMPLE]))
+                    samples.append((
+                        torch.stack(list(tensor_samples[IDX_VALID_SAMPLE])),
+                        counter_example))
 
+                    del tensor_samples
+                    print(
+                        f"\r\033[KLoading trainset samples: {
+                            i + 1}/{list_size} [{info.labels[i]}]",
+                        end="",
+                        flush=True,
+                    )
+
+        assert info is not None, "Missing 'info' field in DataSamples"
         cls = cls(info=info)
         cls.samples = samples
         cls.getNumberOfSamples()
         return cls
 
     @classmethod
-    def dumpInfo(cls, file_path: str) -> tuple[DataSamplesInfo, list[int]]:
-        with open(file_path, 'rb') as f:
+    def dumpInfo(cls, file_path: str) -> tuple[DataSamplesInfo, list[tuple[int, int]]]:
+        with open(file_path, "rb") as f:
             decoder: cbor2.CBORDecoder = cbor2.CBORDecoder(f)
 
-            info: DataSamplesInfo = None
-            sublist_lengths: list[int] = []
+            info: DataSamplesInfo | None = None
+            sublist_lengths: list[tuple[int, int]] = []
 
-            # Decode the CBOR map header
-            initial_byte = decoder.read(1)[0]  # Read the first byte
-            major_type = initial_byte >> 5     # Extract the major type (should be 5 for maps)
-            if major_type != 5:
-                raise ValueError("The first item is not a CBOR map!")
-
-            # Extract the size of the map
-            map_size = initial_byte & 0x1F
-            if map_size == 31:  # Indefinite-length maps not supported in this example
-                raise ValueError("Indefinite-length maps are not supported in this example!")
+            map_size: int = cls.readFileHeader(decoder)
 
             for _ in range(map_size):
                 key = decoder.decode()  # Decode the key
 
                 if key == "info":
                     data = decoder.decode()
+                    assert isinstance(
+                        data, dict), "Invalid 'info' field in DataSamples"
                     info = DataSamplesInfo.fromDict(data)
                 elif key == "samples":
-                    header = decoder.read(1)[0]  # Read the array header
-                    major_type = header >> 5
-                    additional_info = header & 0x1F
+                    assert info is not None, "Missing 'info' field in DataSamples"
 
-                    if major_type != 4:
-                        raise ValueError(f"Expected array for 'samples', got type {major_type}.")
+                    list_size: int = cls.readSampleHeader(decoder)
 
-                    # Decode the size of the array based on the additional information
-                    if additional_info < 24:
-                        list_size = additional_info  # Directly encoded size
-                    elif additional_info == 24:
-                        list_size = decoder.read(1)[0]  # Next byte contains the size
-                    elif additional_info == 25:
-                        list_size = int.from_bytes(decoder.read(2), "big")  # 16-bit size
-                    elif additional_info == 26:
-                        list_size = int.from_bytes(decoder.read(4), "big")  # 32-bit size
-                    elif additional_info == 27:
-                        list_size = int.from_bytes(decoder.read(8), "big")  # 64-bit size
-                    else:
-                        raise ValueError("Indefinite-length arrays are not supported.")
-
-                    for i in range(list_size):
-                        sample_from_label = decoder.decode()
-                        sublist_lengths.append(len(sample_from_label))
+                    for _ in range(list_size):
+                        data = decoder.decode()
+                        assert isinstance(
+                            data, list), "Invalid 'samples' field in DataSamples"
+                        sample_from_label: list[list[list[float]]] = data
+                        sublist_lengths.append((
+                            len(sample_from_label[IDX_VALID_SAMPLE]),
+                            len(sample_from_label[IDX_INVALID_SAMPLE])
+                        ))
                         del sample_from_label
 
+            assert info is not None, "Missing 'info' field in DataSamples"
             return info, sublist_lengths
 
     @classmethod
     def fromCborFile(cls, file_path: str):
-        with open(file_path, 'rb') as f:
+        with open(file_path, "rb") as f:
             decoder: cbor2.CBORDecoder = cbor2.CBORDecoder(f)
             return cls.fromCborDecoder(f, decoder)
 
-    def getNumberOfSamples(self):
-        self.sample_count = sum([len(label_samples) for label_samples in self.samples])
+    def getNumberOfSamples(self) -> int:
+        self.sample_count = sum([len(label_samples)
+                                for label_samples in self.samples])
         return self.sample_count
 
-    # def toDict(self) -> dict:
-    #     # self.sample_count = self.getNumberOfSamples()
+    def getTensorsOfLabel(self, label_id: int, counter_example: bool = True) -> torch.Tensor:
+        """
+        Get the tensors of a label, with the option to include counter example.
+        Counter example only change the return for the null label if defined.
 
-    #     samples: list[list[list[float]]] = []
-    #     for labeled_samples in self.samples:
-    #         tmp: list[list[float]] = []
-    #         for sample in labeled_samples.values():
-    #             # samples[-1].append(sample.flat(self.valid_fields))
-    #             tmp.append(sample)
-    #         samples.append(tmp)
+        Args:
+            label_id (int): The label id to get the tensors from.
+            counter_example (bool, optional): Include counter example. Defaults to True.
 
-    #     return {
-    #         "info": self.info.toDict(),
-    #         "samples": samples
-    #     }
+        Returns:
+            torch.Tensor: The tensors of the label.
+        """
+        tensors: list[torch.Tensor] = [
+            cast(torch.Tensor, self.samples[label_id][IDX_VALID_SAMPLE])]
+        if self.info.null_sample_id == label_id and counter_example:
+            for labels in self.samples:
+                counter_examples: torch.Tensor | None = labels[IDX_INVALID_SAMPLE]
+                if counter_examples is not None:
+                    tensors.append(counter_examples)
+        return torch.cat(tensors, dim=0)
 
-    # def toJsonFile(self, file_path: str, indent: int | str | None = 0):
-    #     with open(file_path, 'w', encoding="utf-8") as f:
-    #         json.dump(self.toDict(), f, indent=indent)
+    def getCounterExampleTensorOfLabel(self, label_id: int) -> torch.Tensor | None:
+        return self.samples[label_id][IDX_INVALID_SAMPLE]
 
-    # def toCbor(self) -> bytes:
-    #     return cbor2.dumps(self.toDict())
+    def getCounterExampleTensors(self) -> list[torch.Tensor]:
+        tensors: list[torch.Tensor] = []
+        for label_id in range(len(self.samples)):
+            tensor: torch.Tensor | None = self.getCounterExampleTensorOfLabel(
+                label_id)
+            if tensor is not None:
+                tensors.append(tensor)
+        return tensors
 
-    # def toCborFile(self, file_path: str):
-    #     with open(file_path, 'wb') as f:
-    #         f.write(self.toCbor())
+    def getNumberOfSamplesOfLabel(self, label_id: int) -> int:
+        total_length: int = cast(
+            torch.Tensor, self.samples[label_id][IDX_VALID_SAMPLE]).shape[0]
+        if self.info.null_sample_id == label_id:
+            for labels in self.samples:
+                counter_examples: torch.Tensor | None = labels[IDX_INVALID_SAMPLE]
+                if counter_examples is not None:
+                    total_length += counter_examples.shape[0]
+        return len(self.samples[label_id])
 
-    def toTensors(self, split_ratio: float = 0, confused_label: list[int] = [], include_confused_label_in_train: bool = True) -> TrainTensors:
-
+    def toTensors(
+        self,
+        split_ratio: float = 0,
+    ) -> tuple[TensorPair, TensorPair | None]:
         train_in: list[torch.Tensor] = []
-        train_out: list[int] = []
-        confusion_in: list[torch.Tensor] = []
-        confusion_out: list[int] = []
+        train_out: list[torch.Tensor] = []
         validation_in: list[torch.Tensor] = []
-        validation_out: list[int] = []
+        validation_out: list[torch.Tensor] = []
 
+        dtype: torch.dtype = label_int_size(len(self.samples))
+        torch.manual_seed(0)
         for i in range(len(self.samples)):
-            indices = torch.randperm(self.samples[i].size(0))  # Random permutation of row indices
-            shuffled_tensor: torch.Tensor = self.samples[i][indices]
+            sample: torch.Tensor = self.getTensorsOfLabel(i)
+            # Random permutation of row indices so sample are evenly reparted between train and validation
+            indices = torch.randperm(sample.size(0))
+            shuffled_tensor: torch.Tensor = sample[indices]
 
-            split_index = int(shuffled_tensor.shape[0] * (1 - split_ratio))
+            sample_count = shuffled_tensor.shape[0]
+            split_index = int(sample_count * (1 - split_ratio))
 
-            if i in confused_label:
-                confusion_in += shuffled_tensor[:split_index]
-                confusion_out += [i] * split_index
+            train_in.append(shuffled_tensor[:split_index])
+            train_out.append(torch.full((split_index,), i))
 
-            if include_confused_label_in_train or i not in confused_label:
-                train_in += shuffled_tensor[:split_index]
-                train_out += [i] * split_index
-
-            validation_in += shuffled_tensor[split_index:]
-            validation_out += [i] * (shuffled_tensor.shape[0] - split_index)
+            validation_in.append(shuffled_tensor[split_index:])
+            validation_out.append(torch.full(
+                (sample_count - split_index,), i))
 
             del shuffled_tensor
 
-        def to_stack(samples: list[torch.Tensor]) -> torch.Tensor | None:
-            if len(samples) == 0:
-                return None
-            return torch.stack(samples)
+        validation: TensorPair | None = None
+        if split_ratio > 0:
+            validation = (torch.cat(validation_in, dim=0),
+                          torch.cat(validation_out, dim=0))
+        return ((torch.cat(train_in, dim=0), torch.cat(train_out, dim=0)), validation)
 
-        return TrainTensors(
-            train=(to_stack(train_in), torch.tensor(train_out)),
-            confusion=(to_stack(confusion_in), torch.tensor(confusion_out)),
-            validation=(to_stack(validation_in), torch.tensor(validation_out))
-        )
-
-    def getTensorsFromLabelId(self, label_int: int, device: torch.device = torch.device("cpu")) -> list[torch.Tensor]:
-        return list(torch.unbind(self.samples[label_int], dim=0))
-
-    def getTensorsFromLabel(self, label: str, device: torch.device = torch.device("cpu")) -> list[torch.Tensor]:
-        return self.getTensorsFromLabelId(self.info.label_map[label], device)
-
-    def getClassWeights(self, balance_weight: bool = True, class_weights: dict[str, float] = {}, device: torch.device = torch.device("cpu")) -> torch.Tensor:
+    def getClassWeights(
+        self,
+        balance_weight: bool = True,
+        class_weights: dict[str, float] = {},
+        device: torch.device | None = None,
+    ) -> torch.Tensor:
         weigths: list[float] = []
         if balance_weight:
-            smallest_class = self.samples[0].shape[0]
-            for sample in self.samples:
-                if sample.shape[0] < smallest_class:
-                    smallest_class = sample.shape[0]
-            i: int = 0
-            for sample in self.samples:
-                weigths.append(smallest_class / sample.shape[0] * class_weights.get(self.info.label_explicit[i], 1))
-                i += 1
+            smallest_class: int = self.getNumberOfSamplesOfLabel(0)
+            sample_length: int = len(self.samples)
+            for i in range(sample_length):
+                sample_size = self.getNumberOfSamplesOfLabel(i)
+                if sample_size < smallest_class:
+                    smallest_class = sample_size
+            for i in range(sample_length):
+                weigths.append(smallest_class / self.getNumberOfSamplesOfLabel(i)
+                               * class_weights.get(self.info.labels[i], 1))
         else:
             for sample in self.samples:
                 weigths.append(1)

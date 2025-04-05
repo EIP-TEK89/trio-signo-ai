@@ -1,33 +1,44 @@
+from dataclasses import dataclass
 import torch
 import time
 from torch.utils.data import DataLoader
-from src.train_model.train import CustomDataset
 from src.model_class.transformer_sign_recognizer import ModelInfo, SignRecognizerTransformerDataset
 
-from src.datasample import *
-from src.datasamples import *
+from src.datasamples import DataSamplesTensors, TensorPair
 from src.train_model.ConfusedSets import ConfusedSets
 from src.train_model.parse_args import Args
 from src.train_model.TrainStat import TrainStat
 
-def init_train_set(args: Args, current_time: str = time.strftime('%d-%m-%Y_%H-%M-%S')) -> tuple[DataLoader, DataLoader | None, DataLoader | None, ModelInfo, torch.Tensor | None, ConfusedSets, TrainStat]:
-    """_summary_
+
+@dataclass
+class TrainDataLoader:
+    train: DataLoader[TensorPair]
+    validation: DataLoader[TensorPair] | None = None
+    confusion: DataLoader[TensorPair] | None = None
+    counter_example: DataLoader[TensorPair] | None = None
+
+
+def init_train_set(args: Args,
+                   ) -> tuple[TrainDataLoader, ConfusedSets, ModelInfo, TrainStat, torch.Tensor]:
+    """Load the training data and format it to make it easy to use for training
 
     Args:
-        trainset_path (str): _description_
-        validation_ratio (float, optional): _description_. Defaults to 0.2.
-        balance_weights (bool, optional): _description_. Defaults to True.
-        model_name (str, optional): _description_. Defaults to None.
+        args (Args): _description_
 
     Returns:
-        tuple[DataLoader, DataLoader | None, ModelInfo, torch.Tensor | None]: TrainData, ValidationData, ModelInfo, WeightsBalance
+        tuple[TrainDataLoader, ConfusedSets, ModelInfo, TrainStat, torch.Tensor | None]:
+            TrainDataLoader: The dataloader for the training data
+            ConfusedSets: The confused sets
+            ModelInfo: The model info
+            TrainStat: The train stat
+            torch.Tensor: The weights balance
     """
 
     print("Loading trainset...", end="", flush=True)
-    train_data: DataSamplesTensors = DataSamplesTensors.fromCborFile(args.trainset_path)
+    train_data: DataSamplesTensors = DataSamplesTensors.fromCborFile(
+        args.trainset_path)
     print("[DONE]")
-    print("Labels:", train_data.info.label_explicit)
-    time.sleep(5)
+    print("Labels:", train_data.info.labels)
 
     sample_quantity: list[int] = []
     for samples in train_data.samples:
@@ -41,30 +52,67 @@ def init_train_set(args: Args, current_time: str = time.strftime('%d-%m-%Y_%H-%M
         validation_ratio=args.validation_set_ratio
     )
 
-
     print("Preparing confused labels...", end="", flush=True)
-    confused_sets: ConfusedSets = ConfusedSets(confusing_pair=args.confusing_label, data_samples=train_data)
+    confused_sets: ConfusedSets = ConfusedSets(
+        train_data, args.confusing_label)
     print("[DONE]")
+
+    print("Balancing class weight...", end="", flush=True)
+    weigths_balance: torch.Tensor
+    if args.balance_weights:
+        weigths_balance = train_data.getClassWeights(
+            class_weights=args.class_weights)
+        print("[DONE]")
+    else:
+        weigths_balance = torch.ones(len(train_data.info.labels))
+        print("[SKIPPED]")
 
     print("Converting trainset to tensor...", end="", flush=True)
-    tensors: TrainTensors = train_data.toTensors(args.validation_set_ratio, confused_label=list(confused_sets.confusing_pair.keys()))
+    train_tensor: TensorPair
+    validation_tensor: TensorPair | None
+    train_tensor, validation_tensor = train_data.toTensors(
+        args.validation_set_ratio)
     # print(tensors)
-    train_dataloader: DataLoader = DataLoader(SignRecognizerTransformerDataset(tensors.train[0], tensors.train[1]), batch_size=args.batch_size, shuffle=True)
-    validation_dataloader: DataLoader = None
-    if tensors.validation[0] is not None:
-        validation_dataloader: DataLoader = DataLoader(SignRecognizerTransformerDataset(tensors.validation[0], tensors.validation[1]), batch_size=args.batch_size, shuffle=True)
-    confuse_dataloader: DataLoader = None
-    if tensors.confusion[0] is not None:
-        confuse_dataloader: DataLoader = DataLoader(SignRecognizerTransformerDataset(tensors.confusion[0], tensors.confusion[1]), batch_size=args.batch_size, shuffle=True)
+    dataloaders: TrainDataLoader = TrainDataLoader(
+        train=DataLoader(SignRecognizerTransformerDataset(
+            train_tensor[0], train_tensor[1]), batch_size=args.batch_size, shuffle=True)
+    )
+    if validation_tensor is not None:
+        dataloaders.validation = DataLoader(SignRecognizerTransformerDataset(
+            validation_tensor[0], validation_tensor[1]), batch_size=args.batch_size, shuffle=True)
     print("[DONE]")
-    # print(train_dataloader, validation_dataloader, confuse_dataloader)
+
+    print("Converting confused labels to tensor...", end="", flush=True)
+    if args.embedding_optimization_thresold >= 0:
+        confuse_tensor: TensorPair | None = confused_sets.getConfusedSamplesTensor()
+        if confuse_tensor is not None:
+            dataloaders.confusion = DataLoader(SignRecognizerTransformerDataset(
+                confuse_tensor[0], confuse_tensor[1]), batch_size=args.batch_size, shuffle=True)
+            print("[DONE]")
+        else:
+            print("[NO CONFUSED LABELS]")
+    else:
+        print("[SKIPPED]")
+
+    if args.embedding_optimization_thresold >= 0:
+        print("Converting counter examples to tensor...", end="", flush=True)
+        counter_tensor: TensorPair | None = confused_sets.getCounterExamplesTensor()
+        if counter_tensor is not None:
+            dataloaders.counter_example = DataLoader(SignRecognizerTransformerDataset(
+                counter_tensor[0], counter_tensor[1]), batch_size=args.batch_size, shuffle=True)
+            print("[DONE]")
+        else:
+            print("[NO COUNTER EXAMPLES]")
+    else:
+        print("[SKIPPED]")
 
     model_info: ModelInfo = ModelInfo.build(
-            info=train_data.info,
-            name=args.name)
+        info=train_data.info,
+        name=args.name,
+        d_model=args.d_model,
+        num_heads=args.num_heads,
+        num_layers=args.num_layers,
+        ff_dim=args.ff_dim
+    )
 
-    weigths_balance: torch.Tensor = None
-    if args.balance_weights:
-        weigths_balance = train_data.getClassWeights(class_weights=args.class_weights)
-
-    return (train_dataloader, validation_dataloader, confuse_dataloader, model_info, weigths_balance, confused_sets, train_stats)
+    return (dataloaders, confused_sets, model_info, train_stats, weigths_balance)

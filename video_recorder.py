@@ -22,20 +22,26 @@ keys_index = {'a': 'a', 'b': 'b', 'c': 'c', 'd': 'd', 'e': 'e', 'f': 'f', 'g': '
 
 screenshot_delay = 0  # Delay before saving screenshots
 
-parser = argparse.ArgumentParser(description="Sign recognition with video recording.")
-parser.add_argument("--label", type=str, nargs="?", default="undefined", help="Label for the video files (default: undefined)")
-parser.add_argument("--model", required=True, help="Path to the folder containing the sign recognition model.")
-parser.add_argument("--counter-example", action='store_true', help="Will save the sign as a counter example of the label set in --label.")
+parser = argparse.ArgumentParser(
+    description="Sign recognition with video recording.")
+parser.add_argument("--label", type=str, nargs="?", default="undefined",
+                    help="Label for the video files (default: undefined)")
+parser.add_argument("--model", required=True,
+                    help="Path to the folder containing the sign recognition model.")
+parser.add_argument("--counter-example", action='store_true',
+                    help="Will save the sign as a counter example of the label set in --label.")
 args = parser.parse_args()
 video_label = args.label
 counter_example: bool = args.counter_example
 
 # Load models
 print("Loading sign recognition model...")
-sign_rec: SignRecognizerTransformer = SignRecognizerTransformer.loadModelFromDir(args.model)
+sign_rec: SignRecognizerTransformer = SignRecognizerTransformer.loadModelFromDir(
+    args.model)
 
 print("Loading hand landmarker...")
 handland_marker = load_hand_landmarker(2)
+
 
 def list_available_cameras(max_cameras=10):
     available_cameras = []
@@ -47,6 +53,7 @@ def list_available_cameras(max_cameras=10):
             cap.release()  # Libère la caméra après le test
 
     return available_cameras
+
 
 available_cameras = list_available_cameras()
 print(available_cameras)
@@ -75,13 +82,16 @@ Any key: Screenshot
 Tab: Edit
 Esc: Quit"""
 
+
 def create_instruction_image():
     instruction_image = np.zeros((frame_height, 300, 3), dtype=np.uint8)
     y0, dy = 50, 30
     for i, line in enumerate(instructions.split('\n')):
         y = y0 + i * dy
-        cv2.putText(instruction_image, line, (10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+        cv2.putText(instruction_image, line, (10, y),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
     return instruction_image
+
 
 def update_json(json_path, file_info):
     with open(json_path, 'r') as f:
@@ -89,6 +99,7 @@ def update_json(json_path, file_info):
     data.append(file_info)
     with open(json_path, 'w') as f:
         json.dump(data, f, indent=4)
+
 
 while True:
     if not is_croping:
@@ -109,7 +120,8 @@ while True:
             frame_history.move_to_one_side()
 
         # frame_history.gestures.reverse()
-        recognized_sign, sign_rec_time = recognize_sign(frame_history, sign_rec, sign_rec.info.active_gestures.getActiveFields())
+        recognized_sign, sign_rec_time = recognize_sign(
+            frame_history, sign_rec, sign_rec.info.active_gestures.getActiveFields())
         # frame_history.gestures.reverse()
 
         text = "undefined"
@@ -118,16 +130,18 @@ while True:
             prev_display = prev_sign
             prev_sign = recognized_sign
         if recognized_sign != -1:
-            text = f"{sign_rec.info.labels[recognized_sign]} prev({sign_rec.info.labels[prev_display]})"
-        cv2.putText(frame, text, (49, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.01, (0,0,0), 2, cv2.LINE_AA)
-        cv2.putText(frame, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
-
-
+            text = f"{sign_rec.info.labels[recognized_sign]} prev({
+                sign_rec.info.labels[prev_display]})"
+        cv2.putText(frame, text, (49, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                    1.01, (0, 0, 0), 2, cv2.LINE_AA)
+        cv2.putText(frame, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                    1, (255, 255, 255), 2, cv2.LINE_AA)
 
         if is_recording:
             out.write(frame)
             data_sample.insert_gesture_from_landmarks(0, result)
-            cv2.putText(frame, "Recording...", (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            cv2.putText(frame, "Recording...", (10, 40),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
         instruction_image = create_instruction_image()
         combined_frame = np.hstack((frame, instruction_image))
@@ -153,17 +167,22 @@ while True:
                         json.dump([], f)
 
                 output_file = os.path.join(full_save_path, file_name)
-                out = cv2.VideoWriter(output_file, fourcc, FPS, (frame_width, frame_height))
+                out = cv2.VideoWriter(
+                    output_file, fourcc, FPS, (frame_width, frame_height))
                 is_recording = True
             else:
                 is_recording = False
                 out.release()
                 if counter_example:
-                    os.makedirs(f"{save_folder}{video_label}/counter_example", exist_ok=True)
-                    data_sample.to_json_file(f"{save_folder}{video_label}/counter_example/{file_name}.json")
+                    os.makedirs(f"{save_folder}{
+                                video_label}/counter_example", exist_ok=True)
+                    data_sample.to_json_file(
+                        f"{save_folder}{video_label}/counter_example/{file_name}.json")
                 else:
-                    data_sample.to_json_file(f"{save_folder}{video_label}/{file_name}.json")
-                update_json(label_json_path, {"filename": file_name, "label": video_label})
+                    data_sample.to_json_file(
+                        f"{save_folder}{video_label}/{file_name}.json")
+                update_json(label_json_path, {
+                            "filename": file_name, "label": video_label})
 
         elif key == TAB:
             is_croping = True
@@ -202,15 +221,19 @@ while True:
                 countdown_active = False
 
                 cv2.imwrite(output_file, og_frame)
-                update_json(label_json_path, {"filename": file_name, "label": image_label})
+                update_json(label_json_path, {
+                            "filename": file_name, "label": image_label})
 
                 result, _ = track_hand(og_frame, handland_marker)
                 image_sample.insert_gesture_from_landmarks(0, result)
                 if counter_example:
-                    os.makedirs(f"{save_folder}{image_label}/counter_example", exist_ok=True)
-                    image_sample.to_json_file(f"{save_folder}{image_label}/counter_example/{file_name}.json")
+                    os.makedirs(f"{save_folder}{
+                                image_label}/counter_example", exist_ok=True)
+                    image_sample.toJsonFile(
+                        f"{save_folder}{image_label}/counter_example/{file_name}.json")
                 else:
-                    image_sample.to_json_file(f"{save_folder}{image_label}/{file_name}.json")
+                    image_sample.toJsonFile(
+                        f"{save_folder}{image_label}/{file_name}.json")
 
 
 record.release()

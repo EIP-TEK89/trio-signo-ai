@@ -10,7 +10,8 @@ model.eval()
 
 datasample: DataSample2 = DataSample2("", [], model.info.memory_frame)
 valid_fields: list[str] = model.info.active_gestures.getActiveFields()
-dummy_input: torch.Tensor = datasample.to_tensor(model.info.memory_frame, valid_fields)
+dummy_input: torch.Tensor = datasample.toTensor(
+    model.info.memory_frame, valid_fields)
 
 # Exporter vers ONNX
 torch.onnx.export(model, dummy_input, f"{model.info.name}.onnx",
