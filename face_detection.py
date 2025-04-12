@@ -6,7 +6,7 @@ import cv2
 import os
 
 FPS = 30
-JSON_DIR = "datasets/processed_face_data"
+JSON_DIR = "datasets/face_data"
 
 IMPORTANT_LANDMARKS = set(
 
