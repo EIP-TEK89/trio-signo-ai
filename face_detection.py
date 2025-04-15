@@ -61,15 +61,12 @@ IMPORTANT_LANDMARKS = set(
     list(range(473, 474)) # Right pupil
 )
 
-# Argument parser
 parser = argparse.ArgumentParser()
 parser.add_argument('--label', type=str, required=True, help='Label for the gesture')
 args = parser.parse_args()
 
-# Création du dossier de sortie
 os.makedirs(JSON_DIR, exist_ok=True)
 
-# Initialisation caméra et variables
 cap = cv2.VideoCapture(0)
 gestures = []
 frame_interval = 1.0 / FPS
@@ -104,7 +101,6 @@ with mp_face_mesh.FaceMesh(
             for face_landmarks in results.multi_face_landmarks:
                 height, width, _ = frame.shape
 
-                # Extraction des points importants uniquement
                 points = {
                     f"face_{idx}": [
                         landmark.x,
@@ -117,7 +113,6 @@ with mp_face_mesh.FaceMesh(
 
                 gestures.append(points)
 
-                # Dessin
                 for pt in points.values():
                     cx, cy = int(pt[0] * width), int(pt[1] * height)
                     cv2.circle(frame, (cx, cy), 2, (0, 255, 0), -1)
@@ -129,7 +124,6 @@ with mp_face_mesh.FaceMesh(
 cap.release()
 cv2.destroyAllWindows()
 
-# Sauvegarde JSON
 if gestures:
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     json_data = {
