@@ -4,6 +4,7 @@ import json
 import time
 import cv2
 import os
+import argparse
 
 FPS = 30
 JSON_DIR = "datasets/face_data"
@@ -60,81 +61,84 @@ IMPORTANT_LANDMARKS = set(
     list(range(473, 474)) # Right pupil
 )
 
+# Argument parser
+parser = argparse.ArgumentParser()
+parser.add_argument('--label', type=str, required=True, help='Label for the gesture')
+args = parser.parse_args()
 
-def save_points_to_json(points, output_dir):
+# Création du dossier de sortie
+os.makedirs(JSON_DIR, exist_ok=True)
+
+# Initialisation caméra et variables
+cap = cv2.VideoCapture(0)
+gestures = []
+frame_interval = 1.0 / FPS
+
+mp_face_mesh = mp.solutions.face_mesh
+
+with mp_face_mesh.FaceMesh(
+    static_image_mode=False,
+    max_num_faces=1,
+    refine_landmarks=True,
+    min_detection_confidence=0.5,
+    min_tracking_confidence=0.5
+) as face_mesh:
+
+    last_frame_time = time.time()
+
+    while cap.isOpened():
+        current_time = time.time()
+        if current_time - last_frame_time < frame_interval:
+            continue
+        last_frame_time = current_time
+
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        frame = cv2.flip(frame, 1)
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = face_mesh.process(rgb_frame)
+
+        if results.multi_face_landmarks:
+            for face_landmarks in results.multi_face_landmarks:
+                height, width, _ = frame.shape
+
+                # Extraction des points importants uniquement
+                points = {
+                    f"face_{idx}": [
+                        landmark.x,
+                        landmark.y,
+                        landmark.z
+                    ]
+                    for idx, landmark in enumerate(face_landmarks.landmark)
+                    if idx in IMPORTANT_LANDMARKS
+                }
+
+                gestures.append(points)
+
+                # Dessin
+                for pt in points.values():
+                    cx, cy = int(pt[0] * width), int(pt[1] * height)
+                    cv2.circle(frame, (cx, cy), 2, (0, 255, 0), -1)
+
+        cv2.imshow('Face recording', frame)
+        if cv2.waitKey(1) & 0xFF == 27:  # ESC key
+            break
+
+cap.release()
+cv2.destroyAllWindows()
+
+# Sauvegarde JSON
+if gestures:
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    json_path = os.path.join(output_dir, f'face_points_{timestamp}.json')
-
-    with open(json_path, 'w') as json_file:
-        json.dump(points, json_file, indent=4)
-
-    print(f'✅ JSON file saved : {json_path}')
-
-
-def main():
-    os.makedirs(JSON_DIR, exist_ok=True)
-
-    cap = cv2.VideoCapture(0)
-    points_data = []
-    frame_interval = 1.0 / FPS
-
-    mp_face_mesh = mp.solutions.face_mesh
-
-    with mp_face_mesh.FaceMesh(
-        static_image_mode=False,
-        max_num_faces=1,
-        refine_landmarks=True,
-        min_detection_confidence=0.5,
-        min_tracking_confidence=0.5
-    ) as face_mesh:
-
-        last_frame_time = time.time()
-        frame_id = 0
-        while cap.isOpened():
-            current_time = time.time()
-            if current_time - last_frame_time < frame_interval:
-                continue 
-            last_frame_time = current_time
-
-            ret, frame = cap.read()
-            if not ret:
-                break
-
-            frame = cv2.flip(frame, 1)
-            rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            results = face_mesh.process(rgb_frame)
-
-            
-            if results.multi_face_landmarks:
-                for face_landmarks in results.multi_face_landmarks:
-                    height, width, _ = frame.shape
-                    points = {
-                        idx: {'x': pt.x, 'y': pt.y, 'z': pt.z}
-                        for idx, pt in enumerate(face_landmarks.landmark) if idx in IMPORTANT_LANDMARKS
-                    }
-
-                    points_data.append({
-                        'frame_id': frame_id,
-                        'points': points
-                    })
-
-                    # Draw points on screen
-                    for idx, pt in points.items():
-                        cx, cy = int(pt['x'] * width), int(pt['y'] * height)
-                        cv2.circle(frame, (cx, cy), 2, (0, 255, 0), -1)
-
-                    frame_id += 1
-
-            cv2.imshow('Face recording', frame)
-            if cv2.waitKey(1) & 0xFF == 27: # esc key
-                break
-
-    cap.release()
-    cv2.destroyAllWindows()
-
-    if points_data:
-        save_points_to_json(points_data, JSON_DIR)
-
-
-if __name__ == '__main__':
-    main()
+    json_data = {
+        "label": args.label,
+        "gestures": gestures,
+        "framerate": FPS,
+        "mirrorable": False
+    }
+    json_path = os.path.join(JSON_DIR, f"face_points_{args.label}_{timestamp}.json")
+    with open(json_path, 'w') as f:
+        json.dump(json_data, f, indent=4)
+    print(f"✅ JSON saved at {json_path}")
