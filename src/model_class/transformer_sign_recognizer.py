@@ -3,6 +3,7 @@ import os
 import json
 from dataclasses import dataclass
 from typing import Self, cast, override
+from numbers import Number
 
 import glob
 import torch
@@ -210,7 +211,13 @@ class SignRecognizerTransformer(nn.Module):
 
     def getEmbeddings(self, x: torch.Tensor) -> torch.Tensor:
         """
-        Retourne les embeddings du modèle
+        Return the embeddings of the input tensor
+
+        Args:
+            x (torch.Tensor): Input tensor of shape [batch_size, seq_len, num_features]
+
+        Returns:
+            torch.Tensor: Embeddings of shape [batch_size, d_model]
         """
         # Embedding + Positional Encoding
         x = self.embedding(x) + self.pos_encoding
@@ -222,14 +229,42 @@ class SignRecognizerTransformer(nn.Module):
 
         return x.mean(dim=0)
 
+    def classify(self, embeddings: torch.Tensor) -> torch.Tensor:
+        """
+        Classify the input embeddings using the final linear layer.
+        Args:
+            embeddings (torch.Tensor): Input embeddings of shape [batch_size, d_model]
+
+        Returns:
+            torch.Tensor: Output logits of shape [batch_size, num_classes]
+        """
+        return cast(torch.Tensor, self.fc(embeddings))
+
+    def getLabelID(self, logits: torch.Tensor) -> list[int]:
+        """
+        Get the label id from the logits.
+        Args:
+            logits (torch.Tensor): Input logits of shape [batch_size, num_classes]
+
+        Returns:
+            list[int]: List of predicted label ids
+        """
+        return cast(list[int], torch.argmax(logits, dim=1).tolist())
+
     @override
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return cast(torch.Tensor, (self.fc(self.getEmbeddings(x))))
+        return self.classify(self.getEmbeddings(x))
 
-    def predict(self, x: torch.Tensor):
+    def predict(self, x: torch.Tensor) -> int:
+        """
+        Predict the label id for the input tensor.
+        Args:
+            x (torch.Tensor): Input tensor of shape [batch_size, seq_len, num_features]
+        Returns:
+            int: Predicted label id
+        """
         with torch.no_grad():
-            out: torch.Tensor = self(x)
-            return torch.argmax(out, dim=1)
+            return self.getLabelID(self.forward(x))[0]
 
 
 class SignRecognizerTransformerDataset(Dataset[TensorPair]):

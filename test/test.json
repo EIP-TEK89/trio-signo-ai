@@ -3,19 +3,7 @@
         "_null",
         "a",
         "b",
-        "c",
-        "_null",
-        "_null",
-        "_null"
-    ],
-    "label_explicit": [
-        "_null",
-        "a",
-        "b",
-        "c",
-        "_null_a",
-        "_null_b",
-        "_null_c"
+        "c"
     ],
     "memory_frame": 15,
     "active_gestures": {
@@ -70,15 +58,13 @@
         "_null": 0,
         "a": 1,
         "b": 2,
-        "c": 3,
-        "_null_a": 4,
-        "_null_b": 5,
-        "_null_c": 6
+        "c": 3
     },
-    "one_side": false,
+    "one_side": true,
+    "null_sample_id": 0,
     "name": "test",
     "d_model": 32,
     "num_heads": 8,
-    "num_layers": 5,
+    "num_layers": 3,
     "ff_dim": 128
 }

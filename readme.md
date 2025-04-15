@@ -26,25 +26,24 @@ You can either manually add them in the folder `datasets/source_images/{whatever
 
 run:
 ```sh
-python example.py
+python video_recorder.py
 ```
 Do a sign and press on the corresponding letter on the keyboard or `0`if not a sign
 
 # Generate dataset
 > Find info with `-h` parameter
 ```sh
-python dataset_asm.py
+python gen_traindata.py
 ```
 
 # Train AI Model
 
 ```sh
-python TrainLSFAlphabetRecognizer.py
+python train_model.py --trainset {path_to_the_cbor_file_you_made_with_gen_traindata.py}
 ```
 
 # Test AI Model
 
 ```sh
-python example.py
+python video_recorder.py --model {path_to_the_model_you_made_with_train_model.py}
 ```
-Do a si

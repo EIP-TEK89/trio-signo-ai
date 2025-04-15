@@ -12,6 +12,7 @@ from src.train_model.ConfusedSets import ConfusedSets
 from src.train_model.TrainStat import TrainStat, TrainStatEpoch, TrainStatEpochResult
 from src.datasamples import TensorPair
 from src.train_model.init_train_data import TrainDataLoader
+from src.tools import from_1d_tensor_to_list_int
 
 
 def train_epoch_optimize(optimizer: optim.Optimizer, loss: torch.Tensor):
@@ -69,7 +70,11 @@ def triplet_margin_train_epoch(model: SignRecognizerTransformer,
                                criterion: nn.TripletMarginLoss,
                                optimizer: optim.Optimizer,
                                pos_neg_func: Callable[[
-                                   torch.Tensor], TensorPair]
+                                   SignRecognizerTransformer,
+                                   list[int],
+                                   torch.Tensor,
+                                   list[int]],
+                                   tuple[TensorPair, list[bool]] | None]
                                ) -> float:
     """Will run the model and then optimize it.
 
@@ -89,18 +94,28 @@ def triplet_margin_train_epoch(model: SignRecognizerTransformer,
     num_batches: int = 0
     inputs: torch.Tensor
     labels: torch.Tensor
+    print(len(dataloader))
     for inputs, labels in dataloader:
         inputs, labels = inputs.to(model.device), labels.to(model.device)
-        outputs: torch.Tensor = model.getEmbeddings(inputs)
-        positive, negative = pos_neg_func(labels)
-        positive = positive.to(model.device)
-        negative = negative.to(model.device)
-        loss: torch.Tensor = criterion(outputs,
-                                       model.getEmbeddings(positive),
-                                       model.getEmbeddings(negative))
+        anchor_emb: torch.Tensor = model.getEmbeddings(inputs)
+        anchor_out: list[int] = model.getLabelID(model.classify(anchor_emb))
+        correction: tuple[TensorPair, list[bool]] | None = pos_neg_func(
+            model,
+            from_1d_tensor_to_list_int(labels),
+            anchor_emb,
+            anchor_out)
+        if correction is None:
+            continue
+        mask: list[bool] = correction[1]
+        positive = correction[0][0].to(model.device)
+        negative = correction[0][1].to(model.device)
+        # print(len(mask), positive.shape, negative.shape)
+        loss: torch.Tensor = criterion(
+            anchor_emb[mask], positive[mask], negative[mask])
         total_loss += loss.item()
         num_batches += 1
         train_epoch_optimize(optimizer, loss)
+        print(num_batches, len(dataloader))
 
     return total_loss / num_batches
 
@@ -249,11 +264,21 @@ def train_model(model: SignRecognizerTransformer,
     confused_run: bool = False
     counter_example_run: bool = False
 
-    def confused_pos_neg_pair(anchor_label: torch.Tensor) -> TensorPair:
-        return confused_sets.getConfusedSamplePosNegPair(anchor_label)
+    def confused_pos_neg_pair(
+            model: SignRecognizerTransformer,
+            anchor_label: list[int],
+            anchor_embeddings: torch.Tensor,
+            anchor_outputs: list[int]) -> TensorPair | None:
+        return confused_sets.getConfusedSamplePosNegPair(model, anchor_label,
+                                                         anchor_embeddings, anchor_outputs)
 
-    def counter_example_pair(anchor_label: torch.Tensor) -> TensorPair:
-        return confused_sets.getCounterExamplePosNegPair(anchor_label)
+    def counter_example_pair(
+            model: SignRecognizerTransformer,
+            non_counter_label: list[int],
+            anchor_embeddings: torch.Tensor,
+            anchor_outputs: list[int]) -> TensorPair | None:
+        return confused_sets.getCounterExamplePosNegPair(model, non_counter_label,
+                                                         anchor_embeddings, anchor_outputs)
 
     for epoch in range(num_epochs):
         cumulated_loss: int = 1
@@ -269,14 +294,14 @@ def train_model(model: SignRecognizerTransformer,
 
         # Triplet margin loss to refine the embedding between label that are similar
         # e.g french v sign and u sign
-        confused_run = False
-        if dataloaders.confusion is not None and \
-                train_avg_acc >= embedding_optimization_threshold:
-            confused_run = True
-            tm_loss = triplet_margin_train_epoch(
-                model, dataloaders.confusion, triplet_margin_criterion, optimizer, confused_pos_neg_pair)
-            total_loss += tm_loss
-            cumulated_loss += 1
+        # confused_run = False
+        # if dataloaders.confusion is not None and \
+        #         train_avg_acc >= embedding_optimization_threshold:
+        #     confused_run = True
+        #     tm_loss = triplet_margin_train_epoch(
+        #         model, dataloaders.confusion, triplet_margin_criterion, optimizer, confused_pos_neg_pair)
+        #     total_loss += tm_loss
+        #     cumulated_loss += 1
 
         # Triplet margin loss to refine the embedding between null label that looks like the label and label
         # e.g a sign and a slightly wrong a sign
@@ -285,7 +310,7 @@ def train_model(model: SignRecognizerTransformer,
                 and train_avg_acc >= embedding_optimization_threshold:
             counter_example_run = True
             tm_loss = triplet_margin_train_epoch(
-                model, dataloaders.counter_example, triplet_margin_criterion, optimizer, counter_example_pair)
+                model, dataloaders.counter_example, triplet_margin_criterion, optimizer, confused_sets.getCounterExamplePosNegPair)
             total_loss += tm_loss
             cumulated_loss += 1
 
