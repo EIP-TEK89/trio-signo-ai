@@ -3,25 +3,33 @@ import mediapipe as mp
 import json
 import time
 import os
+import argparse
 from datetime import datetime
+
+parser = argparse.ArgumentParser(description="Record pose landmarks and save them in JSON format.")
+parser.add_argument("--label", type=str, default="undefined", help="Label for the recorded gesture.")
+parser.add_argument("--output", type=str, default="datasets/body_data", help="Directory to save the JSON files.")
+parser.add_argument("--fps", type=int, default=30, help="Frame rate for recording.")
+parser.add_argument("--mirrorable", action="store_true", help="Whether the gesture is mirrorable.")
+args = parser.parse_args()
 
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
-SELECTED_LANDMARKS = [
-    mp_pose.PoseLandmark.LEFT_SHOULDER,
-    mp_pose.PoseLandmark.RIGHT_SHOULDER,
-    mp_pose.PoseLandmark.LEFT_ELBOW,
-    mp_pose.PoseLandmark.RIGHT_ELBOW,
-    mp_pose.PoseLandmark.LEFT_WRIST,
-    mp_pose.PoseLandmark.RIGHT_WRIST,
-    mp_pose.PoseLandmark.LEFT_HIP,
-    mp_pose.PoseLandmark.RIGHT_HIP,
-    mp_pose.PoseLandmark.LEFT_KNEE,
-    mp_pose.PoseLandmark.RIGHT_KNEE,
-    mp_pose.PoseLandmark.LEFT_ANKLE,
-    mp_pose.PoseLandmark.RIGHT_ANKLE,
-]
+SELECTED_LANDMARKS = {
+    "left_shoulder": mp_pose.PoseLandmark.LEFT_SHOULDER,
+    "right_shoulder": mp_pose.PoseLandmark.RIGHT_SHOULDER,
+    "left_elbow": mp_pose.PoseLandmark.LEFT_ELBOW,
+    "right_elbow": mp_pose.PoseLandmark.RIGHT_ELBOW,
+    "left_wrist": mp_pose.PoseLandmark.LEFT_WRIST,
+    "right_wrist": mp_pose.PoseLandmark.RIGHT_WRIST,
+    "left_hip": mp_pose.PoseLandmark.LEFT_HIP,
+    "right_hip": mp_pose.PoseLandmark.RIGHT_HIP,
+    "left_knee": mp_pose.PoseLandmark.LEFT_KNEE,
+    "right_knee": mp_pose.PoseLandmark.RIGHT_KNEE,
+    "left_ankle": mp_pose.PoseLandmark.LEFT_ANKLE,
+    "right_ankle": mp_pose.PoseLandmark.RIGHT_ANKLE,
+}
 
 CUSTOM_CONNECTIONS = [
     (mp_pose.PoseLandmark.LEFT_SHOULDER, mp_pose.PoseLandmark.LEFT_ELBOW),
@@ -40,7 +48,7 @@ CUSTOM_CONNECTIONS = [
 
 def draw_custom_landmarks(image, landmarks, shape):
     h, w, _ = shape
-    for idx in SELECTED_LANDMARKS:
+    for idx in SELECTED_LANDMARKS.values():
         lm = landmarks.landmark[idx]
         x, y = int(lm.x * w), int(lm.y * h)
         cv2.circle(image, (x, y), 6, (0, 255, 0), -1)
@@ -53,19 +61,15 @@ def draw_custom_landmarks(image, landmarks, shape):
         x2, y2 = int(end.x * w), int(end.y * h)
         cv2.line(image, (x1, y1), (x2, y2), (255, 255, 255), 2)
 
-pose_data = []
-last_save_time = time.time()
-frame_interval = 1.0 / 30.0  # 30 FPS
-frame_count = 0
+if not os.path.exists(args.output):
+    os.makedirs(args.output)
 
-save_dir = "datasets/body_data"
-if not os.path.exists(save_dir):
-    os.makedirs(save_dir)
+pose_data = []
+frame_interval = 1.0 / args.fps
+last_save_time = time.time()
 
 cap = cv2.VideoCapture(0)
-
-with mp_pose.Pose(min_detection_confidence=0.5,
-                  min_tracking_confidence=0.5) as pose:
+with mp_pose.Pose(min_detection_confidence=0.5, min_tracking_confidence=0.5) as pose:
     while True:
         ret, frame = cap.read()
         if not ret:
@@ -84,21 +88,14 @@ with mp_pose.Pose(min_detection_confidence=0.5,
 
             if current_time - last_save_time >= frame_interval:
                 frame_landmarks = {}
-                for idx in SELECTED_LANDMARKS:
+                for name, idx in SELECTED_LANDMARKS.items():
                     lm = results.pose_landmarks.landmark[idx]
                     if lm.visibility < 0.5:
-                        frame_landmarks[idx.name] = {"x": 0, "y": 0, "z": 0}
+                        frame_landmarks[name] = None
                     else:
-                        frame_landmarks[idx.name] = {
-                            "x": lm.x,
-                            "y": lm.y,
-                            "z": lm.z
-                        }
-                pose_data.append({
-                    "frame": frame_count,
-                    "landmarks": frame_landmarks
-                })
-                frame_count += 1
+                        frame_landmarks[name] = [lm.x, lm.y, lm.z]
+
+                pose_data.append(frame_landmarks)
                 last_save_time = current_time
 
         cv2.imshow("Body Detection (ESC or close to quit)", image)
@@ -110,10 +107,17 @@ with mp_pose.Pose(min_detection_confidence=0.5,
 cap.release()
 cv2.destroyAllWindows()
 
+# Save to JSON
+final_data = {
+    "label": args.label,
+    "gestures": pose_data,
+    "fps": args.fps,
+    "mirrorable": args.mirrorable
+}
 current_datetime = datetime.now().strftime("%Y-%m-%d_%H%M%S")
-filename = f"{save_dir}/pose_data_{current_datetime}.json"
+filename = f"{args.output}/pose_data_{current_datetime}.json"
 
 with open(filename, "w") as f:
-    json.dump(pose_data, f, indent=2)
+    json.dump(final_data, f, indent=2)
 
-print(f"Saved landmark data to {filename}")
+print(f"[✔] Saved landmark data to {filename}")
