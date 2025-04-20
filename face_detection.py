@@ -4,17 +4,22 @@ import json
 import cv2
 import os
 
-IMPORTANT_LANDMARKS = set(
+from typing import NamedTuple
+from types import GenericAlias
+import mediapipe.python.solutions.face_mesh as fm
+from mediapipe.tasks.python.vision.face_landmarker import FaceLandmarkerOptions, FaceLandmarker, FaceLandmarkerResult
+from mediapipe.tasks.python.components.containers.category import *
+from mediapipe.tasks.python.components.containers.landmark import *
+
+IMPORTANT_LANDMARKS: set[int] = set(
 
     # MID FACE SET
-    list(range(1)) + # Middle upper lip
     list(range(1,2)) + # Middle nose point
     list(range(6, 7)) + # Middle Top nose
     list(range(9, 10)) + # Middle of eyebrows
     list(range(10, 11)) + # Middle forehead
     list(range(18, 19)) + # Top chin
     list(range(13, 15)) + # Bottom upper lip, Top lower lip
-    list(range(16, 17)) + # Bottom lower lip
     list(range(141, 142)) + # Bottom nose
     list(range(152, 153)) + # Middle chin
     list(range(197, 198)) + # Middle nose
@@ -38,7 +43,7 @@ IMPORTANT_LANDMARKS = set(
 
     # RIGHT FACE SET
     list(range(251, 252)) + # Right temple
-    list(range(262, 263)) + # Right middle chin, right eye exterior
+    list(range(262, 263)) + # Right middle chin
     list(range(269, 270)) + # Right upper lip
     list(range(273, 274)) + # Right exterior mouth
     list(range(280, 281)) + # Right middle cheek
@@ -56,13 +61,12 @@ IMPORTANT_LANDMARKS = set(
     list(range(473, 474)) # Right pupil
 )
 
-mp_face_mesh = mp.solutions.face_mesh
-_face_mesh = None
+_face_mesh: fm.FaceMesh | None = None
 
-def get_face_mesh():
+def get_face_mesh() -> fm.FaceMesh:
     global _face_mesh
     if _face_mesh is None:
-        _face_mesh = mp_face_mesh.FaceMesh(
+        _face_mesh = fm.FaceMesh(
             static_image_mode=False,
             max_num_faces=1,
             refine_landmarks=True,
@@ -73,22 +77,27 @@ def get_face_mesh():
 
 def track_face(frame):
     face_mesh = get_face_mesh()
-    results = face_mesh.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    results: NamedTuple = face_mesh.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    # print(type(results), results, type(results["muti_face_landmarks"]))
     if not results.multi_face_landmarks:
         return frame, {}
 
     face_landmarks = results.multi_face_landmarks[0]
+    print(type(face_landmarks), face_landmarks)
     height, width, _ = frame.shape
     points = {}
     for idx, lm in enumerate(face_landmarks.landmark):
         if idx in IMPORTANT_LANDMARKS:
+            # print("ah", len(IMPORTANT_LANDMARKS))
+            # print(f"Landmark {type(idx)}: {lm.x}, {lm.y}, {lm.z}, {lm.visibility}")
             points[str(idx)] = {'x': lm.x, 'y': lm.y, 'z': lm.z}
             cx, cy = int(lm.x * width), int(lm.y * height)
             cv2.circle(frame, (cx, cy), 2, (255, 0, 0), -1)
 
     return frame, points
 
-def adapt_landmarks_to_json(points):
+def adapt_landmarks_to_json(points: dict[str, dict[str, float]]):
+    print(points)
     adapted_points = {
         str(idx): [pt['x'], pt['y'], pt['z']] for idx, pt in points.items()
     }

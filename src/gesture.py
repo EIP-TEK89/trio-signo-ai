@@ -1,7 +1,7 @@
 import random
 import torch
 from dataclasses import dataclass, fields
-from typing import Generic, TypeVar, Self, final, cast, Sequence
+from typing import Generic, TypeVar, Self, final, cast, Sequence, NamedTuple
 
 import numpy as np
 from numpy.typing import NDArray
@@ -19,6 +19,19 @@ def is_valid_field(field_name: str, valid_fields: list[str] | None) -> bool:
 def default_device(device: torch.device | None = None) -> torch.device:
     return device if device is not None else torch.device("cpu")
 
+class FaceLandmarkPoints(NamedTuple):
+    x: float
+    y: float
+    z: float
+
+class FaceLandmarkData(NamedTuple):
+    landmark: list[FaceLandmarkPoints]
+    visibility: list[float]
+    presence: list[float]
+
+
+class FaceLandmarkResult(NamedTuple):
+    multi_face_landmarks: list[list[FaceLandmarkPoints]]
 
 T = TypeVar("T")
 FIELD_DIMENSION: int = 3
@@ -81,6 +94,57 @@ class _Gestures(Generic[T]):
 
     l_hand_velocity: T | None = None
     r_hand_velocity: T | None = None
+
+    # # MID FACE SET
+    # m_nose_point: T | None = None  # Middle nose point
+    # m_top_nose: T | None = None  # Middle Top nose
+    # m_eyebrows: T | None = None  # Middle of eyebrows
+    # m_forehead: T | None = None  # Middle forehead
+    # m_top_chin: T | None = None  # Top chin
+    # m_bot_up_lip: T | None = None  # Bottom upper lip
+    # m_top_low_lip: T | None = None  # Top lower lip
+    # m_bot_nose: T | None = None  # Bottom nose
+    # m_chin: T | None = None  # Middle chin
+    # m_nose: T | None = None  # Middle nose
+
+    # # LEFT FACE SET
+    # l_eye_exterior: T | None = None  # Left eye exterior
+    # l_temple: T | None = None  # Left temple
+    # l_mid_chin: T | None = None  # Left middle chin
+    # l_up_lip: T | None = None  # Left upper lip
+    # l_ext_nostril: T | None = None  # Exterior left nostril
+    # l_mid_cheek: T | None = None  # Middle left cheek
+    # l_mid_eyebrow: T | None = None  # Middle left eyebrow
+    # l_ext_eyebrow: T | None = None  # Left exterior eyebrow
+    # l_ext_lips: T | None = None  # Exterior left lips
+    # l_jaw_angle: T | None = None  # Left jaw angle
+    # l_mid_ext_face: T | None = None  # Left middle exterior face
+    # l_int_eyebrow: T | None = None  # Interor left eyebrow
+    # l_mid_jaw: T | None = None  # Middle left jaw
+    # l_mid_bot_eyelid: T | None = None  # Left eye middle bottom eyelid
+    # l_ext_mouth: T | None = None  # Left exterior mouth
+    # l_top_eyelid: T | None = None  # Left eye middle top eyelid
+    # l_eye_int: T | None = None  # Left eye interior
+    # l_pupil: T | None = None  # Left pupil
+
+    # # RIGHT FACE SET
+    # r_eye_exterior: T | None = None  # Right eye exterior
+    # r_temple: T | None = None  # Right temple
+    # r_mid_chin: T | None = None  # Right middle chin
+    # r_up_lip: T | None = None  # Right upper lip
+    # r_ext_nostril: T | None = None # Exterior right nostril
+    # r_mid_cheek: T | None = None # Middle right cheek
+    # r_mid_eyebrow: T | None = None  # Middle right eyebrow
+    # r_ext_eyebrow: T | None = None  # Right exterior eyebrow
+    # r_ext_lips: T | None = None  # Exterior right lips
+    # r_jaw_angle: T | None = None  # Right jaw angle
+
+    # r_ext_mouth: T | None = None  # Right exterior mouth
+    # r_mid_cheek: T | None = None  # Right middle cheek
+    # r_ext_eyebrow: T | None = None  # Right exterior eyebrow, right middle eyebrow
+
+
+
 
 
 FIELDS: list[str] = [f.name for f in fields(_Gestures)]
@@ -305,11 +369,13 @@ class DataGestures(Gestures[list[float] | None]):
     @classmethod
     def buildFromHandLandmarkerResult(
         cls,
-        landmark_result: HandLandmarkerResult,
+        landmark_result: HandLandmarkerResult | None = None,
+        facemark_result: FaceLandmarkResult | None = None,
+        bodymark_result: HandLandmarkerResult | None = None,
         valid_fields: list[str] = FIELDS,
     ) -> Self:
         tmp = cls()
-        tmp.setHandsFromHandLandmarkerResult(landmark_result, valid_fields)
+        tmp.setHandsFromHandLandmarkerResult(landmark_result, facemark_result, bodymark_result, valid_fields)
         return tmp
 
     @classmethod
@@ -326,7 +392,9 @@ class DataGestures(Gestures[list[float] | None]):
 
     def setHandsFromHandLandmarkerResult(
         self,
-        landmark_result: HandLandmarkerResult,
+        landmark_result: HandLandmarkerResult | None = None,
+        facemark_result: FaceLandmarkResult | None = None,
+        bodymark_result: HandLandmarkerResult | None = None,
         valid_fields: list[str] = FIELDS,
     ) -> Self:
         """Convert the HandLandmarkerResult object into a DataGestures object.
@@ -338,44 +406,45 @@ class DataGestures(Gestures[list[float] | None]):
             landmark_result (HandLandmarkerResult): _description_
         """
 
-        hand_fields: list[str] = [
-            "wrist",
-            "thumb_cmc",
-            "thumb_mcp",
-            "thumb_ip",
-            "thumb_tip",
-            "index_mcp",
-            "index_pip",
-            "index_dip",
-            "index_tip",
-            "middle_mcp",
-            "middle_pip",
-            "middle_dip",
-            "middle_tip",
-            "ring_mcp",
-            "ring_pip",
-            "ring_dip",
-            "ring_tip",
-            "pinky_mcp",
-            "pinky_pip",
-            "pinky_dip",
-            "pinky_tip",
-        ]
+        if landmark_result is not None:
+            hand_fields: list[str] = [
+                "wrist",
+                "thumb_cmc",
+                "thumb_mcp",
+                "thumb_ip",
+                "thumb_tip",
+                "index_mcp",
+                "index_pip",
+                "index_dip",
+                "index_tip",
+                "middle_mcp",
+                "middle_pip",
+                "middle_dip",
+                "middle_tip",
+                "ring_mcp",
+                "ring_pip",
+                "ring_dip",
+                "ring_tip",
+                "pinky_mcp",
+                "pinky_pip",
+                "pinky_dip",
+                "pinky_tip",
+            ]
 
-        for i in range(len(landmark_result.hand_world_landmarks)):
-            handlandmark: list[NormalizedLandmark] = landmark_result.hand_landmarks[i]
-            handworldlandmark: list[Landmark] = (
-                landmark_result.hand_world_landmarks[i]
-            )
+            for i in range(len(landmark_result.hand_world_landmarks)):
+                handlandmark: list[NormalizedLandmark] = landmark_result.hand_landmarks[i]
+                handworldlandmark: list[Landmark] = (
+                    landmark_result.hand_world_landmarks[i]
+                )
+                prefix: str = "l_" if landmark_result.handedness[i][0].category_name == "Left" else "r_"
 
-            if landmark_result.handedness[i][0].category_name == "Right":
                 """
                 We use the wrist position to get the hand location
                 then we substract 0.5 to center the hand since
                 handlandmark elements store their position in a range of 0 to 1.
                 Doing so will ease operation such as mirroring or rotation.
                 """
-                if valid_fields or "r_hand_position" in valid_fields:
+                if valid_fields or f"{prefix}hand_position" in valid_fields:
                     self.r_hand_position = [
                         (handlandmark[0].x if handlandmark[0].x else 0) - 0.5,
                         (handlandmark[0].y if handlandmark[0].y else 0) - 0.5,
@@ -384,10 +453,10 @@ class DataGestures(Gestures[list[float] | None]):
 
                 # Adding position of each finger articulation
                 for j, field_name in enumerate(hand_fields):
-                    if f"r_{field_name}" in valid_fields:
+                    if f"{prefix}{field_name}" in valid_fields:
                         setattr(
                             self,
-                            f"r_{field_name}",
+                            f"{prefix}{field_name}",
                             [
                                 handworldlandmark[j].x,
                                 handworldlandmark[j].y,
@@ -395,34 +464,13 @@ class DataGestures(Gestures[list[float] | None]):
                             ],
                         )
 
-            else:
-                """
-                We use the wrist position to get the hand location
-                then we substract 0.5 to center the hand since
-                handlandmark elements store their position in a range of 0 to 1.
-                Doing so will ease operation such as mirroring or rotation.
-                """
-                if valid_fields or "l_hand_position" in valid_fields:
-                    self.l_hand_position = [
-                        (handlandmark[0].x if handlandmark[0].x else 0) - 0.5,
-                        (handlandmark[0].y if handlandmark[0].y else 0) - 0.5,
-                        (handlandmark[0].z if handlandmark[0].z else 0) - 0.5,
-                    ]
+            if facemark_result is not None:
+                pass
 
-                # Adding position of each finger articulation
-                for j, field_name in enumerate(hand_fields):
-                    if f"l_{field_name}" in valid_fields:
-                        setattr(
-                            self,
-                            f"l_{field_name}",
-                            [
-                                handworldlandmark[j].x,
-                                handworldlandmark[j].y,
-                                handworldlandmark[j].z,
-                            ],
-                        )
+            if bodymark_result is not None:
+                pass
 
-        return self
+            return self
 
     def setPointTo(self, point_field_name: str, x: float, y: float, z: float) -> Self:
         setattr(self, point_field_name, [x, y, z])
