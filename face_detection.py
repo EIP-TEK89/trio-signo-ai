@@ -83,7 +83,7 @@ def track_face(frame):
     results: NamedTuple = face_mesh.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
     # print(type(results), results, type(results["muti_face_landmarks"]))
     if not results.multi_face_landmarks:
-        return frame, {}
+        return frame, None
 
     gest: DataGestures = DataGestures.buildFromLandmarkerResult(facemark_result=results)
 

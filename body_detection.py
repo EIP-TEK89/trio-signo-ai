@@ -3,6 +3,7 @@ import mediapipe as mp
 import json
 import cv2
 import os
+from typing import NamedTuple
 
 IMPORTANT_LANDMARKS = set([
     mp.solutions.pose.PoseLandmark.LEFT_SHOULDER.value,
@@ -36,11 +37,13 @@ def get_pose_tracker():
 
 def extract_body_landmarks_from_frame(frame, pose_tracker):
     image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    results = pose_tracker.process(image)
+    results: NamedTuple = pose_tracker.process(image)
+    # print(type(results))
 
     if not results.pose_landmarks:
-        return None
+        return None, None
 
+    print(type(results.pose_landmarks))
     landmarks = results.pose_landmarks.landmark
     points = {
         idx: {
@@ -50,21 +53,21 @@ def extract_body_landmarks_from_frame(frame, pose_tracker):
             'visibility': landmarks[idx].visibility
         } for idx in IMPORTANT_LANDMARKS if idx < len(landmarks)
     }
-    return points
+    return results, points
 
 def track_body(frame):
     pose_tracker = get_pose_tracker()
-    points = extract_body_landmarks_from_frame(frame, pose_tracker)
+    results, points = extract_body_landmarks_from_frame(frame, pose_tracker)
 
     if points is None:
-        return frame, {}
-    
+        return frame, None
+
     height, width, _ = frame.shape
     for pt in points.values():
         cx, cy = int(pt['x'] * width), int(pt['y'] * height)
         cv2.circle(frame, (cx, cy), 3, (0, 255, 0), -1)
 
-    return frame, points
+    return frame, results
 
 def adapt_landmarks_to_json(points):
     adapted_points = {
@@ -95,4 +98,3 @@ def save_body_points_to_json(points_data, output_dir, label, framerate=30, mirro
         json.dump(data, f, indent=0)
 
     print(f"✅ JSON saved to {json_path}")
-

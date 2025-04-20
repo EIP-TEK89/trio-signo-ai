@@ -79,7 +79,7 @@ class DataSample2:
     def toDict(self) -> dict[str, object]:
         tmp: dict[str, object] = copy.deepcopy(self).__dict__
         tmp["gestures"] = [gesture.__dict__ for gesture in self.gestures]
-        print(tmp["gestures"])
+        # print(tmp["gestures"])
         return tmp
 
     def toJsonFile(self, file_path: str, indent: bool = False):

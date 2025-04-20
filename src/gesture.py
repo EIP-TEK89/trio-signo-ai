@@ -1,5 +1,6 @@
 import random
 import torch
+import mediapipe
 from dataclasses import dataclass, fields
 from typing import Generic, TypeVar, Self, final, cast, Sequence, NamedTuple
 
@@ -25,6 +26,9 @@ def landmark_to_list(landmark: Landmark) -> list[float]:
 
 class FaceLandmarkResult(NamedTuple):
     multi_face_landmarks: list[NormalizedLandmarkList]
+
+class BodyLandmarkResult(NamedTuple):
+    pose_landmarks: NormalizedLandmarkList
 
 T = TypeVar("T")
 FIELD_DIMENSION: int = 3
@@ -140,6 +144,17 @@ class _Gestures(Generic[T]):
     r_eye_int: T | None = None # Right eye interior
     r_pupil: T | None = None # Right pupil
 
+    l_shoudler: T | None = None  # Left shoulder
+    l_elbow: T | None = None  # Left elbow
+    l_hip: T | None = None  # Left hip
+    l_knee: T | None = None  # Left knee
+    l_ankle: T | None = None  # Left ankle
+
+    r_shoudler: T | None = None  # Right shoulder
+    r_elbow: T | None = None  # Right elbow
+    r_hip: T | None = None  # Right hip
+    r_knee: T | None = None  # Right knee
+    r_ankle: T | None = None  # Right ankle
 
 
 FIELDS: list[str] = [f.name for f in fields(_Gestures)]
@@ -366,7 +381,7 @@ class DataGestures(Gestures[list[float] | None]):
         cls,
         landmark_result: HandLandmarkerResult | None = None,
         facemark_result: FaceLandmarkResult | None = None,
-        bodymark_result: HandLandmarkerResult | None = None,
+        bodymark_result: BodyLandmarkResult | None = None,
         valid_fields: list[str] = FIELDS,
     ) -> Self:
         tmp = cls()
@@ -389,7 +404,7 @@ class DataGestures(Gestures[list[float] | None]):
         self,
         landmark_result: HandLandmarkerResult | None = None,
         facemark_result: FaceLandmarkResult | None = None,
-        bodymark_result: HandLandmarkerResult | None = None,
+        bodymark_result: BodyLandmarkResult | None = None,
         valid_fields: list[str] = FIELDS,
     ) -> Self:
         """Convert the HandLandmarkerResult object into a DataGestures object.
@@ -512,7 +527,21 @@ class DataGestures(Gestures[list[float] | None]):
             self.r_pupil = landmark_to_list(face_points[473])
 
         if bodymark_result is not None:
-            pass
+            body_points: NormalizedLandmarkList = bodymark_result.pose_landmarks.landmark
+
+            self.l_shoudler = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_SHOULDER])
+            self.l_elbow = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_ELBOW])
+            self.l_hip = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_HIP])
+            self.l_knee = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_KNEE])
+            self.l_ankle = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_ANKLE])
+            # self.r_wrist = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_WRIST])
+
+            self.r_shoudler = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_SHOULDER])
+            self.r_elbow = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_ELBOW])
+            self.r_hip = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_HIP])
+            self.r_knee = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_KNEE])
+            self.r_ankle = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_ANKLE])
+            # self.l_wrist = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_WRIST])
 
         return self
 
