@@ -55,7 +55,7 @@ class ModelInfo(DataSamplesInfo):
         _dict["mode_arch"] = self.mode_arch
         return _dict
 
-    def to_json_file(self, file_path: str, indent: int = 4):
+    def toJsonFile(self, file_path: str, indent: int = 4):
         with open(file_path, 'w', encoding="utf-8") as f:
             json.dump(self.to_dict(), f, ensure_ascii=False, indent=indent)
 
@@ -111,7 +111,7 @@ class SignRecognizerV1(nn.Module):
         os.makedirs(model_name, exist_ok=True)
         full_name = f"{model_name}/{model_name}"
         torch.save(self.state_dict(), full_name + ".pth")
-        self.info.to_json_file(full_name + ".json")
+        self.info.toJsonFile(full_name + ".json")
 
     def forward(self, x):
         for i in range(len(self.fcs) - 1):

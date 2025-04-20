@@ -7,7 +7,7 @@ import numpy as np
 from numpy.typing import NDArray
 from mediapipe.tasks.python.vision.hand_landmarker import HandLandmarkerResult
 from mediapipe.tasks.python.components.containers.landmark import NormalizedLandmark, Landmark
-
+from typings.mediapipe.framework.formats.landmark_pb2 import NormalizedLandmarkList
 from src.rot_3d import rot_3d_x, rot_3d_y, rot_3d_z
 from src.tools import rand_fix_interval
 
@@ -19,19 +19,12 @@ def is_valid_field(field_name: str, valid_fields: list[str] | None) -> bool:
 def default_device(device: torch.device | None = None) -> torch.device:
     return device if device is not None else torch.device("cpu")
 
-class FaceLandmarkPoints(NamedTuple):
-    x: float
-    y: float
-    z: float
 
-class FaceLandmarkData(NamedTuple):
-    landmark: list[FaceLandmarkPoints]
-    visibility: list[float]
-    presence: list[float]
-
+def landmark_to_list(landmark: Landmark) -> list[float]:
+    return [landmark.x, landmark.y, landmark.z]
 
 class FaceLandmarkResult(NamedTuple):
-    multi_face_landmarks: list[list[FaceLandmarkPoints]]
+    multi_face_landmarks: list[NormalizedLandmarkList]
 
 T = TypeVar("T")
 FIELD_DIMENSION: int = 3
@@ -95,55 +88,57 @@ class _Gestures(Generic[T]):
     l_hand_velocity: T | None = None
     r_hand_velocity: T | None = None
 
-    # # MID FACE SET
-    # m_nose_point: T | None = None  # Middle nose point
-    # m_top_nose: T | None = None  # Middle Top nose
-    # m_eyebrows: T | None = None  # Middle of eyebrows
-    # m_forehead: T | None = None  # Middle forehead
-    # m_top_chin: T | None = None  # Top chin
-    # m_bot_up_lip: T | None = None  # Bottom upper lip
-    # m_top_low_lip: T | None = None  # Top lower lip
-    # m_bot_nose: T | None = None  # Bottom nose
-    # m_chin: T | None = None  # Middle chin
-    # m_nose: T | None = None  # Middle nose
+    # MID FACE SET
+    m_nose_point: T | None = None  # Middle nose point
+    m_top_nose: T | None = None  # Middle Top nose
+    m_eyebrows: T | None = None  # Middle of eyebrows
+    m_forehead: T | None = None  # Middle forehead
+    m_top_chin: T | None = None  # Top chin
+    m_bot_up_lip: T | None = None  # Bottom upper lip
+    m_top_low_lip: T | None = None  # Top lower lip
+    m_bot_nose: T | None = None  # Bottom nose
+    m_chin: T | None = None  # Middle chin
+    m_nose: T | None = None  # Middle nose
 
-    # # LEFT FACE SET
-    # l_eye_exterior: T | None = None  # Left eye exterior
-    # l_temple: T | None = None  # Left temple
-    # l_mid_chin: T | None = None  # Left middle chin
-    # l_up_lip: T | None = None  # Left upper lip
-    # l_ext_nostril: T | None = None  # Exterior left nostril
-    # l_mid_cheek: T | None = None  # Middle left cheek
-    # l_mid_eyebrow: T | None = None  # Middle left eyebrow
-    # l_ext_eyebrow: T | None = None  # Left exterior eyebrow
-    # l_ext_lips: T | None = None  # Exterior left lips
-    # l_jaw_angle: T | None = None  # Left jaw angle
-    # l_mid_ext_face: T | None = None  # Left middle exterior face
-    # l_int_eyebrow: T | None = None  # Interor left eyebrow
-    # l_mid_jaw: T | None = None  # Middle left jaw
-    # l_mid_bot_eyelid: T | None = None  # Left eye middle bottom eyelid
-    # l_ext_mouth: T | None = None  # Left exterior mouth
-    # l_top_eyelid: T | None = None  # Left eye middle top eyelid
-    # l_eye_int: T | None = None  # Left eye interior
-    # l_pupil: T | None = None  # Left pupil
+    # LEFT FACE SET
+    l_eye_exterior: T | None = None  # Left eye exterior
+    l_temple: T | None = None  # Left temple
+    l_mid_chin: T | None = None  # Left middle chin
+    l_up_lip: T | None = None  # Left upper lip
+    l_ext_nostril: T | None = None  # Exterior left nostril
+    l_mid_cheek: T | None = None  # Middle left cheek
+    l_mid_eyebrow: T | None = None  # Middle left eyebrow
+    l_ext_eyebrow: T | None = None  # Left exterior eyebrow
+    l_ext_lips: T | None = None  # Exterior left lips
+    l_jaw_angle: T | None = None  # Left jaw angle
+    l_mid_ext_face: T | None = None  # Left middle exterior face
+    l_int_eyebrow: T | None = None  # Interor left eyebrow
+    l_mid_jaw: T | None = None  # Middle left jaw
+    l_mid_bot_eyelid: T | None = None  # Left eye middle bottom eyelid
+    l_ext_mouth: T | None = None  # Left exterior mouth
+    l_top_eyelid: T | None = None  # Left eye middle top eyelid
+    l_eye_int: T | None = None  # Left eye interior
+    l_pupil: T | None = None  # Left pupil
 
-    # # RIGHT FACE SET
-    # r_eye_exterior: T | None = None  # Right eye exterior
-    # r_temple: T | None = None  # Right temple
-    # r_mid_chin: T | None = None  # Right middle chin
-    # r_up_lip: T | None = None  # Right upper lip
-    # r_ext_nostril: T | None = None # Exterior right nostril
-    # r_mid_cheek: T | None = None # Middle right cheek
-    # r_mid_eyebrow: T | None = None  # Middle right eyebrow
-    # r_ext_eyebrow: T | None = None  # Right exterior eyebrow
-    # r_ext_lips: T | None = None  # Exterior right lips
-    # r_jaw_angle: T | None = None  # Right jaw angle
-
-    # r_ext_mouth: T | None = None  # Right exterior mouth
-    # r_mid_cheek: T | None = None  # Right middle cheek
-    # r_ext_eyebrow: T | None = None  # Right exterior eyebrow, right middle eyebrow
-
-
+    # RIGHT FACE SET
+    r_eye_exterior: T | None = None  # Right eye exterior
+    r_temple: T | None = None  # Right temple
+    r_mid_chin: T | None = None  # Right middle chin
+    r_up_lip: T | None = None  # Right upper lip
+    r_ext_nostril: T | None = None # Exterior right nostril
+    r_mid_cheek: T | None = None # Middle right cheek
+    r_mid_eyebrow: T | None = None  # Middle right eyebrow
+    r_ext_eyebrow: T | None = None  # Right exterior eyebrow
+    r_ext_lips: T | None = None  # Exterior right lips
+    r_jaw_angle: T | None = None  # Right jaw angle
+    r_mid_ext_face: T | None = None # Right middle exterior face
+    r_int_eyebrow: T | None = None # Interor right eyebrow
+    r_mid_jaw: T | None = None # Middle right jaw
+    r_mid_bot_eyelid: T | None = None # Right eye middle bottom eyelid
+    r_ext_mouth: T | None = None  # Right exterior mouth
+    r_top_eyelid: T | None = None # Right eye middle top eyelid
+    r_eye_int: T | None = None # Right eye interior
+    r_pupil: T | None = None # Right pupil
 
 
 
@@ -367,7 +362,7 @@ CACHE_HANDS_POSITION: list[str] = HANDS_POSITION.getActiveFields()
 @dataclass
 class DataGestures(Gestures[list[float] | None]):
     @classmethod
-    def buildFromHandLandmarkerResult(
+    def buildFromLandmarkerResult(
         cls,
         landmark_result: HandLandmarkerResult | None = None,
         facemark_result: FaceLandmarkResult | None = None,
@@ -464,13 +459,62 @@ class DataGestures(Gestures[list[float] | None]):
                             ],
                         )
 
-            if facemark_result is not None:
-                pass
+        if facemark_result is not None and len(facemark_result.multi_face_landmarks) > 0:
+            face_points: NormalizedLandmarkList = facemark_result.multi_face_landmarks[0].landmark
 
-            if bodymark_result is not None:
-                pass
+            self.m_nose_point = landmark_to_list(face_points[1])
+            self.m_top_nose = landmark_to_list(face_points[6])
+            self.m_eyebrows = landmark_to_list(face_points[9])
+            self.m_forehead = landmark_to_list(face_points[10])
+            self.m_top_chin = landmark_to_list(face_points[18])
+            self.m_bot_up_lip = landmark_to_list(face_points[13])
+            self.m_top_low_lip = landmark_to_list(face_points[14])
+            self.m_bot_nose = landmark_to_list(face_points[141])
+            self.m_chin = landmark_to_list(face_points[152])
+            self.m_nose = landmark_to_list(face_points[197])
 
-            return self
+            self.l_eye_exterior = landmark_to_list(face_points[7])
+            self.l_temple = landmark_to_list(face_points[21])
+            self.l_mid_chin = landmark_to_list(face_points[32])
+            self.l_up_lip = landmark_to_list(face_points[39])
+            self.l_ext_nostril = landmark_to_list(face_points[48])
+            self.l_mid_cheek = landmark_to_list(face_points[50])
+            self.l_mid_eyebrow = landmark_to_list(face_points[52])
+            self.l_ext_eyebrow = landmark_to_list(face_points[53])
+            self.l_ext_lips = landmark_to_list(face_points[57])
+            self.l_jaw_angle = landmark_to_list(face_points[58])
+            self.l_mid_ext_face = landmark_to_list(face_points[93])
+            self.l_int_eyebrow = landmark_to_list(face_points[107])
+            self.l_mid_jaw = landmark_to_list(face_points[136])
+            self.l_mid_bot_eyelid = landmark_to_list(face_points[145])
+            self.l_ext_mouth = landmark_to_list(face_points[146])
+            self.l_top_eyelid = landmark_to_list(face_points[159])
+            self.l_eye_int = landmark_to_list(face_points[173])
+            self.l_pupil = landmark_to_list(face_points[468])
+
+            self.r_eye_exterior = landmark_to_list(face_points[359])
+            self.r_temple = landmark_to_list(face_points[251])
+            self.r_mid_chin = landmark_to_list(face_points[262])
+            self.r_up_lip = landmark_to_list(face_points[269])
+            self.r_ext_nostril = landmark_to_list(face_points[331])
+            self.r_mid_cheek = landmark_to_list(face_points[280])
+            self.r_mid_eyebrow = landmark_to_list(face_points[283])
+            self.r_ext_eyebrow = landmark_to_list(face_points[282])
+            self.r_ext_lips = landmark_to_list(face_points[273])
+            self.r_jaw_angle = landmark_to_list(face_points[288])
+            self.r_mid_ext_face = landmark_to_list(face_points[323])
+            self.r_int_eyebrow = landmark_to_list(face_points[336])
+            self.r_mid_jaw = landmark_to_list(face_points[365])
+            self.r_mid_bot_eyelid = landmark_to_list(face_points[374])
+            self.r_ext_mouth = landmark_to_list(face_points[287])
+            self.r_top_eyelid = landmark_to_list(face_points[386])
+            self.r_eye_int = landmark_to_list(face_points[398])
+            self.r_pupil = landmark_to_list(face_points[473])
+
+        if bodymark_result is not None:
+            pass
+
+        return self
 
     def setPointTo(self, point_field_name: str, x: float, y: float, z: float) -> Self:
         setattr(self, point_field_name, [x, y, z])
@@ -540,6 +584,17 @@ class DataGestures(Gestures[list[float] | None]):
         # print(self, "\n")
         # print(tmp, "\n\n")
         return tmp
+
+    def getPoints(self, valid_fields: list[str] = FIELDS) -> list[list[float] | None]:
+        """Get the points in a list of list.
+
+        Args:
+            valid_fields (list[str], optional): Let you pick which fields should be returned. Defaults to None (All point affected).
+
+        Returns:
+            list[list[float] | None]: _description_
+        """
+        return [getattr(self, field_name) for field_name in valid_fields]
 
     def toNumpy(self, valid_fields: list[str] = FIELDS) -> NDArray[np.float32]:
         return np.array(self.get1DArray(valid_fields), dtype=np.float32)

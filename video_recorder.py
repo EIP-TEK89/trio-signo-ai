@@ -111,14 +111,16 @@ while True:
 
         result, _ = track_hand(frame, handland_marker)
 
+        face_result = None
         if args.face:
             frame, face_result = track_face(frame)
 
+        body_result = None
         if args.body:
             frame, body_result = track_body(frame)
 
         frame = draw_land_marks(frame, result)
-        frame_history.insert_gesture_from_landmarks(0, result)
+        frame_history.insertGestureFromLandmarks(0, result, face_result, body_result)
 
         while len(frame_history.gestures) > sign_rec.info.memory_frame:
             frame_history.gestures.pop(-1)
@@ -142,7 +144,7 @@ while True:
 
         if is_recording:
             out.write(frame)
-            data_sample.insert_gesture_from_landmarks(0, result)
+            data_sample.insertGestureFromLandmarks(0, result)
             cv2.putText(frame, "Recording...", (10, 40),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
@@ -175,10 +177,10 @@ while True:
                 if counter_example:
                     os.makedirs(f"{save_folder}{
                                 video_label}/counter_example", exist_ok=True)
-                    data_sample.to_json_file(
+                    data_sample.toJsonFile(
                         f"{save_folder}{video_label}/counter_example/{file_name}.json")
                 else:
-                    data_sample.to_json_file(
+                    data_sample.toJsonFile(
                         f"{save_folder}{video_label}/{file_name}.json")
                 update_json(label_json_path, {
                             "filename": file_name, "label": video_label})
@@ -220,21 +222,21 @@ while True:
                             "filename": file_name, "label": image_label})
 
                 result, _ = track_hand(og_frame, handland_marker)
-                image_sample.insert_gesture_from_landmarks(0, result)
+                image_sample.insertGestureFromLandmarks(0, result, face_result, body_result)
                 if counter_example:
 
                     os.makedirs(f"{save_folder}{image_label}/counter_example", exist_ok=True)
-                    image_sample.to_json_file(f"{save_folder}{image_label}/counter_example/{file_name}.json")
-                    if args.face:
-                        save_face_points_to_json(face_result, save_folder, image_label)
-                    if args.body:
-                        save_body_points_to_json(body_result, save_folder, image_label)
+                    image_sample.toJsonFile(f"{save_folder}{image_label}/counter_example/{file_name}.json")
+                    # if args.face:
+                    #     save_face_points_to_json(face_result, save_folder, image_label)
+                    # if args.body:
+                    #     save_body_points_to_json(body_result, save_folder, image_label)
                 else:
-                    image_sample.to_json_file(f"{save_folder}{image_label}/{file_name}.json")
-                    if args.face:
-                        save_face_points_to_json(face_result, save_folder, image_label)
-                    if args.body:
-                        save_body_points_to_json(body_result, save_folder, image_label)
+                    image_sample.toJsonFile(f"{save_folder}{image_label}/{file_name}.json")
+                    # if args.face:
+                    #     save_face_points_to_json(face_result, save_folder, image_label)
+                    # if args.body:
+                    #     save_body_points_to_json(body_result, save_folder, image_label)
 
 record.release()
 if out:

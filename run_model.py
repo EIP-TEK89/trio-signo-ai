@@ -153,7 +153,7 @@ if __name__ == '__main__':
             handtrack_times.pop(0)
         handtrack_time = sum(handtrack_times) / len(handtrack_times)
 
-        frame_history.insert_gesture_from_landmarks(0, hand_landmarks)
+        frame_history.insertGestureFromLandmarks(0, hand_landmarks)
         while len(frame_history.gestures) > sign_rec.info.memory_frame:
             frame_history.gestures.pop(-1)
 
