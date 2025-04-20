@@ -30,16 +30,19 @@ parser.add_argument("--model", required=True, help="Path to the folder containin
 parser.add_argument("--counter-example", action='store_true', help="Will save the sign as a counter example of the label set in --label.")
 parser.add_argument("--face", action='store_true', help="Enable face tracking.")
 parser.add_argument("--body", action='store_true', help="Enable body tracking.")
+
 args = parser.parse_args()
 
 video_label = args.label
 counter_example = args.counter_example
 
 print("Loading sign recognition model...")
-sign_rec: SignRecognizerTransformer = SignRecognizerTransformer.loadModelFromDir(args.model)
+sign_rec: SignRecognizerTransformer = SignRecognizerTransformer.loadModelFromDir(
+    args.model)
 
 print("Loading hand landmarker...")
 handland_marker = load_hand_landmarker(2)
+
 
 def list_available_cameras(max_cameras=10):
     available_cameras = []
@@ -49,6 +52,7 @@ def list_available_cameras(max_cameras=10):
             available_cameras.append(i)
             cap.release()
     return available_cameras
+
 
 available_cameras = list_available_cameras()
 print(available_cameras)
@@ -76,13 +80,16 @@ Any key: Screenshot
 Tab: Edit
 Esc: Quit"""
 
+
 def create_instruction_image():
     instruction_image = np.zeros((frame_height, 300, 3), dtype=np.uint8)
     y0, dy = 50, 30
     for i, line in enumerate(instructions.split('\n')):
         y = y0 + i * dy
-        cv2.putText(instruction_image, line, (10, y), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
+        cv2.putText(instruction_image, line, (10, y),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
     return instruction_image
+
 
 def update_json(json_path, file_info):
     with open(json_path, 'r') as f:
@@ -90,6 +97,7 @@ def update_json(json_path, file_info):
     data.append(file_info)
     with open(json_path, 'w') as f:
         json.dump(data, f, indent=4)
+
 
 while True:
     if not is_croping:
@@ -135,7 +143,8 @@ while True:
         if is_recording:
             out.write(frame)
             data_sample.insert_gesture_from_landmarks(0, result)
-            cv2.putText(frame, "Recording...", (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            cv2.putText(frame, "Recording...", (10, 40),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
         instruction_image = create_instruction_image()
         combined_frame = np.hstack((frame, instruction_image))
@@ -157,17 +166,22 @@ while True:
                         json.dump([], f)
 
                 output_file = os.path.join(full_save_path, file_name)
-                out = cv2.VideoWriter(output_file, fourcc, FPS, (frame_width, frame_height))
+                out = cv2.VideoWriter(
+                    output_file, fourcc, FPS, (frame_width, frame_height))
                 is_recording = True
             else:
                 is_recording = False
                 out.release()
                 if counter_example:
-                    os.makedirs(f"{save_folder}{video_label}/counter_example", exist_ok=True)
-                    data_sample.to_json_file(f"{save_folder}{video_label}/counter_example/{file_name}.json")
+                    os.makedirs(f"{save_folder}{
+                                video_label}/counter_example", exist_ok=True)
+                    data_sample.to_json_file(
+                        f"{save_folder}{video_label}/counter_example/{file_name}.json")
                 else:
-                    data_sample.to_json_file(f"{save_folder}{video_label}/{file_name}.json")
-                update_json(label_json_path, {"filename": file_name, "label": video_label})
+                    data_sample.to_json_file(
+                        f"{save_folder}{video_label}/{file_name}.json")
+                update_json(label_json_path, {
+                            "filename": file_name, "label": video_label})
 
         elif key == TAB:
             is_croping = True
@@ -202,11 +216,13 @@ while True:
             if remaining_delay <= 0:
                 countdown_active = False
                 cv2.imwrite(output_file, og_frame)
-                update_json(label_json_path, {"filename": file_name, "label": image_label})
+                update_json(label_json_path, {
+                            "filename": file_name, "label": image_label})
 
                 result, _ = track_hand(og_frame, handland_marker)
                 image_sample.insert_gesture_from_landmarks(0, result)
                 if counter_example:
+
                     os.makedirs(f"{save_folder}{image_label}/counter_example", exist_ok=True)
                     image_sample.to_json_file(f"{save_folder}{image_label}/counter_example/{file_name}.json")
                     if args.face:
