@@ -314,6 +314,100 @@ HANDS_VELOCITY: ActiveGestures = ActiveGestures.buildWithPreset(
 HANDS_FULL: ActiveGestures = ActiveGestures.buildWithPreset(
     [LEFT_HAND_FULL, RIGHT_HAND_FULL]
 )
+
+LEFT_BODY_POINTS : ActiveGestures = ActiveGestures(
+    l_shoudler=True,
+    l_elbow=True,
+    l_hip=True,
+    l_knee=True,
+    l_ankle=True,
+    l_wrist=True
+)
+
+RIGHT_BODY_POINTS : ActiveGestures = ActiveGestures(
+    r_shoudler=True,
+    r_elbow=True,
+    r_hip=True,
+    r_knee=True,
+    r_ankle=True,
+    r_wrist=True
+)
+
+BODY_POINTS : ActiveGestures = ActiveGestures.buildWithPreset(
+    [LEFT_BODY_POINTS, RIGHT_BODY_POINTS]
+)
+
+MID_FACE_POINTS: ActiveGestures = ActiveGestures(
+    m_nose_point=True,
+    m_top_nose=True,
+    m_eyebrows=True,
+    m_forehead=True,
+    m_top_chin=True,
+    m_bot_up_lip=True,
+    m_top_low_lip=True,
+    m_bot_nose=True,
+    m_chin=True,
+    m_nose=True
+)
+
+LEFT_FACE_POINTS: ActiveGestures = ActiveGestures(
+    l_eye_exterior=True,
+    l_temple=True,
+    l_mid_chin=True,
+    l_up_lip=True,
+    l_ext_nostril=True,
+    l_mid_cheek=True,
+    l_mid_eyebrow=True,
+    l_ext_eyebrow=True,
+    l_ext_lips=True,
+    l_jaw_angle=True,
+    l_mid_ext_face=True,
+    l_int_eyebrow=True,
+    l_mid_jaw=True,
+    l_mid_bot_eyelid=True,
+    l_ext_mouth=True,
+    l_top_eyelid=True,
+    l_eye_int=True,
+    l_pupil=True
+)
+
+RIGHT_FACE_POINTS: ActiveGestures = ActiveGestures(
+    r_eye_exterior=True,
+    r_temple=True,
+    r_mid_chin=True,
+    r_up_lip=True,
+    r_ext_nostril=True,
+    r_mid_cheek=True,
+    r_mid_eyebrow=True,
+    r_ext_eyebrow=True,
+    r_ext_lips=True,
+    r_jaw_angle=True,
+    r_mid_ext_face=True,
+    r_int_eyebrow=True,
+    r_mid_jaw=True,
+    r_mid_bot_eyelid=True,
+    r_ext_mouth=True,
+    r_top_eyelid=True,
+    r_eye_int=True,
+    r_pupil=True
+)
+
+FACE_POINTS: ActiveGestures = ActiveGestures.buildWithPreset(
+    [LEFT_FACE_POINTS, RIGHT_FACE_POINTS]
+)
+
+HANDS_BODY_POINTS: ActiveGestures = ActiveGestures.buildWithPreset(
+    [HANDS_POINTS, BODY_POINTS]
+)
+
+HANDS_FACE_POINTS: ActiveGestures = ActiveGestures.buildWithPreset(
+    [HANDS_POINTS, FACE_POINTS]
+)
+
+HANDS_BODY_FACE_POINTS: ActiveGestures = ActiveGestures.buildWithPreset(
+    [HANDS_POINTS, BODY_POINTS, FACE_POINTS]
+)
+
 ALL_GESTURES: ActiveGestures = ActiveGestures()
 ALL_GESTURES.activateAllGesture()
 
