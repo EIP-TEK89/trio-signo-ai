@@ -1,13 +1,8 @@
 from datetime import datetime
 import mediapipe as mp
 import json
-import time
 import cv2
 import os
-import argparse
-
-FPS = 30
-JSON_DIR = "datasets/face_data"
 
 IMPORTANT_LANDMARKS = set(
 
@@ -61,78 +56,64 @@ IMPORTANT_LANDMARKS = set(
     list(range(473, 474)) # Right pupil
 )
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--label', type=str, required=True, help='Label for the gesture')
-args = parser.parse_args()
-
-os.makedirs(JSON_DIR, exist_ok=True)
-
-cap = cv2.VideoCapture(0)
-gestures = []
-frame_interval = 1.0 / FPS
-
 mp_face_mesh = mp.solutions.face_mesh
+_face_mesh = None
 
-with mp_face_mesh.FaceMesh(
-    static_image_mode=False,
-    max_num_faces=1,
-    refine_landmarks=True,
-    min_detection_confidence=0.5,
-    min_tracking_confidence=0.5
-) as face_mesh:
+def get_face_mesh():
+    global _face_mesh
+    if _face_mesh is None:
+        _face_mesh = mp_face_mesh.FaceMesh(
+            static_image_mode=False,
+            max_num_faces=1,
+            refine_landmarks=True,
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5
+        )
+    return _face_mesh
 
-    last_frame_time = time.time()
+def track_face(frame):
+    face_mesh = get_face_mesh()
+    results = face_mesh.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    if not results.multi_face_landmarks:
+        return frame, {}
 
-    while cap.isOpened():
-        current_time = time.time()
-        if current_time - last_frame_time < frame_interval:
-            continue
-        last_frame_time = current_time
+    face_landmarks = results.multi_face_landmarks[0]
+    height, width, _ = frame.shape
+    points = {}
+    for idx, lm in enumerate(face_landmarks.landmark):
+        if idx in IMPORTANT_LANDMARKS:
+            points[str(idx)] = {'x': lm.x, 'y': lm.y, 'z': lm.z}
+            cx, cy = int(lm.x * width), int(lm.y * height)
+            cv2.circle(frame, (cx, cy), 2, (255, 0, 0), -1)
 
-        ret, frame = cap.read()
-        if not ret:
-            break
+    return frame, points
 
-        frame = cv2.flip(frame, 1)
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = face_mesh.process(rgb_frame)
-
-        if results.multi_face_landmarks:
-            for face_landmarks in results.multi_face_landmarks:
-                height, width, _ = frame.shape
-
-                points = {
-                    f"face_{idx}": [
-                        landmark.x,
-                        landmark.y,
-                        landmark.z
-                    ]
-                    for idx, landmark in enumerate(face_landmarks.landmark)
-                    if idx in IMPORTANT_LANDMARKS
-                }
-
-                gestures.append(points)
-
-                for pt in points.values():
-                    cx, cy = int(pt[0] * width), int(pt[1] * height)
-                    cv2.circle(frame, (cx, cy), 2, (0, 255, 0), -1)
-
-        cv2.imshow('Face recording', frame)
-        if cv2.waitKey(1) & 0xFF == 27:  # ESC key
-            break
-
-cap.release()
-cv2.destroyAllWindows()
-
-if gestures:
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    json_data = {
-        "label": args.label,
-        "gestures": gestures,
-        "framerate": FPS,
-        "mirrorable": False
+def adapt_landmarks_to_json(points):
+    adapted_points = {
+        str(idx): [pt['x'], pt['y'], pt['z']] for idx, pt in points.items()
     }
-    json_path = os.path.join(JSON_DIR, f"face_points_{args.label}_{timestamp}.json")
+    return adapted_points
+
+def save_face_points_to_json(points_data, output_dir, label, framerate=30, mirrorable=True, invalid=False):
+    final_dir = os.path.join(output_dir, label)
+    os.makedirs(final_dir, exist_ok=True)
+
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    json_path = os.path.join(final_dir, f'{label}_face_points_{timestamp}.json')
+
+    gestures = []
+
+    gestures.append(adapt_landmarks_to_json(points_data))
+
+    data = {
+        'label': label,
+        'gestures': gestures,
+        'framerate': framerate,
+        'mirrorable': mirrorable,
+        'invalid': invalid
+    }
+
     with open(json_path, 'w') as f:
-        json.dump(json_data, f, indent=4)
-    print(f"✅ JSON saved at {json_path}")
+        json.dump(data, f, indent=0)
+
+    print(f"✅ JSON saved to {json_path}")
