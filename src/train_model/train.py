@@ -94,7 +94,7 @@ def triplet_margin_train_epoch(model: SignRecognizerTransformer,
     num_batches: int = 0
     inputs: torch.Tensor
     labels: torch.Tensor
-    print(len(dataloader))
+    # print(len(dataloader))
     for inputs, labels in dataloader:
         inputs, labels = inputs.to(model.device), labels.to(model.device)
         anchor_emb: torch.Tensor = model.getEmbeddings(inputs)
@@ -115,7 +115,8 @@ def triplet_margin_train_epoch(model: SignRecognizerTransformer,
         total_loss += loss.item()
         num_batches += 1
         train_epoch_optimize(optimizer, loss)
-        print(num_batches, len(dataloader))
+        print("\r", num_batches, len(dataloader), end="")
+    print()
 
     return total_loss / num_batches
 
@@ -263,22 +264,22 @@ def train_model(model: SignRecognizerTransformer,
 
     confused_run: bool = False
     counter_example_run: bool = False
-
-    def confused_pos_neg_pair(
-            model: SignRecognizerTransformer,
-            anchor_label: list[int],
-            anchor_embeddings: torch.Tensor,
-            anchor_outputs: list[int]) -> TensorPair | None:
-        return confused_sets.getConfusedSamplePosNegPair(model, anchor_label,
-                                                         anchor_embeddings, anchor_outputs)
-
-    def counter_example_pair(
-            model: SignRecognizerTransformer,
-            non_counter_label: list[int],
-            anchor_embeddings: torch.Tensor,
-            anchor_outputs: list[int]) -> TensorPair | None:
-        return confused_sets.getCounterExamplePosNegPair(model, non_counter_label,
-                                                         anchor_embeddings, anchor_outputs)
+    #
+    # def confused_pos_neg_pair(
+    #         model: SignRecognizerTransformer,
+    #         anchor_label: list[int],
+    #         anchor_embeddings: torch.Tensor,
+    #         anchor_outputs: list[int]) -> TensorPair | None:
+    #     return confused_sets.getConfusedSamplePosNegPair(model, anchor_label,
+    #                                                      anchor_embeddings, anchor_outputs)
+    #
+    # def counter_example_pair(
+    #         model: SignRecognizerTransformer,
+    #         non_counter_label: list[int],
+    #         anchor_embeddings: torch.Tensor,
+    #         anchor_outputs: list[int]) -> tuple[TensorPair, list[bool]] | None:
+    #     return confused_sets.getCounterExamplePosNegPair(model, non_counter_label,
+                                                         # anchor_embeddings, anchor_outputs)
 
     for epoch in range(num_epochs):
         cumulated_loss: int = 1
