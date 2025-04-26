@@ -40,7 +40,7 @@ while True:
     result, _ = track_hand(frame, hand_landmarker)
     frame = draw_land_marks(frame, result)
 
-    frame_history.insert_gesture_from_landmarks(0, result)
+    frame_history.insertGestureFromLandmarks(0, result)
     while len(frame_history.gestures) > sign_rec.info.memory_frame:
         frame_history.gestures.pop(-1)
     if sign_rec.info.one_side:

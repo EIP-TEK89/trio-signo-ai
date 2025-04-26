@@ -374,7 +374,7 @@ def main():
     print("Total unique sample created: ", train_data.getNumberOfSamples())
     print("Saving dataset...")
     train_data.toCborFile(f"./{dataset_name}.cbor")
-    # train_data.to_json_file(f"./{dataset_name}.json", indent=4)
+    # train_data.toJsonFile(f"./{dataset_name}.json", indent=4)
 
 # import cProfile
 

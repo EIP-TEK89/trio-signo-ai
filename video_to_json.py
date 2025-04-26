@@ -41,7 +41,7 @@ for video_file in os.listdir(videos_dir):
             else:
                 # End of video
                 break
-        data_sample.to_json_file(f"datasets/{label}/{video_file}.json")
+        data_sample.toJsonFile(f"datasets/{label}/{video_file}.json")
 
         # Release the video capture object and close display window
         cap.release()

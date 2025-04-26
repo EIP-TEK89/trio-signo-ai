@@ -7,7 +7,7 @@ import torch
 import numpy as np
 from numpy.typing import NDArray
 from typing import Self, cast
-from src.gesture import DataGestures, FIELD_DIMENSION, FIELDS, default_device
+from src.gesture import DataGestures, FIELD_DIMENSION, FIELDS, default_device, FaceLandmarkResult
 
 
 def clamp(value: float, min_value: float, max_value: float):
@@ -79,6 +79,7 @@ class DataSample2:
     def toDict(self) -> dict[str, object]:
         tmp: dict[str, object] = copy.deepcopy(self).__dict__
         tmp["gestures"] = [gesture.__dict__ for gesture in self.gestures]
+        # print(tmp["gestures"])
         return tmp
 
     def toJsonFile(self, file_path: str, indent: bool = False):
@@ -131,12 +132,15 @@ class DataSample2:
             raw_data.extend(gesture.get1DArray(valid_fields))
         return raw_data
 
-    def insert_gesture_from_landmarks(
-        self, position: int, hand_landmarks: HandLandmarkerResult
+    def insertGestureFromLandmarks(
+        self, position: int,
+        handmark: HandLandmarkerResult = None,
+        facemark: FaceLandmarkResult = None,
+        bodymark: object = None
     ) -> Self:
         self.gestures.insert(
-            position, DataGestures.buildFromHandLandmarkerResult(
-                hand_landmarks)
+            position, DataGestures.buildFromLandmarkerResult(
+                handmark, facemark, bodymark)
         )
         self.computeHandVelocity()
         return self

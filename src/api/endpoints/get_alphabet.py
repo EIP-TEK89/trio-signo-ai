@@ -99,7 +99,7 @@ def get_alphabet(hand_tracker: HandLandmarker, alphabet_recognizer: SignRecogniz
         if sample_history.get(ip) is None:
             sample_history[ip] = DataSample2("", [])
 
-        sample_history[ip].insert_gesture_from_landmarks(0, recognition_result)
+        sample_history[ip].insertGestureFromLandmarks(0, recognition_result)
         while len(sample_history[ip].gestures) > alphabet_recognizer.info.memory_frame:
             sample_history[ip].gestures.pop(-1)
         if alphabet_recognizer.info.one_side:
