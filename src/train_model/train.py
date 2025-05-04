@@ -61,7 +61,9 @@ def cross_entropy_train_epoch(model: SignRecognizerTransformer,
         total_loss += loss.item()
         num_batches += 1
         accuracy_calculator.calculate_accuracy(outputs, labels)
+        print("\rCross Entropy loss batch:", num_batches, "/", len(dataloader), end="")
 
+    print()
     return total_loss / num_batches, accuracy_calculator
 
 
@@ -114,8 +116,8 @@ def triplet_margin_train_epoch(model: SignRecognizerTransformer,
             anchor_emb[mask], positive[mask], negative[mask])
         total_loss += loss.item()
         num_batches += 1
-        train_epoch_optimize(optimizer, loss)
-        print("\r", num_batches, len(dataloader), end="")
+        train_epoch_optimize(optimizer, loss * 0.001)
+        print("\rTriple Margin loss batch:", num_batches, "/", len(dataloader), end="")
     print()
 
     return total_loss / num_batches

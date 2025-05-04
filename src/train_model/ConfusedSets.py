@@ -6,6 +6,7 @@ import torch
 
 from src.model_class.transformer_sign_recognizer import SignRecognizerTransformer
 from src.datasamples import DataSamplesTensors, DataSamplesInfo, TensorPair
+from src.gesture import default_device
 
 
 def getConfusingPairIds(info: DataSamplesInfo, confusing_pair: dict[str, str]) -> dict[int, int]:
@@ -26,12 +27,13 @@ class ConfusedSets:
     """
     confusing_pair: dict[int, int]
     tensors: dict[int, torch.Tensor]
-    counter_examples: dict[int, torch.Tensor]
-    tensors_embeddings: dict[int, torch.Tensor]
     null_embeddings: torch.Tensor | None = None
     null_label_id: int | None = None
 
-    def __init__(self, dst: DataSamplesTensors, confusing_pair: dict[int, int] | None = None):
+    def __init__(self,
+                 dst: DataSamplesTensors,
+                 confusing_pair: dict[int, int] | None = None,
+                 device: torch.device | None = None):
         self.confusing_pair = confusing_pair if confusing_pair is not None else dict()
         self.tensors = dict()
         self.counter_examples = dict()
@@ -48,10 +50,13 @@ class ConfusedSets:
         for i in range(len(dst.info.labels)):
             tensor: torch.Tensor | None = dst.getCounterExampleTensorOfLabel(i)
             if tensor is not None:
-                self.counter_examples[i] = tensor
+                self.tensors[-i] = tensor
                 # Adding the non counter example to the tensors if not already present
                 if i not in self.tensors:
                     self.tensors[i] = dst.getTensorsOfLabel(i)
+
+        for key, val in self.tensors.items():
+            self.tensors[key] = val.to(default_device(device))
 
     def getConfusedSamplesTensor(self) -> TensorPair | None:
         if len(self.tensors) == 0:
@@ -85,27 +90,34 @@ class ConfusedSets:
             Label_ids shape: [samples, corresponding label_id]\n
             Samples          Label_ids
             [                [
-              // First all the counter examples
+              // Counter examples and then valid samples alternating
               [sample, ...]    [-1, ...]
-              [sample, ...]    [-2, ...]
-              // Then counter example's valid samples
               [sample, ...]    [1, ...]
+              [sample, ...]    [-2, ...]
               [sample, ...]    [2, ...]
             ]                ]
 
             Returns None if there are no counter examples.
         """
         labels: list[torch.Tensor] = []
-        valid_samples: list[torch.Tensor] = []
-        for key, val in self.counter_examples.items():
-            labels.append(torch.full((val.shape[0],), -key))
-        for key in self.counter_examples.keys():
-            labels.append(torch.full((self.tensors[key].shape[0], ), key))
-            valid_samples.append(self.tensors[key])
+        samples: list[torch.Tensor] = []
+        for key, val in self.tensors.items():
+            if key < 0:
+                labels.append(torch.full((val.shape[0],), key))
+                samples.append(val)
+                labels.append(torch.full((self.tensors[abs(key)].shape[0],), abs(key)))
+                samples.append(self.tensors[abs(key)])
+
         if len(labels) == 0:
             return None
-        samples: list[torch.Tensor] = list(
-            self.counter_examples.values()) + valid_samples
+        # Shuffle samples and labels together
+        # combined = list(zip(samples, labels))
+        # random.shuffle(combined)
+        # samples, labels = zip(*combined)
+        #second shuffle
+        # indices = torch.randperm(samples.size(0))
+        # samples = samples[indices]
+        # labels = labels[indices]
         return (torch.cat(samples), torch.cat(labels))
 
     def get_sample(self,
@@ -218,6 +230,7 @@ class ConfusedSets:
         mask: list[bool] = []
 
         # print(anchor_embeddings.shape)
+        sample_embeddings: dict[int, torch.Tensor] = {}
         for i, anchor_label_id in enumerate(anchor_labels):
             label_id_to_compare: int = anchor_label_id
             # If the label_id is negative (which happens if the sample is a counter example)
@@ -225,27 +238,47 @@ class ConfusedSets:
             if label_id_to_compare < 0:
                 label_id_to_compare = self.null_label_id
             # If the model properly classified the sample we skip it
-            if anchor_outputs[i] == label_id_to_compare:
-                mask.append(False)
-                positive_samples.append(anchor_embeddings[0])
-                negative_samples.append(anchor_embeddings[0])
-                continue
+            # if anchor_outputs[i] == label_id_to_compare:
+            #     mask.append(False)
+            #     positive_samples.append(anchor_embeddings[0])
+            #     negative_samples.append(anchor_embeddings[0])
+            #     continue
             mask.append(True)
 
-            valid_sample: torch.Tensor | None = self.getRandomSample(
-                abs(anchor_label_id), False)
-            counter_sample: torch.Tensor | None = self.getRandomSample(
-                abs(anchor_label_id), True)
+            # if abs(anchor_label_id) not in sample_embeddings:
+            #     sample_embeddings[anchor_label_id] = model.getEmbeddings(
+            #         self.tensors[anchor_label_id])
+            # if -abs(anchor_label_id) not in sample_embeddings:
+            #     sample_embeddings[-abs(anchor_label_id)] = model.getEmbeddings(
+            #         self.tensors[-abs(anchor_label_id)])
+
+            # valid_sample: torch.Tensor | None = random.choice(
+            #     sample_embeddings[anchor_label_id])
+            # counter_sample: torch.Tensor | None = random.choice(
+            #     sample_embeddings[-abs(anchor_label_id)])
+
+            print(self.tensors[anchor_label_id].shape, self.tensors[-abs(anchor_label_id)].shape)
+            valid_samples: torch.Tensor = model.getEmbeddings(self.tensors[anchor_label_id])
+            invalid_samples: torch.Tensor = model.getEmbeddings(self.tensors[-abs(anchor_label_id)])
+
+
+            valid_sample: torch.Tensor = random.choice(valid_samples)
+            counter_sample: torch.Tensor = random.choice(invalid_samples)
+            del valid_samples
+            del invalid_samples
 
             assert valid_sample is not None, "Valid sample is None"
             assert counter_sample is not None, "Counter sample is None"
+            valid_sample = valid_sample.to(model.device)
+            counter_sample = counter_sample.to(model.device)
+            print(valid_sample.shape, counter_sample.shape)
 
             if anchor_label_id < 0:
-                positive_samples.append(model.getEmbeddings(counter_sample)[0])
-                negative_samples.append(model.getEmbeddings(valid_sample)[0])
+                positive_samples.append(counter_sample)
+                negative_samples.append(valid_sample)
             else:
-                positive_samples.append(model.getEmbeddings(valid_sample)[0])
-                negative_samples.append(model.getEmbeddings(counter_sample)[0])
+                positive_samples.append(valid_sample)
+                negative_samples.append(counter_sample)
 
         if len(positive_samples) == 0 or len(negative_samples) == 0:
             return None

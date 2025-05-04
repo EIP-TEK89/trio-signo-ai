@@ -54,7 +54,7 @@ def init_train_set(args: Args,
 
     print("Preparing confused labels...", end="", flush=True)
     confused_sets: ConfusedSets = ConfusedSets(
-        train_data, args.confusing_label)
+        train_data, args.confusing_label, args.device)
     print("[DONE]")
 
     print("Balancing class weight...", end="", flush=True)
@@ -83,7 +83,7 @@ def init_train_set(args: Args,
     print("[DONE]")
 
     print("Converting confused labels to tensor...", end="", flush=True)
-    if args.embedding_optimization_thresold >= 0:
+    if args.embedding_optimization_threshold >= 0:
         confuse_tensor: TensorPair | None = confused_sets.getConfusedSamplesTensor()
         if confuse_tensor is not None:
             dataloaders.confusion = DataLoader(SignRecognizerTransformerDataset(
@@ -94,7 +94,7 @@ def init_train_set(args: Args,
     else:
         print("[SKIPPED]")
 
-    if args.embedding_optimization_thresold >= 0:
+    if args.embedding_optimization_threshold >= 0:
         print("Converting counter examples to tensor...", end="", flush=True)
         counter_tensor: TensorPair | None = confused_sets.getCounterExamplesTensor()
         if counter_tensor is not None:
