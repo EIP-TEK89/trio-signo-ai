@@ -451,6 +451,19 @@ class DataSamplesTensors:
                     tensors.append(counter_examples)
         return torch.cat(tensors, dim=0)
 
+    def getLabelIdsWithCounterExample(self) -> list[int]:
+        """
+        Get the label ids with counter example.
+
+        Returns:
+            list[int]: The label ids with counter example.
+        """
+        label_ids: list[int] = []
+        for label_id in range(len(self.samples)):
+            if self.samples[label_id][IDX_INVALID_SAMPLE] is not None:
+                label_ids.append(label_id)
+        return label_ids
+
     def getCounterExampleTensorOfLabel(self, label_id: int) -> torch.Tensor | None:
         return self.samples[label_id][IDX_INVALID_SAMPLE]
 

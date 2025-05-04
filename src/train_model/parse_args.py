@@ -23,7 +23,9 @@ class Args:
     confusing_label: dict[str, str] = field(default_factory=dict)
     class_weights: dict[str, float] = field(default_factory=dict)
     batch_size: int = 32
-    embedding_optimization_thresold: float = 0.9
+    embedding_optimization_threshold: float = -1
+    embedding_optimization_alpha: float = 0.03
+    satisfactory_accuracy: float = 1
 
 
 def parse_args() -> Args:
@@ -130,12 +132,12 @@ def parse_args() -> Args:
         type=str,
         nargs=2)
     parser.add_argument(
-        '--embedding-optimization-thresold',
+        '--embedding-optimization-threshold',
         help="Activate the embedding optimization when the accuracy is higher than the set thresold.\n"
              "Admitted values are between 0 and 1.\n"
              "-1 disable this feature.",
         required=False,
-        default=args.embedding_optimization_thresold,
+        default=args.embedding_optimization_threshold,
         type=float)
 
     term_args: argparse.Namespace = parser.parse_args()
@@ -214,6 +216,6 @@ def parse_args() -> Args:
     if term_args.ff_dim is not None:
         args.ff_dim = int(term_args.ff_dim)
     args.batch_size = int(term_args.batch_size)
-    args.embedding_optimization_thresold = float(
-        term_args.embedding_optimization_thresold)
+    args.embedding_optimization_threshold = float(
+        term_args.embedding_optimization_threshold)
     return args
