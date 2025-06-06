@@ -81,24 +81,15 @@ from src.gesture import DataGestures
 def track_face(frame):
     face_mesh = get_face_mesh()
     results: NamedTuple = face_mesh.process(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-    # print(type(results), results, type(results["muti_face_landmarks"]))
     if not results.multi_face_landmarks:
         return frame, None
 
     gest: DataGestures = DataGestures.buildFromLandmarkerResult(facemark_result=results)
 
-    # print(gest)
-    # print(IMPORTANT_LANDMARKS)
     face_landmarks: NormalizedLandmarkList = results.multi_face_landmarks[0]
-    # print(dir(face_landmarks), vars(face_landmarks))
     height, width, _ = frame.shape
-    # points = {}
     for idx, lm in enumerate(gest.getPoints()):
-        # print(idx, lm)
         if lm is not None:
-            # print("ah", len(IMPORTANT_LANDMARKS))
-            # print(f"Landmark {type(idx)}: {lm.x}, {lm.y}, {lm.z}, {lm.presence}, {lm.visibility}")
-            # points[str(idx)] = {'x': lm[0], 'y': lm[1], 'z': lm[2]}
             cx, cy = int(lm[0] * width), int(lm[1] * height)
             cv2.circle(frame, (cx, cy), 5, (255, 0, 0), -1)
 

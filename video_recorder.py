@@ -9,20 +9,20 @@ from src.datasample import DataSample2
 from run_model import load_hand_landmarker, track_hand, draw_land_marks, recognize_sign
 from src.model_class.sign_recognizer_v1 import *
 from src.model_class.transformer_sign_recognizer import *
-from face_detection import track_face, save_face_points_to_json
-from body_detection import track_body, save_body_points_to_json
+from face_detection import track_face
+from body_detection import track_body
 
 ESC = 27
 SPACE = 32
 TAB = 9
 FPS = 30
 
-keys_index = {'a': 'caca', 'b': 'b', 'c': 'c', 'd': 'd', 'e': 'e', 'f': 'f', 'g': 'g', 'h': 'h', 'i': 'i', 'j': 'j',
+keys_index = {'a': 'a', 'b': 'b', 'c': 'c', 'd': 'd', 'e': 'e', 'f': 'f', 'g': 'g', 'h': 'h', 'i': 'i', 'j': 'j',
               'k': 'k', 'l': 'l', 'm': 'm', 'n': 'n', 'o': 'o', 'p': 'p', 'q': 'q', 'r': 'r', 's': 's', 't': 't',
               'u': 'u', 'v': 'v', 'w': 'w', 'x': 'x', 'y': 'y', 'z': 'z', '1': '1', '2': '2', '3': '3', '4': '4',
               '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', '0': '_null'}
 
-screenshot_delay = 0
+screenshot_delay = 1
 
 parser = argparse.ArgumentParser(description="Sign recognition with video recording.")
 parser.add_argument("--label", type=str, nargs="?", default="undefined", help="Label for the video files (default: undefined)")
@@ -218,8 +218,7 @@ while True:
             if remaining_delay <= 0:
                 countdown_active = False
                 cv2.imwrite(output_file, og_frame)
-                update_json(label_json_path, {
-                            "filename": file_name, "label": image_label})
+                update_json(label_json_path, {"filename": file_name, "label": image_label})
 
                 result, _ = track_hand(og_frame, handland_marker)
                 image_sample.insertGestureFromLandmarks(0, result, face_result, body_result)
@@ -227,16 +226,8 @@ while True:
 
                     os.makedirs(f"{save_folder}{image_label}/counter_example", exist_ok=True)
                     image_sample.toJsonFile(f"{save_folder}{image_label}/counter_example/{file_name}.json")
-                    # if args.face:
-                    #     save_face_points_to_json(face_result, save_folder, image_label)
-                    # if args.body:
-                    #     save_body_points_to_json(body_result, save_folder, image_label)
                 else:
                     image_sample.toJsonFile(f"{save_folder}{image_label}/{file_name}.json")
-                    # if args.face:
-                    #     save_face_points_to_json(face_result, save_folder, image_label)
-                    # if args.body:
-                    #     save_body_points_to_json(body_result, save_folder, image_label)
 
 record.release()
 if out:
