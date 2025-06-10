@@ -134,8 +134,8 @@ class DataSample2:
 
     def insertGestureFromLandmarks(
         self, position: int,
-        handmark: HandLandmarkerResult = None,
-        facemark: FaceLandmarkResult = None,
+        handmark: HandLandmarkerResult | None = None,
+        facemark: FaceLandmarkResult | None = None,
         bodymark: object = None
     ) -> Self:
         self.gestures.insert(

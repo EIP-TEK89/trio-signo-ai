@@ -3,6 +3,7 @@ import torch
 import mediapipe
 from dataclasses import dataclass, fields
 from typing import Generic, TypeVar, Self, final, cast, Sequence, NamedTuple
+import math
 
 import numpy as np
 from numpy.typing import NDArray
@@ -21,14 +22,27 @@ def default_device(device: torch.device | None = None) -> torch.device:
     return device if device is not None else torch.device("cpu")
 
 
-def landmark_to_list(landmark: Landmark) -> list[float]:
-    return [landmark.x, landmark.y, landmark.z]
+def landmark_to_list(landmark: Landmark) -> tuple[float, float, float]:
+    return (landmark.x, landmark.y, landmark.z)
+
 
 class FaceLandmarkResult(NamedTuple):
     multi_face_landmarks: list[NormalizedLandmarkList]
 
+
 class BodyLandmarkResult(NamedTuple):
     pose_landmarks: NormalizedLandmarkList
+
+
+def get_dist_between_points(
+    point1: tuple[float | None, float | None, float | None],
+    point2: tuple[float | None, float | None, float | None]
+) -> float | None:
+    if point1[0] is None or point1[1] is None or point1[2] is None or \
+            point2[0] is None or point2[1] is None or point2[2] is None:
+        return None
+    return math.dist(point1, point2)
+
 
 T = TypeVar("T")
 FIELD_DIMENSION: int = 3
@@ -129,20 +143,20 @@ class _Gestures(Generic[T]):
     r_temple: T | None = None  # Right temple
     r_mid_chin: T | None = None  # Right middle chin
     r_up_lip: T | None = None  # Right upper lip
-    r_ext_nostril: T | None = None # Exterior right nostril
-    r_mid_cheek: T | None = None # Middle right cheek
+    r_ext_nostril: T | None = None  # Exterior right nostril
+    r_mid_cheek: T | None = None  # Middle right cheek
     r_mid_eyebrow: T | None = None  # Middle right eyebrow
     r_ext_eyebrow: T | None = None  # Right exterior eyebrow
     r_ext_lips: T | None = None  # Exterior right lips
     r_jaw_angle: T | None = None  # Right jaw angle
-    r_mid_ext_face: T | None = None # Right middle exterior face
-    r_int_eyebrow: T | None = None # Interor right eyebrow
-    r_mid_jaw: T | None = None # Middle right jaw
-    r_mid_bot_eyelid: T | None = None # Right eye middle bottom eyelid
+    r_mid_ext_face: T | None = None  # Right middle exterior face
+    r_int_eyebrow: T | None = None  # Interor right eyebrow
+    r_mid_jaw: T | None = None  # Middle right jaw
+    r_mid_bot_eyelid: T | None = None  # Right eye middle bottom eyelid
     r_ext_mouth: T | None = None  # Right exterior mouth
-    r_top_eyelid: T | None = None # Right eye middle top eyelid
-    r_eye_int: T | None = None # Right eye interior
-    r_pupil: T | None = None # Right pupil
+    r_top_eyelid: T | None = None  # Right eye middle top eyelid
+    r_eye_int: T | None = None  # Right eye interior
+    r_pupil: T | None = None  # Right pupil
 
     l_shoudler: T | None = None  # Left shoulder
     l_elbow: T | None = None  # Left elbow
@@ -155,6 +169,13 @@ class _Gestures(Generic[T]):
     r_hip: T | None = None  # Right hip
     r_knee: T | None = None  # Right knee
     r_ankle: T | None = None  # Right ankle
+
+    m_face_position: T | None = None  # Middle face position
+    m_body_position: T | None = None  # Middle body position
+    m_face_scale: T | None = None  # Middle face scale
+    m_body_scale: T | None = None  # Middle body scale
+    l_hand_scale: T | None = None  # Left hand scale
+    r_hand_scale: T | None = None  # Right hand scale
 
 
 FIELDS: list[str] = [f.name for f in fields(_Gestures)]
@@ -185,6 +206,43 @@ class Gestures(_Gestures[T]):
     ) -> Self:
         for field_name in valid_fields:
             setattr(self, field_name, value)
+        return self
+
+    def getFields(self, valid_fields: list[str] = FIELDS) -> list[T | None]:
+        """
+        Get the values of the fields in a list.
+
+        Args:
+            valid_fields (list[str], optional): The names of the fields to get.
+            Defaults to FIELDS.
+
+        Returns:
+            list[T | None]: The values of the fields.
+        """
+        return [getattr(self, field_name) for field_name in valid_fields]
+
+    def getField(self, field_name: str) -> T | None:
+        """
+        Get the value of a field by its name.
+
+        Args:
+            field_name (str): The name of the field to get.
+
+        Returns:
+            T | None: The value of the field, or None if it doesn't exist.
+        """
+        return cast(T | None, getattr(self, field_name))
+
+    def setField(self, field_name: str, value: T | None) -> Self:
+        """
+        Set the value of a field by its name.
+        Args:
+            field_name (str): The name of the field to set.
+            value (T | None): The value to set.
+        Returns:
+            Self: The instance itself for method chaining.
+        """
+        setattr(self, field_name, value)
         return self
 
     def toDict(self) -> dict[str, bool]:
@@ -239,7 +297,7 @@ class ActiveGestures(Gestures[bool | None]):
     def getActiveFields(self) -> list[str]:
         active_fields: list[str] = []
         for field_name in FIELDS:
-            if getattr(self, field_name):
+            if self.getField(field_name):
                 active_fields.append(field_name)
         return active_fields
 
@@ -315,7 +373,7 @@ HANDS_FULL: ActiveGestures = ActiveGestures.buildWithPreset(
     [LEFT_HAND_FULL, RIGHT_HAND_FULL]
 )
 
-LEFT_BODY_POINTS : ActiveGestures = ActiveGestures(
+LEFT_BODY_POINTS: ActiveGestures = ActiveGestures(
     l_shoudler=True,
     l_elbow=True,
     l_hip=True,
@@ -324,7 +382,7 @@ LEFT_BODY_POINTS : ActiveGestures = ActiveGestures(
     l_wrist=True
 )
 
-RIGHT_BODY_POINTS : ActiveGestures = ActiveGestures(
+RIGHT_BODY_POINTS: ActiveGestures = ActiveGestures(
     r_shoudler=True,
     r_elbow=True,
     r_hip=True,
@@ -333,7 +391,7 @@ RIGHT_BODY_POINTS : ActiveGestures = ActiveGestures(
     r_wrist=True
 )
 
-BODY_POINTS : ActiveGestures = ActiveGestures.buildWithPreset(
+BODY_POINTS: ActiveGestures = ActiveGestures.buildWithPreset(
     [LEFT_BODY_POINTS, RIGHT_BODY_POINTS]
 )
 
@@ -469,37 +527,34 @@ CACHE_HANDS_POSITION: list[str] = HANDS_POSITION.getActiveFields()
 
 @final
 @dataclass
-class DataGestures(Gestures[list[float] | None]):
+class DataGestures(Gestures[tuple[float, float, float] | None]):
     @classmethod
     def buildFromLandmarkerResult(
         cls,
         landmark_result: HandLandmarkerResult | None = None,
         facemark_result: FaceLandmarkResult | None = None,
         bodymark_result: BodyLandmarkResult | None = None,
-        valid_fields: list[str] = FIELDS,
     ) -> Self:
         tmp = cls()
-        tmp.setHandsFromHandLandmarkerResult(landmark_result, facemark_result, bodymark_result, valid_fields)
-        return tmp
+        return tmp.setHandsFromHandLandmarkerResult(landmark_result, facemark_result, bodymark_result)
 
     @classmethod
     def from1DArray(
         cls, array: list[float], valid_fields: list[str] = FIELDS
     ) -> Self:
-        tmp = cls()
+        cls = cls()
         for i, field_name in enumerate(valid_fields):
-            setattr(
-                tmp, field_name, array[i *
-                                       FIELD_DIMENSION: (i + 1) * FIELD_DIMENSION]
-            )
-        return tmp
+            cls.setPointTo(field_name,
+                           array[i * FIELD_DIMENSION],
+                           array[i * FIELD_DIMENSION + 1],
+                           array[i * FIELD_DIMENSION + 2])
+        return cls
 
     def setHandsFromHandLandmarkerResult(
         self,
         landmark_result: HandLandmarkerResult | None = None,
         facemark_result: FaceLandmarkResult | None = None,
-        bodymark_result: BodyLandmarkResult | None = None,
-        valid_fields: list[str] = FIELDS,
+        bodymark_result: BodyLandmarkResult | None = None
     ) -> Self:
         """Convert the HandLandmarkerResult object into a DataGestures object.
 
@@ -534,6 +589,8 @@ class DataGestures(Gestures[list[float] | None]):
                 "pinky_dip",
                 "pinky_tip",
             ]
+            hand_pos_id: int = 9
+            hand_pos_id2: int = 0
 
             for i in range(len(landmark_result.hand_world_landmarks)):
                 handlandmark: list[NormalizedLandmark] = landmark_result.hand_landmarks[i]
@@ -548,28 +605,57 @@ class DataGestures(Gestures[list[float] | None]):
                 handlandmark elements store their position in a range of 0 to 1.
                 Doing so will ease operation such as mirroring or rotation.
                 """
-                if valid_fields or f"{prefix}hand_position" in valid_fields:
-                    self.r_hand_position = [
-                        (handlandmark[0].x if handlandmark[0].x else 0) - 0.5,
-                        (handlandmark[0].y if handlandmark[0].y else 0) - 0.5,
-                        (handlandmark[0].z if handlandmark[0].z else 0) - 0.5,
-                    ]
+                self.setPointTo(f"{prefix}hand_position",
+                                (handlandmark[hand_pos_id].x if handlandmark[hand_pos_id].x else 0) - 0.5,
+                                (handlandmark[hand_pos_id].y if handlandmark[hand_pos_id].y else 0) - 0.5,
+                                (handlandmark[hand_pos_id].z if handlandmark[hand_pos_id].z else 0) - 0.5)
 
                 # Adding position of each finger articulation
+                # for j, field_name in enumerate(hand_fields):
+                #     self.setPointTo(f"{prefix}{field_name}",
+                #                     handworldlandmark[j].x,
+                #                     handworldlandmark[j].y,
+                #                     handworldlandmark[j].z)
+
+                # scale: float = 1.0
+                # normal_dist: float | None = get_dist_between_points(
+                #     (handworldlandmark[hand_pos_id2].x, handworldlandmark[hand_pos_id2].y,
+                #      handworldlandmark[hand_pos_id2].z),
+                #     (handworldlandmark[hand_pos_id].x,
+                #      handworldlandmark[hand_pos_id].y, handworldlandmark[hand_pos_id].z)
+                # )
+                # world_dist: float | None = get_dist_between_points(
+                #     (handlandmark[hand_pos_id2].x, handlandmark[hand_pos_id2].y,
+                #      handlandmark[hand_pos_id2].z),
+                #     (handlandmark[hand_pos_id].x,
+                #      handlandmark[hand_pos_id].y, handlandmark[hand_pos_id].z)
+                # )
+                # if normal_dist is not None and normal_dist > 0 and \
+                #         world_dist is not None and world_dist > 0:
+                #     scale = world_dist / normal_dist
+                offset: tuple[float, float, float] = getattr(
+                    self, f"{prefix}hand_position", (0, 0, 0))
+                scale: float | None = get_dist_between_points(
+                    (handlandmark[hand_pos_id2].x, handlandmark[hand_pos_id2].y,
+                     handlandmark[hand_pos_id2].z),
+                    (handlandmark[hand_pos_id].x, handlandmark[hand_pos_id].y,
+                     handlandmark[hand_pos_id].z))
+                if scale is None or scale <= 0:
+                    scale = 1.0
+                self.setPointTo(f"{prefix}hand_scale", scale, scale, scale)
+
                 for j, field_name in enumerate(hand_fields):
-                    if f"{prefix}{field_name}" in valid_fields:
-                        setattr(
-                            self,
-                            f"{prefix}{field_name}",
-                            [
-                                handworldlandmark[j].x,
-                                handworldlandmark[j].y,
-                                handworldlandmark[j].z,
-                            ],
-                        )
+                    self.setPointTo(f"{prefix}{field_name}",
+                                    ((handlandmark[j].x if handlandmark[j].x else 0)
+                                    - offset[0]) / scale,
+                                    ((handlandmark[j].y if handlandmark[j].y else 0)
+                                    - offset[1]) / scale,
+                                    ((handlandmark[j].z if handlandmark[j].z else 0)
+                                    - offset[2]) / scale)
 
         if facemark_result is not None and len(facemark_result.multi_face_landmarks) > 0:
-            face_points: NormalizedLandmarkList = facemark_result.multi_face_landmarks[0].landmark
+            face_points: NormalizedLandmarkList = facemark_result.multi_face_landmarks[
+                0].landmark
 
             self.m_nose_point = landmark_to_list(face_points[1])
             self.m_top_nose = landmark_to_list(face_points[6])
@@ -623,25 +709,34 @@ class DataGestures(Gestures[list[float] | None]):
         if bodymark_result is not None:
             body_points: NormalizedLandmarkList = bodymark_result.pose_landmarks.landmark
 
-            self.l_shoudler = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_SHOULDER])
-            self.l_elbow = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_ELBOW])
-            self.l_hip = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_HIP])
-            self.l_knee = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_KNEE])
-            self.l_ankle = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_ANKLE])
+            self.l_shoudler = landmark_to_list(
+                body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_SHOULDER])
+            self.l_elbow = landmark_to_list(
+                body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_ELBOW])
+            self.l_hip = landmark_to_list(
+                body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_HIP])
+            self.l_knee = landmark_to_list(
+                body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_KNEE])
+            self.l_ankle = landmark_to_list(
+                body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_ANKLE])
             # self.r_wrist = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_WRIST])
 
-            self.r_shoudler = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_SHOULDER])
-            self.r_elbow = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_ELBOW])
-            self.r_hip = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_HIP])
-            self.r_knee = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_KNEE])
-            self.r_ankle = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_ANKLE])
+            self.r_shoudler = landmark_to_list(
+                body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_SHOULDER])
+            self.r_elbow = landmark_to_list(
+                body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_ELBOW])
+            self.r_hip = landmark_to_list(
+                body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_HIP])
+            self.r_knee = landmark_to_list(
+                body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_KNEE])
+            self.r_ankle = landmark_to_list(
+                body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_ANKLE])
             # self.l_wrist = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_WRIST])
 
         return self
 
     def setPointTo(self, point_field_name: str, x: float, y: float, z: float) -> Self:
-        setattr(self, point_field_name, [x, y, z])
-        return self
+        return self.setField(point_field_name, (x, y, z))
 
     def setPointToZero(self, point_field_name: str) -> Self:
         return self.setPointTo(point_field_name, 0, 0, 0)
@@ -653,12 +748,11 @@ class DataGestures(Gestures[list[float] | None]):
                     1), rand_fix_interval(1)
             )
         # 0.15 is the max value I can find on hand landmark
-        return self.setPointTo(
-            point,
-            rand_fix_interval(0.15),
-            rand_fix_interval(0.15),
-            rand_fix_interval(0.15),
-        )
+        return self.setPointTo(point,
+                               rand_fix_interval(0.15),
+                               rand_fix_interval(0.15),
+                               rand_fix_interval(0.15),
+                               )
 
     def setAllPointsToZero(self) -> Self:
         for field_name in FIELDS:
@@ -684,15 +778,13 @@ class DataGestures(Gestures[list[float] | None]):
 
     def setNonePointsRandomlyToRandomOrZero(self, proba: float = 0.1) -> Self:
         # Filter fields where the attribute is None
-        none_fields = [
+        none_fields: list[str] = [
             field_name for field_name in FIELDS if getattr(self, field_name) is None
         ]
 
         for field_name in none_fields:
             if random.random() < proba:
-                setattr(
-                    self, field_name, [0, 0, 0]
-                )  # Replace setPointToZero with direct set to 0
+                self.setPointToZero(field_name)
             else:
                 self.setPointToRandom(field_name)
 
@@ -702,13 +794,13 @@ class DataGestures(Gestures[list[float] | None]):
         tmp = [
             coord
             for field_name in valid_fields
-            for coord in (cast(list[float], getattr(self, field_name, [0, 0, 0])) or [0, 0, 0])
+            for coord in (cast(list[float], self.getField(field_name) or [0, 0, 0]))
         ]
         # print(self, "\n")
         # print(tmp, "\n\n")
         return tmp
 
-    def getPoints(self, valid_fields: list[str] = FIELDS) -> list[list[float] | None]:
+    def getPoints(self, valid_fields: list[str] = FIELDS) -> list[tuple[float, float, float] | None]:
         """Get the points in a list of list.
 
         Args:
@@ -717,7 +809,7 @@ class DataGestures(Gestures[list[float] | None]):
         Returns:
             list[list[float] | None]: _description_
         """
-        return [getattr(self, field_name) for field_name in valid_fields]
+        return [self.getField(field_name) for field_name in valid_fields]
 
     def toNumpy(self, valid_fields: list[str] = FIELDS) -> NDArray[np.float32]:
         return np.array(self.get1DArray(valid_fields), dtype=np.float32)
@@ -744,26 +836,31 @@ class DataGestures(Gestures[list[float] | None]):
             DataSample2: Return this class instance for chaining
         """
         for field_name in valid_fields:
-            field_value: list[float] | None = getattr(self, field_name)
+            field_value: tuple[float, float,
+                               float] | None = getattr(self, field_name)
             if field_value is not None:
-                field_value[0] += rand_fix_interval(range)
-                field_value[1] += rand_fix_interval(range)
-                field_value[2] += rand_fix_interval(range)
-                setattr(self, field_name, field_value)
+                return self.setPointTo(field_name,
+                                       field_value[0] +
+                                       rand_fix_interval(range),
+                                       field_value[1] +
+                                       rand_fix_interval(range),
+                                       field_value[2] +
+                                       rand_fix_interval(range))
         return self
 
     def mirror(self, x: bool = True, y: bool = False, z: bool = False) -> Self:
+        inv_x: int = -1 if x else 1
+        inv_y: int = -1 if y else 1
+        inv_z: int = -1 if z else 1
         for field_name in FIELDS:
-            field_value: list[float] | None = getattr(self, field_name)
+            field_value: tuple[float, float,
+                               float] | None = getattr(self, field_name)
             if field_value is None:
                 continue
-            if x:
-                field_value[0] *= -1
-            if y:
-                field_value[1] *= -1
-            if z:
-                field_value[2] *= -1
-            setattr(self, field_name, field_value)
+            self.setPointTo(field_name,
+                            field_value[0] * inv_x,
+                            field_value[1] * inv_y,
+                            field_value[2] * inv_z)
 
         # Mirroring the hand make the hand become the opposite hand
         # This if statement will swap the left hand and right hand data
@@ -779,7 +876,8 @@ class DataGestures(Gestures[list[float] | None]):
         valid_fields: list[str] = FIELDS,
     ) -> Self:
         for field_name in valid_fields:
-            field_value: list[float] | None = getattr(self, field_name)
+            field_value: tuple[float, float,
+                               float] | None = getattr(self, field_name)
             if field_value is None:
                 continue
             field_value = rot_3d_x(field_value, x)
@@ -796,13 +894,14 @@ class DataGestures(Gestures[list[float] | None]):
         valid_fields: list[str] = FIELDS,
     ) -> Self:
         for field_name in valid_fields:
-            field_value: list[float] | None = getattr(self, field_name)
+            field_value: tuple[float, float,
+                               float] | None = getattr(self, field_name)
             if field_value is None:
                 continue
-            field_value[0] *= x
-            field_value[1] *= y
-            field_value[2] *= z
-            setattr(self, field_name, field_value)
+            self.setPointTo(field_name,
+                            field_value[0] * x,
+                            field_value[1] * y,
+                            field_value[2] * z)
         return self
 
     def translate(
@@ -813,13 +912,14 @@ class DataGestures(Gestures[list[float] | None]):
         valid_fields: list[str] = FIELDS,
     ) -> Self:
         for field_name in valid_fields:
-            field_value: list[float] | None = getattr(self, field_name)
+            field_value: tuple[float, float,
+                               float] | None = getattr(self, field_name)
             if field_value is None:
                 continue
-            field_value[0] += x
-            field_value[1] += y
-            field_value[2] += z
-            setattr(self, field_name, field_value)
+            self.setPointTo(field_name,
+                            field_value[0] + x,
+                            field_value[1] + y,
+                            field_value[2] + z)
         return self
 
     def swapHands(self) -> Self:
@@ -875,17 +975,17 @@ class DataGestures(Gestures[list[float] | None]):
 
         for field_name in FIELDS:
             if field_name.startswith(src_side):
-                src_side_val: list[float] | None = getattr(self, field_name)
+                src_side_val: tuple[float, float,
+                                    float] | None = getattr(self, field_name)
                 opposite_field_name = field_name.replace(
                     src_side, dest_side, 1)
-                dest_side_value: list[float] | None = getattr(
+                dest_side_value: tuple[float, float, float] | None = getattr(
                     self, field_name.replace(src_side, dest_side)
                 )
                 if dest_side_value is None:
                     if src_side_val is not None:
-                        src_side_val[0] *= -1
-                        # src_side_val[1] *= -1
-                        src_side_val[2] *= -1
+                        src_side_val = (-src_side_val[0],
+                                        src_side_val[1], -src_side_val[2])
                     setattr(self, opposite_field_name, src_side_val)
                     setattr(self, field_name, None)
         return self
