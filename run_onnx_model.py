@@ -25,7 +25,7 @@ frame_width = int(record.get(3))
 frame_height = int(record.get(4))
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 
-frame_history: DataSample2 = DataSample2("", [])
+frame_history: DataSample = DataSample("", [])
 prev_sign = -1
 prev_display = -1
 

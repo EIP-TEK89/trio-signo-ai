@@ -74,7 +74,7 @@ def main():
 
     # Endpoints
     app.add_url_rule('/ping', view_func=ping, methods=['GET'])
-    datasamples_instance: dict[int, DataSample2] = {}
+    datasamples_instance: dict[int, DataSample] = {}
     app.add_url_rule('/get-alphabet', view_func=get_alphabet, methods=['POST'],
                      defaults={"hand_tracker": hand_tracker,
                                "alphabet_recognizer": alphabet_recognizer,

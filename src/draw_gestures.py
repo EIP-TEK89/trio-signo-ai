@@ -1,5 +1,5 @@
 from typing import Callable
-from src.gesture import DataGestures, FIELDS, ActiveGestures, HANDS_POINTS
+from src.gesture import DataGestures, RIGHT_HAND_POINTS, LEFT_HAND_POINTS, BODY_POINTS, FACE_POINTS
 
 HAND_CONNECTIONS: list[tuple[str, str]] = [
     ("r_wrist", "r_index_mcp"),
@@ -66,68 +66,98 @@ def project_3d_to_2d(
     y_2d = -y * factor
     return (x_2d, y_2d)
 
+def draw_selected_point(gestures: DataGestures,
+                        draw_line_func: Callable[[tuple[float, float], float, tuple[float, float], float], None],
+                        draw_point_func: Callable[[tuple[float, float], float], None],
+                        position: tuple[float, float, float],
+                        scale: tuple[float, float, float],
+                        points: list[str],
+                        connections: list[tuple[str, str]]) -> None:
+    """Draws a selected point and its connections."""
+
+    points_dict: dict[str, tuple[float, float]] = {}
+    depths_dict: dict[str, float] = {}
+
+    for field in points:
+        gesture_value: tuple[float, float, float] | None = getattr(gestures, field, None)
+        if gesture_value is not None:
+            gesture_value = (
+                gesture_value[0] * scale[0] + position[0],
+                gesture_value[1] * scale[1] + position[1],
+                gesture_value[2] * scale[2] + position[2]
+            )
+            points_dict[field] = (gesture_value[0], gesture_value[1])
+            depths_dict[field] = gesture_value[2]
+
+    for connection in connections:
+        if connection[0] in points_dict and connection[1] in points_dict:
+            draw_line_func(
+                points_dict[connection[0]], depths_dict[connection[0]],
+                points_dict[connection[1]], depths_dict[connection[1]])
+
+    for key, point in points_dict.items():
+        draw_point_func(point, depths_dict[key])
+
 
 def draw_hand_gestures(gesture: DataGestures,
                        draw_line_func: Callable[[tuple[float, float], float, tuple[float, float], float], None],
                        draw_point_func: Callable[[tuple[float, float], float], None],
-                       draw_normalized: bool = False,
-                       valid_fields: list[str] = FIELDS) -> None:
-    points: dict[str, tuple[float, float]] = {}
-    depths: dict[str, float] = {}
-    hand_fields: list[str] = HANDS_POINTS.getActiveFields()
+                       draw_normalized: bool = False) -> None:
     r_scale: tuple[float, float, float] = (1.0, 1.0, 1.0)
     l_scale: tuple[float, float, float] = (1.0, 1.0, 1.0)
     r_pos: tuple[float, float, float] = (0.0, 0.0, 0.0)
     l_pos: tuple[float, float, float] = (0.0, 0.0, 0.0)
 
-    if not draw_normalized:
+    if not draw_normalized or 1:
         r_scale = r_scale if gesture.r_hand_scale is None else gesture.r_hand_scale
         l_scale = l_scale if gesture.l_hand_scale is None else gesture.l_hand_scale
         r_pos = r_pos if gesture.r_hand_position is None else gesture.r_hand_position
         l_pos = l_pos if gesture.l_hand_position is None else gesture.l_hand_position
 
-    for field in valid_fields:
-        if field not in hand_fields:
-            continue
-        gesture_value: tuple[float, float, float] | None = getattr(
-            gesture, field, None)
-        if gesture_value is not None:
-            if field.startswith("r_"):
-                gesture_value = (
-                    gesture_value[0] * r_scale[0] + r_pos[0],
-                    gesture_value[1] * r_scale[1] + r_pos[1],
-                    gesture_value[2] * r_scale[2] + r_pos[2]
-                )
-            elif field.startswith("l_"):
-                gesture_value = (
-                    gesture_value[0] * l_scale[0] + l_pos[0],
-                    gesture_value[1] * l_scale[1] + l_pos[1],
-                    gesture_value[2] * l_scale[2] + l_pos[2]
-                )
-            else:
-                continue
-            # points[field] = project_3d_to_2d(
-            #     gesture_value[0], gesture_value[1], gesture_value[2])
-            points[field] = (gesture_value[0], gesture_value[1])
-            depths[field] = gesture_value[2]
+    # Draw right hand
+    draw_selected_point(gesture, draw_line_func, draw_point_func,
+                        r_pos, r_scale, RIGHT_HAND_POINTS.getActiveFields(), HAND_CONNECTIONS)
+    # Draw left hand
+    draw_selected_point(gesture, draw_line_func, draw_point_func,
+                        l_pos, l_scale, LEFT_HAND_POINTS.getActiveFields(), HAND_CONNECTIONS)
 
-    for connection in HAND_CONNECTIONS:
-        if connection[0] in points and connection[1] in points:
-            draw_line_func(
-                points[connection[0]],
-                depths[connection[0]],
-                points[connection[1]],
-                depths[connection[1]])
+def draw_body_gestures(gestures: DataGestures,
+                       draw_line_func: Callable[[tuple[float, float], float, tuple[float, float], float], None],
+                       draw_point_func: Callable[[tuple[float, float], float], None],
+                       draw_normalized: bool = False) -> None:
+    scale: tuple[float, float, float] = (1.0, 1.0, 1.0)
+    position: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    if not draw_normalized:
+        scale = gestures.m_body_scale if gestures.m_body_scale is not None else scale
+        position = gestures.m_body_position if gestures.m_body_position is not None else position
 
-    for key, point in points.items():
-        draw_point_func(point, depths[key])
+    # Draw body points
+    draw_selected_point(gestures, draw_line_func, draw_point_func,
+                        position, scale, BODY_POINTS.getActiveFields(), [])
 
+def draw_face_gestures(gestures: DataGestures,
+                       draw_line_func: Callable[[tuple[float, float], float, tuple[float, float], float], None],
+                       draw_point_func: Callable[[tuple[float, float], float], None],
+                       draw_normalized: bool = False) -> None:
+    scale: tuple[float, float, float] = (1.0, 1.0, 1.0)
+    position: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    if not draw_normalized:
+        scale = gestures.m_face_scale if gestures.m_face_scale is not None else scale
+        position = gestures.m_face_position if gestures.m_face_position is not None else position
+
+    # Draw face points
+    draw_selected_point(gestures, draw_line_func, draw_point_func,
+                        position, scale, FACE_POINTS.getActiveFields(), [])
 
 def draw_gestures(gestures: DataGestures,
                   draw_line_func: Callable[[tuple[float, float], float, tuple[float, float], float], None],
                   draw_point_func: Callable[[tuple[float, float], float], None],
-                  draw_normalized: bool = False,
-                  valid_fields: list[str] = FIELDS) -> None:
+                  draw_normalized: bool = False) -> None:
     """Draws the gestures on the screen."""
     draw_hand_gestures(gestures, draw_line_func,
-                       draw_point_func, draw_normalized, valid_fields)
+                       draw_point_func, draw_normalized)
+    # draw_body_gestures(gestures, draw_line_func,
+    #                    draw_point_func, draw_normalized)
+    # draw_face_gestures(gestures, draw_line_func,
+    #                    draw_point_func, draw_normalized)
+    #

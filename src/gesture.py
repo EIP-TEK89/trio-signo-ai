@@ -22,8 +22,16 @@ def default_device(device: torch.device | None = None) -> torch.device:
     return device if device is not None else torch.device("cpu")
 
 
-def landmark_to_list(landmark: Landmark) -> tuple[float, float, float]:
-    return (landmark.x, landmark.y, landmark.z)
+def landmark_to_list(landmark: Landmark | NormalizedLandmark | None) -> tuple[float, float, float] | None:
+    if landmark is None:
+        return None
+    if landmark.x is None and landmark.y is None and landmark.z is None:
+        return None
+    return (
+        landmark.x if landmark.x is not None else 0.0, 
+        landmark.y if landmark.y is not None else 0.0, 
+        landmark.z if landmark.z is not None else 0.0
+    )
 
 
 class FaceLandmarkResult(NamedTuple):
@@ -38,10 +46,17 @@ def get_dist_between_points(
     point1: tuple[float | None, float | None, float | None],
     point2: tuple[float | None, float | None, float | None]
 ) -> float | None:
-    if point1[0] is None or point1[1] is None or point1[2] is None or \
-            point2[0] is None or point2[1] is None or point2[2] is None:
-        return None
-    return math.dist(point1, point2)
+    point1_full: tuple[float, float, float] = (
+        point1[0] if point1[0] is not None else 0.0,
+        point1[1] if point1[1] is not None else 0.0,
+        point1[2] if point1[2] is not None else 0.0
+    )
+    point2_full: tuple[float, float, float] = (
+        point2[0] if point2[0] is not None else 0.0,
+        point2[1] if point2[1] is not None else 0.0,
+        point2[2] if point2[2] is not None else 0.0
+    )
+    return math.dist(point1_full, point2_full)
 
 
 T = TypeVar("T")
@@ -564,6 +579,8 @@ class DataGestures(Gestures[tuple[float, float, float] | None]):
         Args:
             landmark_result (HandLandmarkerResult): _description_
         """
+        scale: float | None
+        tmp: tuple[float, float, float] | None
 
         if landmark_result is not None:
             hand_fields: list[str] = [
@@ -605,10 +622,15 @@ class DataGestures(Gestures[tuple[float, float, float] | None]):
                 handlandmark elements store their position in a range of 0 to 1.
                 Doing so will ease operation such as mirroring or rotation.
                 """
+                hand_pos_id_coords: tuple[float, float, float] = (
+                    float(handlandmark[hand_pos_id].x or 0.0),
+                    float(handlandmark[hand_pos_id].y or 0.0),
+                    float(handlandmark[hand_pos_id].z or 0.0)
+                )
                 self.setPointTo(f"{prefix}hand_position",
-                                (handlandmark[hand_pos_id].x if handlandmark[hand_pos_id].x else 0) - 0.5,
-                                (handlandmark[hand_pos_id].y if handlandmark[hand_pos_id].y else 0) - 0.5,
-                                (handlandmark[hand_pos_id].z if handlandmark[hand_pos_id].z else 0) - 0.5)
+                                hand_pos_id_coords[0] - 0.5,
+                                hand_pos_id_coords[1] - 0.5,
+                                hand_pos_id_coords[2] - 0.5)
 
                 # Adding position of each finger articulation
                 # for j, field_name in enumerate(hand_fields):
@@ -635,7 +657,7 @@ class DataGestures(Gestures[tuple[float, float, float] | None]):
                 #     scale = world_dist / normal_dist
                 offset: tuple[float, float, float] = getattr(
                     self, f"{prefix}hand_position", (0, 0, 0))
-                scale: float | None = get_dist_between_points(
+                scale = get_dist_between_points(
                     (handlandmark[hand_pos_id2].x, handlandmark[hand_pos_id2].y,
                      handlandmark[hand_pos_id2].z),
                     (handlandmark[hand_pos_id].x, handlandmark[hand_pos_id].y,
@@ -645,93 +667,139 @@ class DataGestures(Gestures[tuple[float, float, float] | None]):
                 self.setPointTo(f"{prefix}hand_scale", scale, scale, scale)
 
                 for j, field_name in enumerate(hand_fields):
+                    tmp = (
+                        float(handworldlandmark[j].x or 0.0),
+                        float(handworldlandmark[j].y or 0.0),
+                        float(handworldlandmark[j].z or 0.0)
+                    )
                     self.setPointTo(f"{prefix}{field_name}",
-                                    ((handlandmark[j].x if handlandmark[j].x else 0)
-                                    - offset[0]) / scale,
-                                    ((handlandmark[j].y if handlandmark[j].y else 0)
-                                    - offset[1]) / scale,
-                                    ((handlandmark[j].z if handlandmark[j].z else 0)
-                                    - offset[2]) / scale)
+                                    (tmp[0] - offset[0]) / scale,
+                                    (tmp[1] - offset[1]) / scale,
+                                    (tmp[2] - offset[2]) / scale)
 
         if facemark_result is not None and len(facemark_result.multi_face_landmarks) > 0:
-            face_points: NormalizedLandmarkList = facemark_result.multi_face_landmarks[
-                0].landmark
+            face_fields: dict[str, int] = {
+                "m_nose_point": 1,  # Middle nose point
+                "m_top_nose": 6,  # Middle Top nose
+                "m_eyebrows": 9,  # Middle of eyebrows
+                "m_forehead": 10,  # Middle forehead
+                "m_top_chin": 18,  # Top chin
+                "m_bot_up_lip": 13,  # Bottom upper lip
+                "m_top_low_lip": 14,  # Top lower lip
+                "m_bot_nose": 141,  # Bottom nose
+                "m_chin": 152,  # Middle chin
+                "m_nose": 197,  # Middle nose
+                "l_eye_exterior": 7,  # Left eye exterior
+                "l_temple": 21,  # Left temple
+                "l_mid_chin": 32,  # Left middle chin
+                "l_up_lip": 39,  # Left upper lip
+                "l_ext_nostril": 48,  # Exterior left nostril
+                "l_mid_cheek": 50,  # Middle left cheek
+                "l_mid_eyebrow": 52,  # Middle left eyebrow
+                "l_ext_eyebrow": 53,  # Left exterior eyebrow
+                "l_ext_lips": 57,  # Exterior left lips
+                "l_jaw_angle": 58,  # Left jaw angle
+                "l_mid_ext_face": 93,  # Left middle exterior face
+                "l_int_eyebrow": 107,  # Interor left eyebrow
+                "l_mid_jaw": 136,  # Middle left jaw
+                "l_mid_bot_eyelid": 145,  # Left eye middle bottom eyelid
+                "l_ext_mouth": 146,  # Left exterior mouth
+                "l_top_eyelid": 159,  # Left eye middle top eyelid
+                "l_eye_int": 173,  # Left eye interior
+                "l_pupil": 468,  # Left pupil
+                "r_eye_exterior": 359,  # Right eye exterior
+                "r_temple": 251,  # Right temple
+                "r_mid_chin": 262,  # Right middle chin
+                "r_up_lip": 269,  # Right upper lip
+                "r_ext_nostril": 331,  # Exterior right nostril
+                "r_mid_cheek": 280,  # Middle right cheek
+                "r_mid_eyebrow": 283,  # Middle right eyebrow
+                "r_ext_eyebrow": 282,  # Right exterior eyebrow
+                "r_ext_lips": 273,  # Exterior right lips
+                "r_jaw_angle": 288,  # Right jaw angle
+                "r_mid_ext_face": 323,  # Right middle exterior face
+                "r_int_eyebrow": 336,  # Interor right eyebrow
+                "r_mid_jaw": 365,  # Middle right jaw
+                "r_mid_bot_eyelid": 374,  # Right eye middle bottom eyelid
+                "r_ext_mouth": 287,  # Right exterior mouth
+                "r_top_eyelid": 386,  # Right eye middle top eyelid
+                "r_eye_int": 398,   # Right eye interior
+                "r_pupil": 473      # Right pupil
+            }
+            face_points: list[NormalizedLandmark] = facemark_result.multi_face_landmarks[0].landmark
+            nose_point_coord: tuple[float, float, float] | None = landmark_to_list(face_points[face_fields["m_nose_point"]])
+            chin_coord: tuple[float, float, float] | None = landmark_to_list(face_points[face_fields["m_chin"]])
+            self.m_face_position = nose_point_coord
+            if nose_point_coord is None:
+                nose_point_coord = (0.0, 0.0, 0.0)
+            if chin_coord is None:
+                chin_coord = (0.0, 0.0, 0.0)
 
-            self.m_nose_point = landmark_to_list(face_points[1])
-            self.m_top_nose = landmark_to_list(face_points[6])
-            self.m_eyebrows = landmark_to_list(face_points[9])
-            self.m_forehead = landmark_to_list(face_points[10])
-            self.m_top_chin = landmark_to_list(face_points[18])
-            self.m_bot_up_lip = landmark_to_list(face_points[13])
-            self.m_top_low_lip = landmark_to_list(face_points[14])
-            self.m_bot_nose = landmark_to_list(face_points[141])
-            self.m_chin = landmark_to_list(face_points[152])
-            self.m_nose = landmark_to_list(face_points[197])
+            scale = get_dist_between_points(
+                (nose_point_coord[0], nose_point_coord[1], nose_point_coord[2]),
+                (chin_coord[0], chin_coord[1], chin_coord[2])
+            ) or 1.0
 
-            self.l_eye_exterior = landmark_to_list(face_points[7])
-            self.l_temple = landmark_to_list(face_points[21])
-            self.l_mid_chin = landmark_to_list(face_points[32])
-            self.l_up_lip = landmark_to_list(face_points[39])
-            self.l_ext_nostril = landmark_to_list(face_points[48])
-            self.l_mid_cheek = landmark_to_list(face_points[50])
-            self.l_mid_eyebrow = landmark_to_list(face_points[52])
-            self.l_ext_eyebrow = landmark_to_list(face_points[53])
-            self.l_ext_lips = landmark_to_list(face_points[57])
-            self.l_jaw_angle = landmark_to_list(face_points[58])
-            self.l_mid_ext_face = landmark_to_list(face_points[93])
-            self.l_int_eyebrow = landmark_to_list(face_points[107])
-            self.l_mid_jaw = landmark_to_list(face_points[136])
-            self.l_mid_bot_eyelid = landmark_to_list(face_points[145])
-            self.l_ext_mouth = landmark_to_list(face_points[146])
-            self.l_top_eyelid = landmark_to_list(face_points[159])
-            self.l_eye_int = landmark_to_list(face_points[173])
-            self.l_pupil = landmark_to_list(face_points[468])
+            self.m_face_scale = (scale, scale, scale)
+            for key, val in face_fields.items():
+                tmp = landmark_to_list(face_points[val])
+                if tmp is not None:
+                    tmp = (
+                            (tmp[0] - nose_point_coord[0]) / scale,
+                            (tmp[1] - nose_point_coord[1]) / scale,
+                            (tmp[2] - nose_point_coord[2]) / scale
+                    )
 
-            self.r_eye_exterior = landmark_to_list(face_points[359])
-            self.r_temple = landmark_to_list(face_points[251])
-            self.r_mid_chin = landmark_to_list(face_points[262])
-            self.r_up_lip = landmark_to_list(face_points[269])
-            self.r_ext_nostril = landmark_to_list(face_points[331])
-            self.r_mid_cheek = landmark_to_list(face_points[280])
-            self.r_mid_eyebrow = landmark_to_list(face_points[283])
-            self.r_ext_eyebrow = landmark_to_list(face_points[282])
-            self.r_ext_lips = landmark_to_list(face_points[273])
-            self.r_jaw_angle = landmark_to_list(face_points[288])
-            self.r_mid_ext_face = landmark_to_list(face_points[323])
-            self.r_int_eyebrow = landmark_to_list(face_points[336])
-            self.r_mid_jaw = landmark_to_list(face_points[365])
-            self.r_mid_bot_eyelid = landmark_to_list(face_points[374])
-            self.r_ext_mouth = landmark_to_list(face_points[287])
-            self.r_top_eyelid = landmark_to_list(face_points[386])
-            self.r_eye_int = landmark_to_list(face_points[398])
-            self.r_pupil = landmark_to_list(face_points[473])
+                setattr(self, key, tmp)
+
 
         if bodymark_result is not None:
-            body_points: NormalizedLandmarkList = bodymark_result.pose_landmarks.landmark
+            body_points: NormalizedLandmarkList = bodymark_result.pose_landmarks
+            body_fields: dict[str, int] = {
+                "l_shoudler": mediapipe.solutions.pose.PoseLandmark.LEFT_SHOULDER,
+                "l_elbow": mediapipe.solutions.pose.PoseLandmark.LEFT_ELBOW,
+                "l_hip": mediapipe.solutions.pose.PoseLandmark.LEFT_HIP,
+                "l_knee": mediapipe.solutions.pose.PoseLandmark.LEFT_KNEE,
+                "l_ankle": mediapipe.solutions.pose.PoseLandmark.LEFT_ANKLE,
+                # "l_wrist": mediapipe.solutions.pose.PoseLandmark.LEFT_WRIST,
+                "r_shoudler": mediapipe.solutions.pose.PoseLandmark.RIGHT_SHOULDER,
+                "r_elbow": mediapipe.solutions.pose.PoseLandmark.RIGHT_ELBOW,
+                "r_hip": mediapipe.solutions.pose.PoseLandmark.RIGHT_HIP,
+                "r_knee": mediapipe.solutions.pose.PoseLandmark.RIGHT_KNEE,
+                "r_ankle": mediapipe.solutions.pose.PoseLandmark.RIGHT_ANKLE,
+                # "r_wrist": mediapipe.solutions.pose.PoseLandmark.RIGHT_WRIST,
+            }
+            l_shoulder_coord: tuple[float, float, float] | None = landmark_to_list(
+                body_points.landmark[body_fields["l_shoudler"]])
+            r_shoulder_coord: tuple[float, float, float] | None = landmark_to_list(
+                body_points.landmark[body_fields["r_shoudler"]])
+            if l_shoulder_coord is None:
+                l_shoulder_coord = (0.0, 0.0, 0.0)
+            if r_shoulder_coord is None:
+                r_shoulder_coord = (0.0, 0.0, 0.0)
+            self.m_body_position = (
+                (l_shoulder_coord[0] + r_shoulder_coord[0]) / 2,
+                (l_shoulder_coord[1] + r_shoulder_coord[1]) / 2,
+                (l_shoulder_coord[2] + r_shoulder_coord[2]) / 2
+            )
 
-            self.l_shoudler = landmark_to_list(
-                body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_SHOULDER])
-            self.l_elbow = landmark_to_list(
-                body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_ELBOW])
-            self.l_hip = landmark_to_list(
-                body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_HIP])
-            self.l_knee = landmark_to_list(
-                body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_KNEE])
-            self.l_ankle = landmark_to_list(
-                body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_ANKLE])
-            # self.r_wrist = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_WRIST])
+            scale = get_dist_between_points(
+                (l_shoulder_coord[0], l_shoulder_coord[1], l_shoulder_coord[2]),
+                (r_shoulder_coord[0], r_shoulder_coord[1], r_shoulder_coord[2])
+            ) or 1.0
+            self.m_body_scale = (scale, scale, scale)
 
-            self.r_shoudler = landmark_to_list(
-                body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_SHOULDER])
-            self.r_elbow = landmark_to_list(
-                body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_ELBOW])
-            self.r_hip = landmark_to_list(
-                body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_HIP])
-            self.r_knee = landmark_to_list(
-                body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_KNEE])
-            self.r_ankle = landmark_to_list(
-                body_points[mediapipe.solutions.pose.PoseLandmark.RIGHT_ANKLE])
-            # self.l_wrist = landmark_to_list(body_points[mediapipe.solutions.pose.PoseLandmark.LEFT_WRIST])
+            for key, val in body_fields.items():
+                tmp = landmark_to_list(
+                    body_points.landmark[val])
+                if tmp is not None:
+                    tmp = (
+                        (tmp[0] - self.m_body_position[0]) / scale,
+                        (tmp[1] - self.m_body_position[1]) / scale,
+                        (tmp[2] - self.m_body_position[2]) / scale
+                    )
+
+                setattr(self, key, tmp)
 
         return self
 
@@ -833,7 +901,7 @@ class DataGestures(Gestures[tuple[float, float, float] | None]):
             valid_fields (list[str], optional): Let you pick which fields should be randomized. Defaults to None (All point affected).
 
         Returns:
-            DataSample2: Return this class instance for chaining
+            DataSample: Return this class instance for chaining
         """
         for field_name in valid_fields:
             field_value: tuple[float, float,

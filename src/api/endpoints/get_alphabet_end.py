@@ -4,7 +4,7 @@ from flask import request, jsonify
 
 from src.datasample import *
 
-def get_alphabet_end(sample_history: dict[int, DataSample2]):
+def get_alphabet_end(sample_history: dict[int, DataSample]):
     try:
         ip: int = ipaddress.ip_address(request.remote_addr)
     except:

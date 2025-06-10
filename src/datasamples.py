@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Self, cast, TypeAlias
 
 from src.gesture import ActiveGestures, ALL_GESTURES
-from src.datasample import DataSample2
+from src.datasample import DataSample
 
 TensorPair: TypeAlias = tuple[torch.Tensor, torch.Tensor]
 
@@ -129,7 +129,7 @@ class DataSamples:
         for labeled_samples in dict_sample:
             for i, sample_kind in enumerate(labeled_samples):
                 for sample in sample_kind:
-                    # new_datasample: DataSample2 = DataSample2.unflat(cls.info.label_explicit[sample_label_id], sample, cls.valid_fields)
+                    # new_datasample: DataSample = DataSample.unflat(cls.info.label_explicit[sample_label_id], sample, cls.valid_fields)
                     cls.samples[sample_label_id][i][id(sample)] = sample
             sample_label_id += 1
         cls.getNumberOfSamples()
@@ -182,7 +182,7 @@ class DataSamples:
         with open(file_path, "wb") as f:
             f.write(self.toCbor())
 
-    def addDataSample(self, data_sample: DataSample2, valid_example: bool = True):
+    def addDataSample(self, data_sample: DataSample, valid_example: bool = True):
         # Get or cache label_id
         label_id = self.info.label_map.get(data_sample.label)
         if label_id is None:
@@ -203,7 +203,7 @@ class DataSamples:
         # Increment the overall sample count
         self.sample_count += 1
 
-    def addDataSamples(self, data_samples: list[DataSample2], valid: bool = True):
+    def addDataSamples(self, data_samples: list[DataSample], valid: bool = True):
         for data_sample in data_samples:
             # print(type(data_sample))
             self.addDataSample(data_sample, valid)
@@ -250,7 +250,7 @@ class DataSamplesTensors:
                 tensor_sample_kind: list[torch.Tensor] = []
                 for sample in sample_kind:
                     tensor_sample_kind.append(
-                        DataSample2.unflat(
+                        DataSample.unflat(
                             "", sample, cls.valid_fields
                         ).toTensor(cls.info.memory_frame, cls.valid_fields)
                     )
@@ -354,7 +354,7 @@ class DataSamplesTensors:
                         tensor_sample_kind: deque[torch.Tensor] = deque()
                         for sample in sample_kind:
                             tensor_sample_kind.append(
-                                DataSample2.unflat("", sample, valid_fields).toTensor(
+                                DataSample.unflat("", sample, valid_fields).toTensor(
                                     info.memory_frame, valid_fields
                                 )
                             )

@@ -10,11 +10,12 @@ from PIL import Image, ImageOps
 from run_model import track_hand, recognize_sign
 
 from src.model_class.transformer_sign_recognizer import *
+from src.datasample import DataSample, DataGestures
 
 import mediapipe as mp
 from mediapipe.tasks.python.vision.hand_landmarker import *
 
-def get_alphabet2(alphabet_recognizer: SignRecognizerTransformer, sample_history: dict[int, DataSample2]):
+def get_alphabet2(alphabet_recognizer: SignRecognizerTransformer, sample_history: dict[int, DataSample]):
     try:
         ip: int = ipaddress.ip_address(request.remote_addr)
     except:
@@ -23,7 +24,7 @@ def get_alphabet2(alphabet_recognizer: SignRecognizerTransformer, sample_history
     gest: DataGestures = DataGestures.fromDict(request.get_json())
 
     if sample_history.get(ip) is None:
-        sample_history[ip] = DataSample2("", [])
+        sample_history[ip] = DataSample("", [])
     sample_history[ip].gestures.insert(0, gest)
     while len(sample_history[ip].gestures) > alphabet_recognizer.info.memory_frame:
         sample_history[ip].gestures.pop(-1)

@@ -5,7 +5,7 @@ import argparse
 import numpy as np
 import copy
 from datetime import datetime
-from src.datasample import DataSample2
+from src.datasample import DataSample
 from run_model import load_hand_landmarker, track_hand, draw_land_marks, recognize_sign
 from src.model_class.sign_recognizer_v1 import *
 from src.model_class.transformer_sign_recognizer import *
@@ -76,7 +76,7 @@ is_croping = False
 remaining_delay = 0
 countdown_active = False
 
-frame_history: DataSample2 = DataSample2("", [])
+frame_history: DataSample = DataSample("", [])
 prev_sign = -1
 prev_display = -1
 
@@ -204,7 +204,7 @@ while True:
             if not is_recording:
                 file_name = video_label + "_" + current_time + ".avi"
                 full_save_path = os.path.join(save_folder, video_label, 'temp')
-                data_sample = DataSample2(video_label, [])
+                data_sample = DataSample(video_label, [])
 
                 os.makedirs(full_save_path, exist_ok=True)
                 label_json_path = os.path.join(full_save_path, 'label.json')
@@ -255,7 +255,7 @@ while True:
                         json.dump([], f)
 
                 output_file = os.path.join(full_save_path, file_name)
-                image_sample = DataSample2(image_label, [])
+                image_sample = DataSample(image_label, [])
 
         if countdown_active:
             remaining_delay -= 1 / FPS

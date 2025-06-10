@@ -88,7 +88,7 @@ def draw_land_marks(image: cv2.typing.MatLike, hand_landmarks: HandLandmarkerRes
     return img_cpy
 
 
-def recognize_sign(sample: DataSample2, sign_recognition_model: SignRecognizerTransformer, valid_fields: list[str] = None) -> tuple[int, float]:
+def recognize_sign(sample: DataSample, sign_recognition_model: SignRecognizerTransformer, valid_fields: list[str] = None) -> tuple[int, float]:
     start_time = time.time()
     out = sign_recognition_model.predict(sample.toTensor(
         sign_recognition_model.info.memory_frame, valid_fields))
@@ -131,7 +131,7 @@ if __name__ == '__main__':
 
     handtrack_times = []
     sign_rec_times = []
-    frame_history: DataSample2 = DataSample2("", [])
+    frame_history: DataSample = DataSample("", [])
     prev_sign: int = -1
     prev_display: int = -1
     valid_fields: list[str] = sign_rec.info.active_gestures.getActiveFields()

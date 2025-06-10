@@ -2,13 +2,13 @@ import sys
 import torch
 
 from src.model_class.transformer_sign_recognizer import *
-from src.datasample import DataSample2
+from src.datasample import DataSample
 
 # Charger un modèle pré-entraîné (exemple: ResNet18)
 model = SignRecognizerTransformer.loadModelFromDir(sys.argv[1])
 model.eval()
 
-datasample: DataSample2 = DataSample2("", [], model.info.memory_frame)
+datasample: DataSample = DataSample("", [], model.info.memory_frame)
 valid_fields: list[str] = model.info.active_gestures.getActiveFields()
 dummy_input: torch.Tensor = datasample.toTensor(
     model.info.memory_frame, valid_fields)

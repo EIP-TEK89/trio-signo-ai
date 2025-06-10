@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Optional, Any
+from typing import Any
 
 @dataclasses.dataclass
 class Landmark:
@@ -21,14 +21,13 @@ class Landmark:
       Depending on the model, presence value is either a result of sigmoid or an
       argument of sigmoid function to get landmark presence probability.
     """
-
-    x: Optional[float] = None
-    y: Optional[float] = None
-    z: Optional[float] = None
-    visibility: Optional[float] = None
-    presence: Optional[float] = None
+  x: float | None = None
+  y: float | None = None
+  z: float | None = None
+  visibility: float | None = None
+  presence: float | None = None
     
-    def __init__(self, *args: Any, **kwargs: Any) -> None: ...
+  def __init__(self, *args: Any, **kwargs: Any) -> None: ...
 
 @dataclasses.dataclass
 class NormalizedLandmark:
@@ -51,11 +50,11 @@ class NormalizedLandmark:
       argument of sigmoid function to get landmark presence probability.
   """
 
-    x: Optional[float] = None
-    y: Optional[float] = None
-    z: Optional[float] = None
-    visibility: Optional[float] = None
-    presence: Optional[float] = None
+  x: float | None = None
+  y: float | None = None
+  z: float | None = None
+  visibility: float | None = None
+  presence: float | None = None
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None: ...
+  def __init__(self, *args: Any, **kwargs: Any) -> None: ...
 

@@ -15,7 +15,7 @@ def clamp(value: float, min_value: float, max_value: float):
 
 
 @dataclass
-class DataSample2:
+class DataSample:
     label: str
     gestures: list[DataGestures]
     framerate: int = 30
@@ -36,7 +36,7 @@ class DataSample2:
                 gesture, dict), "Invalid JSON data, 'gestures' must be a list of dict"
             gestures.append(DataGestures.fromDict(gesture))
 
-        tmp: DataSample2 = cls(
+        tmp: DataSample = cls(
             label=str(json_data["label"]),
             gestures=gestures,
         )
@@ -102,7 +102,7 @@ class DataSample2:
         self, sequence_length: int, valid_fields: list[str] = FIELDS
     ) -> NDArray[np.float32]:
         """
-        Converts the DataSample2 object into an ONNX-compatible NumPy tensor.
+        Converts the DataSample object into an ONNX-compatible NumPy tensor.
 
         Args:
             sequence_length (int): The number of frames (sequence length) expected by the model.
@@ -188,7 +188,7 @@ class DataSample2:
             valid_fields (list[str], optional): Let you pick which fields should be randomized. Defaults to None (All point affected).
 
         Returns:
-            DataSample2: Return this class instance for chaining
+            DataSample: Return this class instance for chaining
         """
         for gesture in self.gestures:
             gesture.noise(range, valid_fields)
@@ -286,7 +286,7 @@ class DataSample2:
         in case the hands are mirrored or the data is not in the right order.
 
         Returns:
-            DataSample2: _description_
+            DataSample: _description_
         """
         for gesture in self.gestures:
             gesture.swapHands()
