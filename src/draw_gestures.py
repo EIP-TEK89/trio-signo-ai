@@ -128,7 +128,7 @@ def draw_hand_gestures(gesture: DataGestures,
         r_pos = r_pos if gesture.r_hand_position is None else gesture.r_hand_position
         l_pos = l_pos if gesture.l_hand_position is None else gesture.l_hand_position
 
-    # print(r_scale, l_scale, r_pos, l_pos)
+    print(r_scale, l_scale, r_pos, l_pos)
 
     # Draw right hand
     draw_selected_point(gesture, draw_line_func, draw_point_func,

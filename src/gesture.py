@@ -620,15 +620,11 @@ class DataGestures(Gestures[tuple[float, float, float] | None]):
                 "pinky_tip", # 20
             ]
             hand_pos_id: int = 9
-            hand_pos_id2: int = 5
-            hand_pos_id3: int = 17
+            hand_pos_id2: int = 0
 
             for i in range(len(landmark_result.hand_world_landmarks)):
-                # Hand normalized
-                handlandmark: list[NormalizedLandmark] = landmark_result.hand_landmarks[i]
                 # Hand world placed
-                handworldlandmark: list[Landmark] = landmark_result.hand_world_landmarks[i]
-                # handlandmark, handworldlandmark = (handworldlandmark, handlandmark)
+                handlandmark: list[NormalizedLandmark] = landmark_result.hand_landmarks[i]
 
                 # print(handlandmark, handworldlandmark)
                 prefix: str = "l_" if landmark_result.handedness[i][0].category_name == "Left" else "r_"
@@ -639,48 +635,29 @@ class DataGestures(Gestures[tuple[float, float, float] | None]):
                 handlandmark elements store their position in a range of 0 to 1.
                 Doing so will ease operation such as mirroring or rotation.
                 """
-                hand_pos_id_coords: tuple[float, float, float] = (
-                    float(handlandmark[hand_pos_id].x or 0.0),
-                    float(handlandmark[hand_pos_id].y or 0.0),
-                    float(handlandmark[hand_pos_id].z or 0.0)
-                )
-                self.setPointTo(f"{prefix}hand_position",
-                                hand_pos_id_coords[0] - 0.5,
-                                hand_pos_id_coords[1] - 0.5,
-                                hand_pos_id_coords[2] - 0.5)
+                hand_pos: tuple[float, float, float] = landmark_to_list(handlandmark[hand_pos_id]) or (0.0, 0.0, 0.0)
 
-                combination: int = 0
-                scale_norm: float = 0
-                scale = 0
-                for i in range(len(hand_fields)):
-                    for k in range(len(hand_fields)):
-                        if i == k:
-                            continue
-                        scale_norm += get_dist_between_points(
-                            (handlandmark[i].x, handlandmark[i].y, handlandmark[i].z),
-                            (handlandmark[k].x, handlandmark[k].y, handlandmark[k].z)
-                        ) or 0.0
-                        scale += get_dist_between_points(
-                            (handworldlandmark[i].x, handworldlandmark[i].y, handworldlandmark[i].z),
-                            (handworldlandmark[k].x, handworldlandmark[k].y, handworldlandmark[k].z)
-                        ) or 0.0
-                        combination += 1
-                scale_norm /= combination
-                scale /= combination
-                if scale == 0 or scale_norm == 0:
-                    scale = 1.0
-                else:
-                    scale = scale_norm / scale
+                scale = get_dist_between_points(
+                            (handlandmark[hand_pos_id].x, handlandmark[hand_pos_id].y, handlandmark[hand_pos_id].z),
+                            (handlandmark[hand_pos_id2].x, handlandmark[hand_pos_id2].y, handlandmark[hand_pos_id2].z)
+                        ) or 1.0
                 self.setPointTo(f"{prefix}hand_scale", scale, scale, scale)
 
                 for j, field_name in enumerate(hand_fields):
-                    tmp = (
-                        float(handworldlandmark[j].x or 0.0),
-                        float(handworldlandmark[j].y or 0.0),
-                        float(handworldlandmark[j].z or 0.0)
-                    )
-                    self.setPointTo(f"{prefix}{field_name}",
-                                    tmp[0], tmp[1], tmp[2])
+                    tmp = landmark_to_list(handlandmark[j])
+                    if tmp is not None:
+                        tmp = (
+                            (tmp[0] - hand_pos[0]) / scale,
+                            (tmp[1] - hand_pos[1]) / scale,
+                            (tmp[2] - hand_pos[2]) / scale
+                        )
+                    setattr(self, f"{prefix}{field_name}", tmp)
+
+                self.setPointTo(f"{prefix}hand_position",
+                                hand_pos[0] - 0.5,
+                                hand_pos[1] - 0.5,
+                                hand_pos[2] - 0.5)
+
 
         if facemark_result is not None and len(facemark_result.multi_face_landmarks) > 0:
             face_fields: dict[str, int] = {
