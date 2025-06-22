@@ -178,12 +178,14 @@ class _Gestures(Generic[T]):
     l_hip: T | None = None  # Left hip
     l_knee: T | None = None  # Left knee
     l_ankle: T | None = None  # Left ankle
+    l_body_wrist: T | None = None  # Left wrist, used for body gestures
 
     r_shoulder: T | None = None  # Right shoulder
     r_elbow: T | None = None  # Right elbow
     r_hip: T | None = None  # Right hip
     r_knee: T | None = None  # Right knee
     r_ankle: T | None = None  # Right ankle
+    r_body_wrist: T | None = None  # Right wrist, used for body gestures
 
     m_face_position: T | None = None  # Middle face position
     m_body_position: T | None = None  # Middle body position
@@ -394,7 +396,7 @@ LEFT_BODY_POINTS: ActiveGestures = ActiveGestures(
     l_hip=True,
     l_knee=True,
     l_ankle=True,
-    # l_wrist=True
+    l_body_wrist=True
 )
 
 RIGHT_BODY_POINTS: ActiveGestures = ActiveGestures(
@@ -403,7 +405,7 @@ RIGHT_BODY_POINTS: ActiveGestures = ActiveGestures(
     r_hip=True,
     r_knee=True,
     r_ankle=True,
-    # r_wrist=True
+    r_body_wrist=True
 )
 
 BODY_POINTS: ActiveGestures = ActiveGestures.buildWithPreset(
@@ -749,13 +751,13 @@ class DataGestures(Gestures[tuple[float, float, float] | None]):
                 "l_hip": mediapipe.solutions.pose.PoseLandmark.LEFT_HIP,
                 "l_knee": mediapipe.solutions.pose.PoseLandmark.LEFT_KNEE,
                 "l_ankle": mediapipe.solutions.pose.PoseLandmark.LEFT_ANKLE,
-                # "l_wrist": mediapipe.solutions.pose.PoseLandmark.LEFT_WRIST,
+                "l_body_wrist": mediapipe.solutions.pose.PoseLandmark.LEFT_WRIST,
                 "r_shoulder": mediapipe.solutions.pose.PoseLandmark.RIGHT_SHOULDER,
                 "r_elbow": mediapipe.solutions.pose.PoseLandmark.RIGHT_ELBOW,
                 "r_hip": mediapipe.solutions.pose.PoseLandmark.RIGHT_HIP,
                 "r_knee": mediapipe.solutions.pose.PoseLandmark.RIGHT_KNEE,
                 "r_ankle": mediapipe.solutions.pose.PoseLandmark.RIGHT_ANKLE,
-                # "r_wrist": mediapipe.solutions.pose.PoseLandmark.RIGHT_WRIST,
+                "r_body_wrist": mediapipe.solutions.pose.PoseLandmark.RIGHT_WRIST,
             }
             l_shoulder_coord: tuple[float, float, float] | None = landmark_to_list(
                 body_points.landmark[body_fields["l_shoulder"]])

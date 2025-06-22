@@ -57,9 +57,9 @@ BODY_CONNECTIONS: list[tuple[str, str]] = [
     ("l_shoulder", "l_hip"),
     ("r_shoulder", "r_hip"),
     ("l_shoulder", "l_elbow"),
-    # ("l_elbow", "l_wrist"),
+    ("l_elbow", "l_body_wrist"),
     ("r_shoulder", "r_elbow"),
-    # ("r_elbow", "r_wrist"),
+    ("r_elbow", "r_body_wrist"),
     ("l_hip", "l_knee"),
     ("l_knee", "l_ankle"),
     ("r_hip", "r_knee"),
@@ -128,7 +128,7 @@ def draw_hand_gestures(gesture: DataGestures,
         r_pos = r_pos if gesture.r_hand_position is None else gesture.r_hand_position
         l_pos = l_pos if gesture.l_hand_position is None else gesture.l_hand_position
 
-    print(r_scale, l_scale, r_pos, l_pos)
+    # print(r_scale, l_scale, r_pos, l_pos)
 
     # Draw right hand
     draw_selected_point(gesture, draw_line_func, draw_point_func,
