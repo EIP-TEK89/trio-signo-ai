@@ -93,14 +93,15 @@ def track_face(frame):
     # print(dir(face_landmarks), vars(face_landmarks))
     height, width, _ = frame.shape
     # points = {}
-    for idx, lm in enumerate(gest.getPoints()):
-        # print(idx, lm)
-        if lm is not None:
-            # print("ah", len(IMPORTANT_LANDMARKS))
-            # print(f"Landmark {type(idx)}: {lm.x}, {lm.y}, {lm.z}, {lm.presence}, {lm.visibility}")
-            # points[str(idx)] = {'x': lm[0], 'y': lm[1], 'z': lm[2]}
-            cx, cy = int(lm[0] * width), int(lm[1] * height)
-            cv2.circle(frame, (cx, cy), 5, (255, 0, 0), -1)
+
+    # for idx, lm in enumerate(gest.getPoints()):
+    #     # print(idx, lm)
+    #     if lm is not None:
+    #         # print("ah", len(IMPORTANT_LANDMARKS))
+    #         # print(f"Landmark {type(idx)}: {lm.x}, {lm.y}, {lm.z}, {lm.presence}, {lm.visibility}")
+    #         # points[str(idx)] = {'x': lm[0], 'y': lm[1], 'z': lm[2]}
+    #         cx, cy = int(lm[0] * width), int(lm[1] * height)
+    #         cv2.circle(frame, (cx, cy), 5, (255, 0, 0), -1)
 
     return frame, results
 

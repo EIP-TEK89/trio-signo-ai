@@ -119,18 +119,17 @@ class CVDrawer:
                   end: tuple[float, float], end_depth: float) -> None:
 
         start_px: tuple[int, int] = (
-            int(self.scale * start[0] * frame_width),
-            int(self.scale * start[1] * frame_height))
+            int(self.scale * (0.5 + start[0]) * frame_width),
+            int(self.scale * (0.5 + start[1]) * frame_height))
         end_px: tuple[int, int] = (
-            int(self.scale * end[0] * frame_width),
-            int(self.scale * end[1] * frame_height))
+            int(self.scale * (0.5 + end[0]) * frame_width),
+            int(self.scale * (0.5 + end[1]) * frame_height))
         self.frame = cv2.line(self.frame, start_px, end_px, (0, 255, 0), 2)
 
     def draw_point(self, point: tuple[float, float], depth: float) -> None:
         point_px: tuple[int, int] = (
-            int(self.scale * point[0] * frame_width),
-            int(self.scale * point[1] * frame_height))
-        print(point_px, point)
+            int(self.scale * (0.5 + point[0]) * frame_width),
+            int(self.scale * (0.5 + point[1]) * frame_height))
         self.frame = cv2.circle(self.frame, point_px, 5, (255, 0, 0), -1)
 
 

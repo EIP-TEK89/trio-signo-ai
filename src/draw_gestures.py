@@ -51,6 +51,20 @@ HAND_CONNECTIONS: list[tuple[str, str]] = [
     ("l_ring_mcp", "l_pinky_mcp"),
 ]
 
+BODY_CONNECTIONS: list[tuple[str, str]] = [
+    ("l_shoulder", "r_shoulder"),
+    ("l_hip", "r_hip"),
+    ("l_shoulder", "l_hip"),
+    ("r_shoulder", "r_hip"),
+    ("l_shoulder", "l_elbow"),
+    # ("l_elbow", "l_wrist"),
+    ("r_shoulder", "r_elbow"),
+    # ("r_elbow", "r_wrist"),
+    ("l_hip", "l_knee"),
+    ("l_knee", "l_ankle"),
+    ("r_hip", "r_knee"),
+    ("r_knee", "r_ankle")
+]
 
 def project_3d_to_2d(
         x: float,
@@ -90,7 +104,7 @@ def draw_selected_point(gestures: DataGestures,
             depths_dict[field] = gesture_value[2]
 
     for connection in connections:
-        if connection[0] in points_dict and connection[1] in points_dict:
+        if connection[0] in points_dict.keys() and connection[1] in points_dict.keys():
             draw_line_func(
                 points_dict[connection[0]], depths_dict[connection[0]],
                 points_dict[connection[1]], depths_dict[connection[1]])
@@ -108,11 +122,13 @@ def draw_hand_gestures(gesture: DataGestures,
     r_pos: tuple[float, float, float] = (0.0, 0.0, 0.0)
     l_pos: tuple[float, float, float] = (0.0, 0.0, 0.0)
 
-    if not draw_normalized or 1:
+    if not draw_normalized:
         r_scale = r_scale if gesture.r_hand_scale is None else gesture.r_hand_scale
         l_scale = l_scale if gesture.l_hand_scale is None else gesture.l_hand_scale
         r_pos = r_pos if gesture.r_hand_position is None else gesture.r_hand_position
         l_pos = l_pos if gesture.l_hand_position is None else gesture.l_hand_position
+
+    # print(r_scale, l_scale, r_pos, l_pos)
 
     # Draw right hand
     draw_selected_point(gesture, draw_line_func, draw_point_func,
@@ -120,6 +136,8 @@ def draw_hand_gestures(gesture: DataGestures,
     # Draw left hand
     draw_selected_point(gesture, draw_line_func, draw_point_func,
                         l_pos, l_scale, LEFT_HAND_POINTS.getActiveFields(), HAND_CONNECTIONS)
+
+from dataclasses import fields
 
 def draw_body_gestures(gestures: DataGestures,
                        draw_line_func: Callable[[tuple[float, float], float, tuple[float, float], float], None],
@@ -133,7 +151,7 @@ def draw_body_gestures(gestures: DataGestures,
 
     # Draw body points
     draw_selected_point(gestures, draw_line_func, draw_point_func,
-                        position, scale, BODY_POINTS.getActiveFields(), [])
+                        position, scale, BODY_POINTS.getActiveFields(), BODY_CONNECTIONS)
 
 def draw_face_gestures(gestures: DataGestures,
                        draw_line_func: Callable[[tuple[float, float], float, tuple[float, float], float], None],
@@ -156,8 +174,7 @@ def draw_gestures(gestures: DataGestures,
     """Draws the gestures on the screen."""
     draw_hand_gestures(gestures, draw_line_func,
                        draw_point_func, draw_normalized)
-    # draw_body_gestures(gestures, draw_line_func,
-    #                    draw_point_func, draw_normalized)
-    # draw_face_gestures(gestures, draw_line_func,
-    #                    draw_point_func, draw_normalized)
-    #
+    draw_body_gestures(gestures, draw_line_func,
+                       draw_point_func, draw_normalized)
+    draw_face_gestures(gestures, draw_line_func,
+                       draw_point_func, draw_normalized)

@@ -28,8 +28,8 @@ def landmark_to_list(landmark: Landmark | NormalizedLandmark | None) -> tuple[fl
     if landmark.x is None and landmark.y is None and landmark.z is None:
         return None
     return (
-        landmark.x if landmark.x is not None else 0.0, 
-        landmark.y if landmark.y is not None else 0.0, 
+        landmark.x if landmark.x is not None else 0.0,
+        landmark.y if landmark.y is not None else 0.0,
         landmark.z if landmark.z is not None else 0.0
     )
 
@@ -173,13 +173,13 @@ class _Gestures(Generic[T]):
     r_eye_int: T | None = None  # Right eye interior
     r_pupil: T | None = None  # Right pupil
 
-    l_shoudler: T | None = None  # Left shoulder
+    l_shoulder: T | None = None  # Left shoulder
     l_elbow: T | None = None  # Left elbow
     l_hip: T | None = None  # Left hip
     l_knee: T | None = None  # Left knee
     l_ankle: T | None = None  # Left ankle
 
-    r_shoudler: T | None = None  # Right shoulder
+    r_shoulder: T | None = None  # Right shoulder
     r_elbow: T | None = None  # Right elbow
     r_hip: T | None = None  # Right hip
     r_knee: T | None = None  # Right knee
@@ -389,21 +389,21 @@ HANDS_FULL: ActiveGestures = ActiveGestures.buildWithPreset(
 )
 
 LEFT_BODY_POINTS: ActiveGestures = ActiveGestures(
-    l_shoudler=True,
+    l_shoulder=True,
     l_elbow=True,
     l_hip=True,
     l_knee=True,
     l_ankle=True,
-    l_wrist=True
+    # l_wrist=True
 )
 
 RIGHT_BODY_POINTS: ActiveGestures = ActiveGestures(
-    r_shoudler=True,
+    r_shoulder=True,
     r_elbow=True,
     r_hip=True,
     r_knee=True,
     r_ankle=True,
-    r_wrist=True
+    # r_wrist=True
 )
 
 BODY_POINTS: ActiveGestures = ActiveGestures.buildWithPreset(
@@ -465,8 +465,21 @@ RIGHT_FACE_POINTS: ActiveGestures = ActiveGestures(
     r_pupil=True
 )
 
+MIDDLE_FACE_POINTS: ActiveGestures = ActiveGestures(
+    m_nose_point=True,
+    m_top_nose=True,
+    m_eyebrows=True,
+    m_forehead=True,
+    m_top_chin=True,
+    m_bot_up_lip=True,
+    m_top_low_lip=True,
+    m_bot_nose=True,
+    m_chin=True,
+    m_nose=True
+)
+
 FACE_POINTS: ActiveGestures = ActiveGestures.buildWithPreset(
-    [LEFT_FACE_POINTS, RIGHT_FACE_POINTS]
+    [LEFT_FACE_POINTS, MIDDLE_FACE_POINTS, RIGHT_FACE_POINTS]
 )
 
 HANDS_BODY_POINTS: ActiveGestures = ActiveGestures.buildWithPreset(
@@ -584,36 +597,40 @@ class DataGestures(Gestures[tuple[float, float, float] | None]):
 
         if landmark_result is not None:
             hand_fields: list[str] = [
-                "wrist",
-                "thumb_cmc",
-                "thumb_mcp",
-                "thumb_ip",
-                "thumb_tip",
-                "index_mcp",
-                "index_pip",
-                "index_dip",
-                "index_tip",
-                "middle_mcp",
-                "middle_pip",
-                "middle_dip",
-                "middle_tip",
-                "ring_mcp",
-                "ring_pip",
-                "ring_dip",
-                "ring_tip",
-                "pinky_mcp",
-                "pinky_pip",
-                "pinky_dip",
-                "pinky_tip",
+                "wrist", # 0
+                "thumb_cmc", # 1
+                "thumb_mcp", # 2
+                "thumb_ip", # 3
+                "thumb_tip", # 4
+                "index_mcp", # 5
+                "index_pip", # 6
+                "index_dip", # 7
+                "index_tip", # 8
+                "middle_mcp", # 9
+                "middle_pip", # 10
+                "middle_dip", # 11
+                "middle_tip", # 12
+                "ring_mcp", # 13
+                "ring_pip", # 14
+                "ring_dip", # 15
+                "ring_tip", # 16
+                "pinky_mcp", # 17
+                "pinky_pip", # 18
+                "pinky_dip", # 19
+                "pinky_tip", # 20
             ]
             hand_pos_id: int = 9
-            hand_pos_id2: int = 0
+            hand_pos_id2: int = 5
+            hand_pos_id3: int = 17
 
             for i in range(len(landmark_result.hand_world_landmarks)):
+                # Hand normalized
                 handlandmark: list[NormalizedLandmark] = landmark_result.hand_landmarks[i]
-                handworldlandmark: list[Landmark] = (
-                    landmark_result.hand_world_landmarks[i]
-                )
+                # Hand world placed
+                handworldlandmark: list[Landmark] = landmark_result.hand_world_landmarks[i]
+                # handlandmark, handworldlandmark = (handworldlandmark, handlandmark)
+
+                # print(handlandmark, handworldlandmark)
                 prefix: str = "l_" if landmark_result.handedness[i][0].category_name == "Left" else "r_"
 
                 """
@@ -632,38 +649,28 @@ class DataGestures(Gestures[tuple[float, float, float] | None]):
                                 hand_pos_id_coords[1] - 0.5,
                                 hand_pos_id_coords[2] - 0.5)
 
-                # Adding position of each finger articulation
-                # for j, field_name in enumerate(hand_fields):
-                #     self.setPointTo(f"{prefix}{field_name}",
-                #                     handworldlandmark[j].x,
-                #                     handworldlandmark[j].y,
-                #                     handworldlandmark[j].z)
-
-                # scale: float = 1.0
-                # normal_dist: float | None = get_dist_between_points(
-                #     (handworldlandmark[hand_pos_id2].x, handworldlandmark[hand_pos_id2].y,
-                #      handworldlandmark[hand_pos_id2].z),
-                #     (handworldlandmark[hand_pos_id].x,
-                #      handworldlandmark[hand_pos_id].y, handworldlandmark[hand_pos_id].z)
-                # )
-                # world_dist: float | None = get_dist_between_points(
-                #     (handlandmark[hand_pos_id2].x, handlandmark[hand_pos_id2].y,
-                #      handlandmark[hand_pos_id2].z),
-                #     (handlandmark[hand_pos_id].x,
-                #      handlandmark[hand_pos_id].y, handlandmark[hand_pos_id].z)
-                # )
-                # if normal_dist is not None and normal_dist > 0 and \
-                #         world_dist is not None and world_dist > 0:
-                #     scale = world_dist / normal_dist
-                offset: tuple[float, float, float] = getattr(
-                    self, f"{prefix}hand_position", (0, 0, 0))
-                scale = get_dist_between_points(
-                    (handlandmark[hand_pos_id2].x, handlandmark[hand_pos_id2].y,
-                     handlandmark[hand_pos_id2].z),
-                    (handlandmark[hand_pos_id].x, handlandmark[hand_pos_id].y,
-                     handlandmark[hand_pos_id].z))
-                if scale is None or scale <= 0:
+                combination: int = 0
+                scale_norm: float = 0
+                scale = 0
+                for i in range(len(hand_fields)):
+                    for k in range(len(hand_fields)):
+                        if i == k:
+                            continue
+                        scale_norm += get_dist_between_points(
+                            (handlandmark[i].x, handlandmark[i].y, handlandmark[i].z),
+                            (handlandmark[k].x, handlandmark[k].y, handlandmark[k].z)
+                        ) or 0.0
+                        scale += get_dist_between_points(
+                            (handworldlandmark[i].x, handworldlandmark[i].y, handworldlandmark[i].z),
+                            (handworldlandmark[k].x, handworldlandmark[k].y, handworldlandmark[k].z)
+                        ) or 0.0
+                        combination += 1
+                scale_norm /= combination
+                scale /= combination
+                if scale == 0 or scale_norm == 0:
                     scale = 1.0
+                else:
+                    scale = scale_norm / scale
                 self.setPointTo(f"{prefix}hand_scale", scale, scale, scale)
 
                 for j, field_name in enumerate(hand_fields):
@@ -673,9 +680,7 @@ class DataGestures(Gestures[tuple[float, float, float] | None]):
                         float(handworldlandmark[j].z or 0.0)
                     )
                     self.setPointTo(f"{prefix}{field_name}",
-                                    (tmp[0] - offset[0]) / scale,
-                                    (tmp[1] - offset[1]) / scale,
-                                    (tmp[2] - offset[2]) / scale)
+                                    tmp[0], tmp[1], tmp[2])
 
         if facemark_result is not None and len(facemark_result.multi_face_landmarks) > 0:
             face_fields: dict[str, int] = {
@@ -739,8 +744,8 @@ class DataGestures(Gestures[tuple[float, float, float] | None]):
                 (nose_point_coord[0], nose_point_coord[1], nose_point_coord[2]),
                 (chin_coord[0], chin_coord[1], chin_coord[2])
             ) or 1.0
-
             self.m_face_scale = (scale, scale, scale)
+
             for key, val in face_fields.items():
                 tmp = landmark_to_list(face_points[val])
                 if tmp is not None:
@@ -752,17 +757,23 @@ class DataGestures(Gestures[tuple[float, float, float] | None]):
 
                 setattr(self, key, tmp)
 
+            self.m_face_position = (
+                self.m_face_position[0] - 0.5,
+                self.m_face_position[1] - 0.5,
+                self.m_face_position[2] - 0.5,
+            )
+
 
         if bodymark_result is not None:
             body_points: NormalizedLandmarkList = bodymark_result.pose_landmarks
             body_fields: dict[str, int] = {
-                "l_shoudler": mediapipe.solutions.pose.PoseLandmark.LEFT_SHOULDER,
+                "l_shoulder": mediapipe.solutions.pose.PoseLandmark.LEFT_SHOULDER,
                 "l_elbow": mediapipe.solutions.pose.PoseLandmark.LEFT_ELBOW,
                 "l_hip": mediapipe.solutions.pose.PoseLandmark.LEFT_HIP,
                 "l_knee": mediapipe.solutions.pose.PoseLandmark.LEFT_KNEE,
                 "l_ankle": mediapipe.solutions.pose.PoseLandmark.LEFT_ANKLE,
                 # "l_wrist": mediapipe.solutions.pose.PoseLandmark.LEFT_WRIST,
-                "r_shoudler": mediapipe.solutions.pose.PoseLandmark.RIGHT_SHOULDER,
+                "r_shoulder": mediapipe.solutions.pose.PoseLandmark.RIGHT_SHOULDER,
                 "r_elbow": mediapipe.solutions.pose.PoseLandmark.RIGHT_ELBOW,
                 "r_hip": mediapipe.solutions.pose.PoseLandmark.RIGHT_HIP,
                 "r_knee": mediapipe.solutions.pose.PoseLandmark.RIGHT_KNEE,
@@ -770,9 +781,9 @@ class DataGestures(Gestures[tuple[float, float, float] | None]):
                 # "r_wrist": mediapipe.solutions.pose.PoseLandmark.RIGHT_WRIST,
             }
             l_shoulder_coord: tuple[float, float, float] | None = landmark_to_list(
-                body_points.landmark[body_fields["l_shoudler"]])
+                body_points.landmark[body_fields["l_shoulder"]])
             r_shoulder_coord: tuple[float, float, float] | None = landmark_to_list(
-                body_points.landmark[body_fields["r_shoudler"]])
+                body_points.landmark[body_fields["r_shoulder"]])
             if l_shoulder_coord is None:
                 l_shoulder_coord = (0.0, 0.0, 0.0)
             if r_shoulder_coord is None:
@@ -800,6 +811,11 @@ class DataGestures(Gestures[tuple[float, float, float] | None]):
                     )
 
                 setattr(self, key, tmp)
+            self.m_body_position = (
+                self.m_body_position[0] - 0.5,
+                self.m_body_position[1] - 0.5,
+                self.m_body_position[2] - 0.5,
+            )
 
         return self
 
