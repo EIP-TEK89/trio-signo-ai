@@ -22,7 +22,7 @@ keys_index = {'a': 'a', 'b': 'b', 'c': 'c', 'd': 'd', 'e': 'e', 'f': 'f', 'g': '
               'u': 'u', 'v': 'v', 'w': 'w', 'x': 'x', 'y': 'y', 'z': 'z', '1': '1', '2': '2', '3': '3', '4': '4',
               '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', '0': '_null'}
 
-screenshot_delay = 1
+screenshot_delay = 2
 
 parser = argparse.ArgumentParser(description="Sign recognition with video recording.")
 parser.add_argument("--label", type=str, nargs="?", default="undefined", help="Label for the video files (default: undefined)")
