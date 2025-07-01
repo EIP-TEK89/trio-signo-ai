@@ -50,15 +50,16 @@ def print_progression(dataset_labels: list[str], label_id: int,
     remaining_time_str = time.strftime("%H:%M:%S", time.gmtime(remaining_time))
     dataset_labels_len = len(dataset_labels)
 
-    print(f"\r\033[KCreating dataset: " +
+    string: str = f"\r\033[KCreating dataset: " + \
           f"[Label ({dataset_labels[label_id]}): {str(label_id).zfill(
-              len(str(dataset_labels_len)))}/{dataset_labels_len}] " +
+              len(str(dataset_labels_len)))}/{dataset_labels_len}] " + \
           f"[Datasample: {str(treated_sample).zfill(
-              len(str(label_total_samples)))}/{label_total_samples}] " +
+              len(str(label_total_samples)))}/{label_total_samples}] " + \
           f"[Subset Generation: {str(subset).zfill(
-              len(str(total_subset)))}/{total_subset}] " +
-          f"[Sample generated: {created_sample}] " +
-          f"Remain time: {remaining_time_str} {str(completed_cycle).zfill(len(str(total_cycle)))}/{total_cycle}", end="")
+              len(str(total_subset)))}/{total_subset}] " + \
+          f"[Sample generated: {created_sample}] " + \
+          f"Remain time: {remaining_time_str} {str(completed_cycle).zfill(len(str(total_cycle)))}/{total_cycle}"
+    print(string, end="\r", flush=True)
 
 
 def create_subset(sample: DataSample,

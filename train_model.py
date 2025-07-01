@@ -35,7 +35,7 @@ assert model is not None, "Model is None"
 
 print("Starting training...")
 train_stats = train_model(model, dataloaders, confused_sets, train_stats,
-                          weights, args.embedding_optimization_thresold,
+                          weights, args.embedding_optimization_threshold,
                           num_epochs=args.epoch,
                           device=args.device)
 
