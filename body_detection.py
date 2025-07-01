@@ -43,7 +43,7 @@ def extract_body_landmarks_from_frame(frame, pose_tracker):
     if not results.pose_landmarks:
         return None, None
 
-    print(type(results.pose_landmarks))
+    # print(type(results.pose_landmarks))
     landmarks = results.pose_landmarks.landmark
     points = {
         idx: {
@@ -62,10 +62,10 @@ def track_body(frame):
     if points is None:
         return frame, None
 
-    height, width, _ = frame.shape
-    for pt in points.values():
-        cx, cy = int(pt['x'] * width), int(pt['y'] * height)
-        cv2.circle(frame, (cx, cy), 3, (0, 255, 0), -1)
+    # height, width, _ = frame.shape
+    # for pt in points.values():
+    #     cx, cy = int(pt['x'] * width), int(pt['y'] * height)
+    #     cv2.circle(frame, (cx, cy), 3, (0, 255, 0), -1)
 
     return frame, results
 

@@ -88,10 +88,11 @@ def track_face(frame):
 
     face_landmarks: NormalizedLandmarkList = results.multi_face_landmarks[0]
     height, width, _ = frame.shape
-    for idx, lm in enumerate(gest.getPoints()):
-        if lm is not None:
-            cx, cy = int(lm[0] * width), int(lm[1] * height)
-            cv2.circle(frame, (cx, cy), 5, (255, 0, 0), -1)
+
+    # for idx, lm in enumerate(gest.getPoints()):
+    #     if lm is not None:
+    #         cx, cy = int(lm[0] * width), int(lm[1] * height)
+    #         cv2.circle(frame, (cx, cy), 5, (255, 0, 0), -1)
 
     return frame, results
 

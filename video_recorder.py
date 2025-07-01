@@ -5,10 +5,12 @@ import argparse
 import numpy as np
 import copy
 from datetime import datetime
-from src.datasample import DataSample2
+from src.datasample import DataSample
 from run_model import load_hand_landmarker, track_hand, draw_land_marks, recognize_sign
 from src.model_class.sign_recognizer_v1 import *
 from src.model_class.transformer_sign_recognizer import *
+from src.draw_gestures import draw_gestures
+
 from face_detection import track_face
 from body_detection import track_body
 
@@ -24,12 +26,18 @@ keys_index = {'a': 'a', 'b': 'b', 'c': 'c', 'd': 'd', 'e': 'e', 'f': 'f', 'g': '
 
 screenshot_delay = 2
 
-parser = argparse.ArgumentParser(description="Sign recognition with video recording.")
-parser.add_argument("--label", type=str, nargs="?", default="undefined", help="Label for the video files (default: undefined)")
-parser.add_argument("--model", required=True, help="Path to the folder containing the sign recognition model.")
-parser.add_argument("--counter-example", action='store_true', help="Will save the sign as a counter example of the label set in --label.")
-parser.add_argument("--face", action='store_true', help="Enable face tracking.")
-parser.add_argument("--body", action='store_true', help="Enable body tracking.")
+parser = argparse.ArgumentParser(
+    description="Sign recognition with video recording.")
+parser.add_argument("--label", type=str, nargs="?", default="undefined",
+                    help="Label for the video files (default: undefined)")
+parser.add_argument("--model", required=True,
+                    help="Path to the folder containing the sign recognition model.")
+parser.add_argument("--counter-example", action='store_true',
+                    help="Will save the sign as a counter example of the label set in --label.")
+parser.add_argument("--face", action='store_true',
+                    help="Enable face tracking.")
+parser.add_argument("--body", action='store_true',
+                    help="Enable body tracking.")
 
 args = parser.parse_args()
 
@@ -57,7 +65,7 @@ def list_available_cameras(max_cameras=10):
 available_cameras = list_available_cameras()
 print(available_cameras)
 
-record = cv2.VideoCapture(available_cameras[0])
+record: cv2.VideoCapture = cv2.VideoCapture(available_cameras[0])
 frame_width = int(record.get(3))
 frame_height = int(record.get(4))
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -68,7 +76,7 @@ is_croping = False
 remaining_delay = 0
 countdown_active = False
 
-frame_history: DataSample2 = DataSample2("", [])
+frame_history: DataSample = DataSample("", [])
 prev_sign = -1
 prev_display = -1
 
@@ -99,6 +107,34 @@ def update_json(json_path, file_info):
         json.dump(data, f, indent=4)
 
 
+class CVDrawer:
+    frame: np.ndarray | None = None
+    scale: float = 1
+
+    def update_frame(self, frame: np.ndarray) -> np.ndarray:
+        self.frame = frame
+        return self.frame
+
+    def draw_line(self, start: tuple[float, float], start_depth: float,
+                  end: tuple[float, float], end_depth: float) -> None:
+
+        start_px: tuple[int, int] = (
+            int(self.scale * (0.5 + start[0]) * frame_width),
+            int(self.scale * (0.5 + start[1]) * frame_height))
+        end_px: tuple[int, int] = (
+            int(self.scale * (0.5 + end[0]) * frame_width),
+            int(self.scale * (0.5 + end[1]) * frame_height))
+        self.frame = cv2.line(self.frame, start_px, end_px, (0, 255, 0), 2)
+
+    def draw_point(self, point: tuple[float, float], depth: float) -> None:
+        point_px: tuple[int, int] = (
+            int(self.scale * (0.5 + point[0]) * frame_width),
+            int(self.scale * (0.5 + point[1]) * frame_height))
+        self.frame = cv2.circle(self.frame, point_px, 5, (255, 0, 0), -1)
+
+
+cv_drawer = CVDrawer()
+
 while True:
     if not is_croping:
         ret, frame = record.read()
@@ -119,8 +155,13 @@ while True:
         if args.body:
             frame, body_result = track_body(frame)
 
-        frame = draw_land_marks(frame, result)
-        frame_history.insertGestureFromLandmarks(0, result, face_result, body_result)
+        # frame = draw_land_marks(frame, result)
+        frame_history.insertGestureFromLandmarks(
+            0, result, face_result, body_result)
+
+        cv_drawer.update_frame(frame)
+        draw_gestures(frame_history.gestures[0], cv_drawer.draw_line,
+                      cv_drawer.draw_point)
 
         while len(frame_history.gestures) > sign_rec.info.memory_frame:
             frame_history.gestures.pop(-1)
@@ -137,10 +178,13 @@ while True:
             prev_display = prev_sign
             prev_sign = recognized_sign
         if recognized_sign != -1:
-            text = f"{sign_rec.info.labels[recognized_sign]} prev({sign_rec.info.labels[prev_display]})"
+            text = f"{sign_rec.info.labels[recognized_sign]} prev({
+                sign_rec.info.labels[prev_display]})"
 
-        cv2.putText(frame, text, (49, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.01, (0,0,0), 2, cv2.LINE_AA)
-        cv2.putText(frame, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2, cv2.LINE_AA)
+        cv2.putText(frame, text, (49, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                    1.01, (0, 0, 0), 2, cv2.LINE_AA)
+        cv2.putText(frame, text, (50, 50), cv2.FONT_HERSHEY_SIMPLEX,
+                    1, (255, 255, 255), 2, cv2.LINE_AA)
 
         if is_recording:
             out.write(frame)
@@ -159,7 +203,7 @@ while True:
             if not is_recording:
                 file_name = video_label + "_" + current_time + ".avi"
                 full_save_path = os.path.join(save_folder, video_label, 'temp')
-                data_sample = DataSample2(video_label, [])
+                data_sample = DataSample(video_label, [])
 
                 os.makedirs(full_save_path, exist_ok=True)
                 label_json_path = os.path.join(full_save_path, 'label.json')
@@ -210,7 +254,7 @@ while True:
                         json.dump([], f)
 
                 output_file = os.path.join(full_save_path, file_name)
-                image_sample = DataSample2(image_label, [])
+                image_sample = DataSample(image_label, [])
 
         if countdown_active:
             remaining_delay -= 1 / FPS
@@ -221,9 +265,9 @@ while True:
                 update_json(label_json_path, {"filename": file_name, "label": image_label})
 
                 result, _ = track_hand(og_frame, handland_marker)
-                image_sample.insertGestureFromLandmarks(0, result, face_result, body_result)
+                image_sample.insertGestureFromLandmarks(
+                    0, result, face_result, body_result)
                 if counter_example:
-
                     os.makedirs(f"{save_folder}{image_label}/counter_example", exist_ok=True)
                     image_sample.toJsonFile(f"{save_folder}{image_label}/counter_example/{file_name}.json")
                 else:

@@ -19,14 +19,14 @@ if len(sys.argv) < 2:
     exit(1)
 
 selected_sample: int = 0
-samples: list[tuple[DataSample2, str]] = []
+samples: list[tuple[DataSample, str]] = []
 
 try:
-    samples = [(DataSample2.fromJsonFile(sys.argv[1]), sys.argv[1])]
+    samples = [(DataSample.fromJsonFile(sys.argv[1]), sys.argv[1])]
 except:
     for file in os.listdir(sys.argv[1]):
         if file.endswith(".json"):
-            samples.append((DataSample2.fromJsonFile(
+            samples.append((DataSample.fromJsonFile(
                 f"{sys.argv[1]}/{file}"), f"{sys.argv[1]}/{file}"))
             # samples[-1][0].noise_sample()
 
@@ -191,7 +191,7 @@ Controls:
       """)
 
 while run:
-    sample: DataSample2 = samples[selected_sample][0]
+    sample: DataSample = samples[selected_sample][0]
     frame %= len(sample.gestures)
     print(f"\r\033[Kframe: {frame + 1}/{len(sample.gestures)}, Sample: {
           selected_sample}/{len(samples)} [{samples[selected_sample][1]}]", end="")
@@ -235,7 +235,7 @@ while run:
 
     win.fill((0, 0, 0))
 
-    sample_cpy: DataSample2 = copy.deepcopy(sample)
+    sample_cpy: DataSample = copy.deepcopy(sample)
     # sample_cpy.noise_sample(0.004)
 
     # ROT_ANGLE = math.pi / 4
