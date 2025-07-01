@@ -6,26 +6,52 @@ import numpy as np
 from datetime import datetime
 from src.datasample import DataSample
 from src.datasample import dataclass
-from run_model import load_hand_landmarker, track_hand
-from face_detection import track_face
-from body_detection import track_body
+from src.run_model import load_hand_landmarker, track_hand
+from src.video_recorder.face_detection import track_face
+from src.video_recorder.body_detection import track_body
 
 parser = argparse.ArgumentParser(description="Process PNG images from a folder and extract landmarks.")
 parser.add_argument("--folder", required=True, help="Folder containing PNG images.")
-parser.add_argument("--label", required=True, help="Label to assign to the processed images.")
+parser.add_argument("--output", required=True, help="Output folder for processed images.")
+# parser.add_argument("--label", required=True, help="Label to assign to the processed images.")
 #parser.add_argument("--model", required=True, help="Path to the sign recognition model (needed for structure).")
 parser.add_argument("--face", action='store_true', help="Enable face tracking.")
 parser.add_argument("--body", action='store_true', help="Enable body tracking.")
 parser.add_argument("--counter-example", action='store_true', help="Save as counter example.")
 args = parser.parse_args()
 
-save_folder = "datasets/"
-output_path = os.path.join(save_folder, args.label, "test", "counter_example" if args.counter_example else "")
-os.makedirs(output_path, exist_ok=True)
+src_folder: str = args.folder
+save_folder: str = args.output
+# output_path = os.path.join(save_folder, args.label, "test", "counter_example" if args.counter_example else "")
+# os.makedirs(output_path, exist_ok=True)
 
 # Load hand landmark model
 print("Loading hand landmark model...")
 handland_marker = load_hand_landmarker(2)
+
+for label_folder in os.listdir(src_folder):
+    if not os.path.isdir(os.path.join(src_folder, label_folder)):
+        print(f"Skipping non-directory item: {label_folder}")
+        continue
+    print(f"Processing label folder: {label_folder}")
+    # Create output directory for the label
+    full_path: str = os.path.join(src_folder, label_folder)
+    print("Full path:", full_path)
+    print(os.listdir(full_path))
+    try:
+        valid_path: str = os.path.join(full_path, "valid")
+        print("valid", valid_path, os.listdir(valid_path), len(os.listdir(valid_path)))
+        # ajouter la recup des images/video ici
+    except FileNotFoundError:
+        print("No valid folder found for label:", label_folder)
+    try:
+        counter_example_path: str = os.path.join(full_path, "counter_example")
+        print("counter_example", len(os.listdir(counter_example_path)))
+        # ajouter la recup des images/video ici
+    except FileNotFoundError:
+        print("No counter_example folder found for label:", label_folder)
+
+exit()
 
 # Prepare label.json
 temp_folder = os.path.join(save_folder, args.label, 'temp')
@@ -49,13 +75,13 @@ for img_file in image_files:
         continue
 
     image_sample = DataSample(args.label, [])
-    
+
     hand_result, _ = track_hand(image, handland_marker)
     face_result = track_face(image)[1] if args.face else None
     body_result = track_body(image)[1] if args.body else None
 
     image_sample.insertGestureFromLandmarks(0, hand_result, face_result, body_result)
-    
+
     """
     for elem in image_sample.gestures:
         print(elem)

@@ -3,7 +3,7 @@ from mediapipe.tasks.python.vision.hand_landmarker import *
 import os
 from src.datasample import *
 
-from run_model import load_hand_landmarker, track_hand, draw_land_marks
+from src.run_model import load_hand_landmarker, track_hand, draw_land_marks
 
 # Path to your video file
 label = "j"

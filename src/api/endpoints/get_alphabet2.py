@@ -7,7 +7,7 @@ from flask import request, jsonify
 import numpy as np
 import io
 from PIL import Image, ImageOps
-from run_model import track_hand, recognize_sign
+from src.run_model import track_hand, recognize_sign
 
 from src.model_class.transformer_sign_recognizer import *
 from src.datasample import DataSample, DataGestures

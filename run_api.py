@@ -22,7 +22,7 @@ from mediapipe.tasks.python import vision
 from mediapipe.tasks.python.vision.hand_landmarker import *
 
 from src.model_class.transformer_sign_recognizer import *
-from run_model import load_hand_landmarker
+from src.run_model import load_hand_landmarker
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)

@@ -6,13 +6,13 @@ import numpy as np
 import copy
 from datetime import datetime
 from src.datasample import DataSample
-from run_model import load_hand_landmarker, track_hand, draw_land_marks, recognize_sign
+from src.run_model import load_hand_landmarker, track_hand, draw_land_marks, recognize_sign
 from src.model_class.sign_recognizer_v1 import *
 from src.model_class.transformer_sign_recognizer import *
 from src.draw_gestures import draw_gestures
 
-from face_detection import track_face
-from body_detection import track_body
+from src.video_recorder.face_detection import track_face
+from src.video_recorder.body_detection import track_body
 
 ESC = 27
 SPACE = 32
