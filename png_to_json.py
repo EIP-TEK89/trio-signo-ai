@@ -13,7 +13,7 @@ from body_detection import track_body
 parser = argparse.ArgumentParser(description="Process PNG images from a folder and extract landmarks.")
 parser.add_argument("--folder", required=True, help="Folder containing PNG images.")
 parser.add_argument("--label", required=True, help="Label to assign to the processed images.")
-parser.add_argument("--model", required=True, help="Path to the sign recognition model (needed for structure).")
+#parser.add_argument("--model", required=True, help="Path to the sign recognition model (needed for structure).")
 parser.add_argument("--face", action='store_true', help="Enable face tracking.")
 parser.add_argument("--body", action='store_true', help="Enable body tracking.")
 parser.add_argument("--counter-example", action='store_true', help="Save as counter example.")
