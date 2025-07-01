@@ -1,17 +1,17 @@
 import random
 from collections import deque
 
-from src.datasample import DataSample2
+from src.datasample import DataSample
 from src.gen_traindata.tools import make_new_sample_variation, zero_gesture, rand_gesture
 
 
-def gen_static_data(sample: DataSample2,
+def gen_static_data(sample: DataSample,
                     nb_frame: int,
                     null_set: str | None = None,
-                    ) -> deque[DataSample2]:
-    sub_sample: deque[DataSample2] = deque()
+                    ) -> deque[DataSample]:
+    sub_sample: deque[DataSample] = deque()
 
-    tmp_sample: DataSample2
+    tmp_sample: DataSample
     iterations: int = nb_frame * 1
 
     for _ in range(1):
@@ -69,8 +69,8 @@ def gen_static_data(sample: DataSample2,
         #     sub_sample.append(tmp_sample.noise_sample())
 
         # # Generate coherent image succession for each sub_sample
-        # src_sample: DataSample2 = make_new_sample_variation(sample)
-        # tmp_sample = DataSample2(sample.label, [])
+        # src_sample: DataSample = make_new_sample_variation(sample)
+        # tmp_sample = DataSample(sample.label, [])
         # step: int = 0
 
         # while step < nb_frame * 1.5:

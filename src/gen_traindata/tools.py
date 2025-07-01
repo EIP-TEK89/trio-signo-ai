@@ -2,7 +2,7 @@ import copy
 import math
 
 from src.gesture import DataGestures
-from src.datasample import DataSample2
+from src.datasample import DataSample
 from src.tools import rand_fix_interval
 
 ROT_ANGLE = math.pi / 4
@@ -18,8 +18,8 @@ def zero_gesture() -> DataGestures:
     return tmp.setAllPointsToZero()
 
 
-def make_new_sample_variation(sample: DataSample2) -> DataSample2:
-    tmp: DataSample2 = copy.deepcopy(sample)
+def make_new_sample_variation(sample: DataSample) -> DataSample:
+    tmp: DataSample = copy.deepcopy(sample)
 
     # Create a variation
     return tmp.rotate_sample(

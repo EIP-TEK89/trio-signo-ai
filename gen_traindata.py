@@ -10,7 +10,7 @@ from src.gen_traindata.gen_dynamic_data import gen_dynamic_data
 from src.gen_traindata.tools import rand_gesture
 
 from src.gesture import DataGestures, ActiveGestures, ALL_GESTURES, ACTIVATED_GESTURES_PRESETS
-from src.datasample import DataSample2
+from src.datasample import DataSample
 from src.datasamples import IDX_VALID_SAMPLE, DataSamples, DataSamplesInfo, IDX_INVALID_SAMPLE
 
 DATASETS_DIR = "datasets"
@@ -62,22 +62,22 @@ def print_progression(dataset_labels: list[str], label_id: int,
     print(string, end="\r", flush=True)
 
 
-def create_subset(sample: DataSample2,
+def create_subset(sample: DataSample,
                   nb_frame: int,
                   null_set: str | None = None,
                   active_points: ActiveGestures = ALL_GESTURES,
-                  ) -> list[DataSample2]:
-    sub_sample: deque[DataSample2] = deque()
+                  ) -> list[DataSample]:
+    sub_sample: deque[DataSample] = deque()
 
-    initial_samples: list[DataSample2] = [sample]
+    initial_samples: list[DataSample] = [sample]
     if sample.mirrorable:
-        mirror_sample: DataSample2 = copy.deepcopy(sample)
+        mirror_sample: DataSample = copy.deepcopy(sample)
         mirror_sample.mirror_sample(x=True, y=False, z=False)
         initial_samples.append(mirror_sample)
 
     for samp in initial_samples:
         # Be careful those function randomize undefined (set to None) points
-        tmp_samples: deque[DataSample2]
+        tmp_samples: deque[DataSample]
         if len(sample.gestures) == 1:
             tmp_samples = gen_static_data(samp, nb_frame, null_set)
         else:
@@ -91,7 +91,7 @@ def create_subset(sample: DataSample2,
     # Create pure non valid data
     if null_set is not None:
         for _ in range(2):
-            tmp_sample: DataSample2 = DataSample2(null_set, [])
+            tmp_sample: DataSample = DataSample(null_set, [])
 
             target_nb_frame: int = random.randint(1, nb_frame)
             while len(tmp_sample.gestures) < target_nb_frame:
@@ -123,20 +123,20 @@ def summary_checker(dataset_name: str, null_label: str | None, labels: list[str]
 def load_datasamples(dataset_labels: list[str],
                      memory_frame: int,
                      null_label: str | None = None,
-                     ) -> dict[str, tuple[list[DataSample2], list[DataSample2]]]:
-    data_samples: dict[str, tuple[list[DataSample2], list[DataSample2]]] = {}
+                     ) -> dict[str, tuple[list[DataSample], list[DataSample]]]:
+    data_samples: dict[str, tuple[list[DataSample], list[DataSample]]] = {}
     for label_name in dataset_labels:
         label_path: str = f"{DATASETS_DIR}/{label_name}"
         dataset_samples = os.listdir(label_path)
-        samples: list[DataSample2] = []
-        counter_examples: list[DataSample2] = []
+        samples: list[DataSample] = []
+        counter_examples: list[DataSample] = []
 
         if len(dataset_samples) == 0:
             print(f"Warning: {label_name} is empty")
             continue
         for dataset_sample in dataset_samples:
             try:
-                sample: DataSample2 = DataSample2.fromJsonFile(
+                sample: DataSample = DataSample.fromJsonFile(
                     f"{label_path}/{dataset_sample}")
                 sample.label = label_name
                 if len(sample.gestures) > memory_frame:
@@ -148,7 +148,7 @@ def load_datasamples(dataset_labels: list[str],
                     file_names = os.listdir(f"{label_path}/{dataset_sample}")
                     for file_name in file_names:
                         try:
-                            sample = DataSample2.fromJsonFile(
+                            sample = DataSample.fromJsonFile(
                                 f"{label_path}/{dataset_sample}/{file_name}")
                             sample.invalid = True
                             if len(sample.gestures) > memory_frame:
@@ -243,7 +243,7 @@ def main():
                     total_subsets, nb_frame, dataset_name, one_side, active_gesture)
 
     print("Loading samples into memory...", end=" ")
-    data_samples: dict[str, tuple[list[DataSample2], list[DataSample2]]] = load_datasamples(
+    data_samples: dict[str, tuple[list[DataSample], list[DataSample]]] = load_datasamples(
         dataset_labels, memory_frame=nb_frame, null_label=null_set)
     print("[DONE]")
 
@@ -343,7 +343,7 @@ def main():
         total_cycle = (biggest_label_count * len(train_data.info.labels)
                        ) - train_data.getNumberOfSamples()
         while label_id < len(train_data.samples):
-            current_data_samples: list[DataSample2] = data_samples[train_data.info.labels[label_id]][IDX_VALID_SAMPLE]
+            current_data_samples: list[DataSample] = data_samples[train_data.info.labels[label_id]][IDX_VALID_SAMPLE]
 
             if len(current_data_samples) == 0:
                 print(f"Warning: {train_data.info.labels[label_id]} is empty")
@@ -352,9 +352,9 @@ def main():
             data_sample_len = len(current_data_samples)
             sample_idx: int = 0
             while train_data.getNumberOfSamplesOfLabel(label_id) < biggest_label_count:
-                sample: DataSample2 = current_data_samples[sample_idx]
+                sample: DataSample = current_data_samples[sample_idx]
                 sample.label = train_data.info.labels[label_id]
-                generated_subset: list[DataSample2] = create_subset(
+                generated_subset: list[DataSample] = create_subset(
                     sample, nb_frame, None, active_gesture)
                 completed_cycle += len(generated_subset)
                 train_data.addDataSamples(generated_subset)
