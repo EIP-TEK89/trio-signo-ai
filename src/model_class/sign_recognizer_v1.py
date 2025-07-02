@@ -11,9 +11,11 @@ import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 
 from src.datasample import *
+from src.datasamples import *
+from src.train_model.AccuracyCalculator import AccuracyCalculator
 
 @dataclass
-class ModelInfo(TrainDataInfo):
+class ModelInfo(DataSamplesInfo):
     layers: list[int]
     name: str
     mode_arch: str = "v1"
@@ -43,6 +45,9 @@ class ModelInfo(TrainDataInfo):
         with open(file_path, 'r', encoding="utf-8") as f:
             return cls.from_dict(json.load(f))
 
+    def set_intermediate_layers(self, layers: list[int]):
+        self.layers = [self.layers[0]] + layers + [self.layers[-1]]
+
     def to_dict(self):
         _dict: dict = super(ModelInfo, self).to_dict()
         _dict["layers"] = self.layers
@@ -50,7 +55,7 @@ class ModelInfo(TrainDataInfo):
         _dict["mode_arch"] = self.mode_arch
         return _dict
 
-    def to_json_file(self, file_path: str, indent: int = 4):
+    def toJsonFile(self, file_path: str, indent: int = 4):
         with open(file_path, 'w', encoding="utf-8") as f:
             json.dump(self.to_dict(), f, ensure_ascii=False, indent=indent)
 
@@ -64,21 +69,26 @@ class ModelEpochResult:
     epoch: int
 
 class SignRecognizerV1(nn.Module):
-    def __init__(self, model_info: ModelInfo):
+    def __init__(self, model_info: ModelInfo, device: torch.device = torch.device("cpu"), dropout: float = 0.3):
         super(SignRecognizerV1, self).__init__()
 
         self.info = model_info
         self.fcs = nn.ModuleList()
+        self.device: torch.device = device
 
         for i in range(len(model_info.layers) - 1):
             self.fcs.append(nn.Linear(model_info.layers[i], model_info.layers[i+1]))
+            if i < len(model_info.layers) - 2:
+                self.fcs.append(nn.Dropout(dropout))
+
+        self.to(self.device)
 
     @classmethod
-    def loadModelFromDir(cls, model_dir: str):
+    def loadModelFromDir(cls, model_dir: str, device: torch.device = torch.device("cpu")):
         json_files = glob.glob(f"{model_dir}/*.json")
         if len(json_files) == 0:
             raise FileNotFoundError(f"No .json file found in {model_dir}")
-        cls = SignRecognizerV1(ModelInfo.from_json_file(json_files[0]))
+        cls = SignRecognizerV1(ModelInfo.from_json_file(json_files[0]), device=device)
 
         pth_files = glob.glob(f"{model_dir}/*.pth")
         if len(pth_files) == 0:
@@ -88,7 +98,7 @@ class SignRecognizerV1(nn.Module):
         return cls
 
     def loadPthFile(self, model_path):
-        self.load_state_dict(torch.load(model_path))
+        self.load_state_dict(torch.load(model_path, map_location=self.device))
 
     def saveModel(self, model_name: str = None):
         if model_name is None:
@@ -101,7 +111,7 @@ class SignRecognizerV1(nn.Module):
         os.makedirs(model_name, exist_ok=True)
         full_name = f"{model_name}/{model_name}"
         torch.save(self.state_dict(), full_name + ".pth")
-        self.info.to_json_file(full_name + ".json")
+        self.info.toJsonFile(full_name + ".json")
 
     def forward(self, x):
         for i in range(len(self.fcs) - 1):
@@ -109,8 +119,6 @@ class SignRecognizerV1(nn.Module):
         return self.fcs[-1](x)
 
     def use(self, input: list[float]):
-        # for i in range(len(input)):
-        #     input[i] = round(input[i], 3)
         while len(input) < self.info.layers[0]:
             input.append(0)
         self.eval()
@@ -119,77 +127,3 @@ class SignRecognizerV1(nn.Module):
             logits = self(input_tensor)
         probabilities = F.softmax(logits, dim=0)
         return torch.argmax(probabilities, dim=0).item()
-
-    def trainModel(self, train_data: TrainData2, num_epochs: int = 20, validation_data: TrainData2 = None) -> str:
-        model_epochs: list[ModelEpochResult] = []
-        class CustomDataset(Dataset):
-            def __init__(self, input: list[list[float]], output: list[int], model_input_neuron: int):
-                if len(input) != len(output):
-                    raise ValueError("Input and output data must have the same length")
-
-                self.input: list[list[float]] = input
-                self.output: list[int] = output
-                self.model_input_neuron = model_input_neuron
-                # print(len(input), len(output))
-
-            def __len__(self):
-                return len(self.input)
-
-            def __getitem__(self, idx):
-                input_data: list[float] = self.input[idx]
-                # print(input_data)
-                while len(input_data) < self.model_input_neuron:
-                    input_data.append(0)
-                input_tensor = torch.tensor(input_data, dtype=torch.float32)
-                label_tensor = torch.tensor(self.output[idx], dtype=torch.long)
-                return input_tensor, label_tensor
-
-        dataset = CustomDataset(train_data.get_input_data(), train_data.get_output_data(), self.info.layers[0])
-        dataloader = DataLoader(dataset, batch_size=64, shuffle=True)
-        if validation_data is not None:
-            validation_set = CustomDataset(validation_data.get_input_data(), validation_data.get_output_data(), self.info.layers[0])
-            validation_dataloader = DataLoader(validation_set, batch_size=64, shuffle=True)
-
-        criterion = nn.CrossEntropyLoss()
-        optimizer = optim.Adam(self.parameters(), lr=0.001)
-
-        for epoch in range(num_epochs):
-            for inputs, labels in dataloader:
-                outputs = self(inputs)
-                loss = criterion(outputs, labels)
-
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-
-            print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item():.4f}', end="")
-            if validation_data is not None:
-                validation_loss = None
-                for inputs, labels in validation_dataloader:
-                    outputs = self(inputs)
-                    validation_loss = criterion(outputs, labels)
-
-                print(f', Validation Loss: {validation_loss.item():.4f}', end="")
-
-            loss_diff: float = abs(loss.item() - (validation_loss.item() if validation_loss is not None else 0))
-            mean_loss: float = (loss.item() + (validation_loss.item() if validation_loss is not None else loss.item())) / 2
-
-            print(f", Loss Diff: {loss_diff:.4f}, Mean Loss: {mean_loss:.4f}")
-
-            model_epochs.append(ModelEpochResult(copy.deepcopy(self), loss.item(),
-                                                 validation_loss.item() if validation_loss is not None else None,
-                                                 loss_diff, mean_loss, epoch+1))
-
-        model_epochs.sort(key=lambda x: x.loss_diff)
-        # print(model_epochs)
-        while len(model_epochs) > 5:
-            model_epochs.pop(-1)
-        for model_epoch in model_epochs:
-            print(f"Epoch {model_epoch.epoch}: Loss diff: {model_epoch.loss_diff:.4f}, Mean Loss: {model_epoch.mean_loss:.4f}")
-        model_epochs.sort(key=lambda x: x.validation_loss)
-        print("-----")
-        for model_epoch in model_epochs:
-            print(f"Epoch {model_epoch.epoch}: Loss diff: {model_epoch.loss_diff:.4f}, Mean Loss: {model_epoch.mean_loss:.4f}")
-        # print(model_epochs)
-        print("Model Epoch Picked:", model_epochs[0].epoch)
-        self = model_epochs[0].model_instance

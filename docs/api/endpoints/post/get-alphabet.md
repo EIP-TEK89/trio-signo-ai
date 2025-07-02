@@ -5,6 +5,7 @@
 ## Description
 
 Gets an image and return the letter it represent in LSF (French Sign Language) or nothing if it's not a letter.
+**IMPORTANT** this endpoint remembers previous image sent in case you want to send a video streaming. Therefore **you must** call [get-alphabet-end](get-alphabet-end.md) endpoint when finishing using this endpoint.
 
 ## Request
 
@@ -28,7 +29,13 @@ The request body should be in the **form-data** format and include the following
 ### 200
 ```json
 {
-    "message": "A", // A letter in uppercase or "null" if no letter is recognized.
+    "message": "A"
+}
+```
+Or in case no hand is found:
+```json
+{
+    "message": null
 }
 ```
 ### 400

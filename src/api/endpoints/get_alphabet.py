@@ -1,4 +1,5 @@
 import os
+import ipaddress
 
 import cv2
 from flask import request, jsonify
@@ -6,8 +7,10 @@ from flask import request, jsonify
 import numpy as np
 import io
 from PIL import Image, ImageOps
+from src.run_model import track_hand, recognize_sign
+from src.datasample import DataSample
 
-from src.alphabet_recognizer import *
+from src.model_class.transformer_sign_recognizer import *
 
 import mediapipe as mp
 from mediapipe.tasks.python.vision.hand_landmarker import *
@@ -52,10 +55,15 @@ def display_hand_tracked_image(image, recognition_result: HandLandmarkerResult):
           mp_drawing_styles.get_default_hand_connections_style())
 
     cv2.imshow('gesture_recognition', current_frame)
-    cv2.waitKeyEx(1000)
-    cv2.destroyAllWindows()
+    cv2.waitKey(1)
+    # cv2.destroyAllWindows()
 
-def get_alpahabet(hand_tracker: HandLandmarker, alphabet_recognizer: LSFAlphabetRecognizer):
+def get_alphabet(hand_tracker: HandLandmarker, alphabet_recognizer: SignRecognizerTransformer, sample_history: dict[int, DataSample]):
+    try:
+        ip: int = ipaddress.ip_address(request.remote_addr)
+    except:
+        return jsonify({'error': 'Invalid IP address'}), 400
+
     if 'file' not in request.files:
         return jsonify({'error': 'No file part in the request'}), 400
 
@@ -77,14 +85,28 @@ def get_alpahabet(hand_tracker: HandLandmarker, alphabet_recognizer: LSFAlphabet
 
         image = rescale_from_smallest_side(image, 480)
 
-        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Ensure the image is in RGB format
+        # image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Ensure the image is in RGB format
 
-        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image_rgb)
+        # mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=image_rgb)
 
-        recognition_result: HandLandmarkerResult = hand_tracker.detect(mp_image)
+        # recognition_result: HandLandmarkerResult = hand_tracker.detect(mp_image)
+        recognition_result, _ = track_hand(image, hand_tracker)
 
         # display_hand_tracked_image(image, recognition_result)
 
         if len(recognition_result.hand_world_landmarks) < 1:
             return jsonify({'message': None}), 200
-        return jsonify({'message': LABEL_MAP.id[alphabet_recognizer.use(LandmarksTo1DArray(recognition_result.hand_world_landmarks[0]))]}), 200
+
+        if sample_history.get(ip) is None:
+            sample_history[ip] = DataSample("", [])
+
+        sample_history[ip].insertGestureFromLandmarks(0, recognition_result)
+        while len(sample_history[ip].gestures) > alphabet_recognizer.info.memory_frame:
+            sample_history[ip].gestures.pop(-1)
+        if alphabet_recognizer.info.one_side:
+            sample_history[ip].move_to_one_side()
+
+        sign, _ = recognize_sign(sample_history[ip], alphabet_recognizer, alphabet_recognizer.info.active_gestures.getActiveFields())
+
+        # print(f"Sign: {alphabet_recognizer.info.labels[sign]}")
+        return jsonify({'message': f"{alphabet_recognizer.info.labels[sign]}"}), 200
