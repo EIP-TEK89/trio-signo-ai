@@ -39,7 +39,8 @@ def load_hand_landmarker(num_hand: int) -> HandLandmarker:
     base_options = python.BaseOptions(
         model_asset_path=HAND_TRACKING_MODEL_PATH)
     options: HandLandmarkerOptions = vision.HandLandmarkerOptions(base_options=base_options,
-                                                                  num_hands=num_hand)
+                                                                  num_hands=num_hand,
+                                                                  running_mode = vision.RunningMode.IMAGE)
     recognizer: HandLandmarker = vision.HandLandmarker.create_from_options(
         options)
     return recognizer
