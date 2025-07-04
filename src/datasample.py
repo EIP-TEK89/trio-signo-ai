@@ -296,3 +296,9 @@ class DataSample:
         for gesture in self.gestures:
             gesture.moveToOneSide(right_side)
         return self
+
+    def isFullNone(self) -> bool:
+        for gesture in self.gestures:
+            if not gesture.isFullNone():
+                return False
+        return True

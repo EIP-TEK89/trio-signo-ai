@@ -111,6 +111,7 @@ def update_json(json_path, file_info):
         json.dump(data, f, indent=4)
 
 cv_drawer = CVDrawer(frame_width, frame_height)
+data_sample: DataSample = DataSample(video_label, [])
 
 while True:
     if not is_croping:
@@ -195,11 +196,15 @@ while True:
             else:
                 is_recording = False
                 out.release()
-                tmp_path: str = os.path.join(SAVE_FOLDER, video_label, SUB_FOLDER)
-                os.makedirs(tmp_path, exist_ok=True)
-                data_sample.toJsonFile(os.path.join(tmp_path ,f"{file_name}.json"))
-                update_json(label_json_path, {
-                            "filename": file_name, "label": video_label})
+                if data_sample.isFullNone():
+                    print("No gestures recorded, skipping saving.")
+                    continue
+                else:
+                    tmp_path: str = os.path.join(SAVE_FOLDER, video_label, SUB_FOLDER)
+                    os.makedirs(tmp_path, exist_ok=True)
+                    data_sample.toJsonFile(os.path.join(tmp_path ,f"{file_name}.json"))
+                    update_json(label_json_path, {
+                                "filename": file_name, "label": video_label})
 
         elif key == TAB:
             is_croping = True
@@ -233,15 +238,18 @@ while True:
 
             if remaining_delay <= 0:
                 countdown_active = False
-                cv2.imwrite(output_file, og_frame)
-                update_json(label_json_path, {"filename": file_name, "label": image_label})
-
                 result, _ = track_hand(og_frame, handland_marker)
                 image_sample.insertGestureFromLandmarks(
                     0, result, face_result, body_result)
-                tmp_path: str = os.path.join(SAVE_FOLDER, image_label, SUB_FOLDER)
-                os.makedirs(tmp_path, exist_ok=True)
-                image_sample.toJsonFile(os.path.join(tmp_path, f"{file_name}.json"))
+                if image_sample.isFullNone():
+                    print("No gestures recorded, skipping saving.")
+                else:
+                    cv2.imwrite(output_file, og_frame)
+                    update_json(label_json_path, {"filename": file_name, "label": image_label})
+
+                    tmp_path: str = os.path.join(SAVE_FOLDER, image_label, SUB_FOLDER)
+                    os.makedirs(tmp_path, exist_ok=True)
+                    image_sample.toJsonFile(os.path.join(tmp_path, f"{file_name}.json"))
 
 record.release()
 if out:

@@ -6,6 +6,7 @@ from src.datasample import *
 from src.rot_3d import *
 import copy
 import time
+from dataclasses import fields
 
 
 BASE_FPS = 15  # Do not change this value
@@ -77,6 +78,12 @@ pause_animation = 0
 
 
 def render_hand(win, hand_frame: DataGestures):
+    for f in fields(hand_frame):
+        value: float = getattr(hand_frame, f.name)
+        if value is None:
+            continue
+        setattr(hand_frame, f.name, (value[0] * 0.05, value[1] * 0.05, value[2] * 0.05))
+
     draw_line_between(win, hand_frame.r_wrist,
                       hand_frame.r_index_mcp, (128, 255, 128))
     draw_line_between(win, hand_frame.l_wrist,
@@ -187,6 +194,7 @@ Controls:
     - PageUp to select previous sample (if multiple samples are loaded)
     - PageDown to select next sample (if multiple samples are loaded)
     - W to save current sample to file
+    - Del to delete hands (In case the hands are inverted)
     - M to swap hands (In case the hands are inverted)
       """)
 

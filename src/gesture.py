@@ -1052,3 +1052,9 @@ class DataGestures(Gestures[tuple[float, float, float] | None]):
                     setattr(self, opposite_field_name, src_side_val)
                     setattr(self, field_name, None)
         return self
+
+    def isFullNone(self) -> bool:
+        for field_name in FIELDS:
+            if getattr(self, field_name) is not None:
+                return False
+        return True
