@@ -11,19 +11,18 @@ from src.draw_gestures import draw_gestures
 
 from src.run_model import load_hand_landmarker, track_hand, draw_land_marks
 
-# Path to your video file
-label = "j"
-videos_dir = f"datasets/{label}/temp/"
 
-# Open the video file
 
-handland_marker: HandLandmarker = load_hand_landmarker(1)
+FRAME_ELAPSED: int = 0
 
-def video_to_json(path: str, label: str,
+def video_to_json(path: str, label: str, frame_elapsed: list[int],
                   hand_landmarker: HandLandmarker | None = None,
                   body_landmarker: bool = False,
-                  face_landmarker: bool = False) -> DataSample | None:
+                  face_landmarker: bool = False
+                  ) -> DataSample | None:
     cap = cv2.VideoCapture(path)
+    fps: float = cap.get(cv2.CAP_PROP_FPS)
+    print(f"Video framerate: {fps} FPS")
 
     # Check if video opened successfully
     if not cap.isOpened():
@@ -34,6 +33,7 @@ def video_to_json(path: str, label: str,
     # Loop over the frames
 
     cv_drawer: CVDrawer = CVDrawer(0, 0)
+
     while cap.isOpened():
         # Capture frame-by-frame
         ret, frame = cap.read()
@@ -42,7 +42,7 @@ def video_to_json(path: str, label: str,
             cv_drawer.set_frame_dim(cap.get(3), cap.get(4))
             cv_drawer.update_frame(frame)
             # Process the frame here (e.g., display or save)
-            hand_result: HandLandmarkerResult | None = track_hand(frame, handland_marker)[0] if hand_landmarker else None
+            hand_result: HandLandmarkerResult | None = track_hand(frame, hand_landmarker, int((1000 / fps) * frame_elapsed[0]))[0] if hand_landmarker else None
             body_result: BodyLandmarkResult | None = track_body(frame)[1] if body_landmarker else None
             face_result: FaceLandmarkResult | None = track_face(frame)[1] if face_landmarker else None
             data_sample.insertGestureFromLandmarks(0, hand_result, face_result, body_result)
@@ -55,6 +55,8 @@ def video_to_json(path: str, label: str,
         else:
             # End of video
             break
+        frame_elapsed[0] += 1
+    frame_elapsed[0] += fps * 10
     # Release the video capture object and close display window
     cap.release()
     return data_sample

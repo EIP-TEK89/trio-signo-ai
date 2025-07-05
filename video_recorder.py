@@ -111,7 +111,8 @@ def update_json(json_path, file_info):
         json.dump(data, f, indent=4)
 
 cv_drawer = CVDrawer(frame_width, frame_height)
-data_sample: DataSample = DataSample(video_label, [])
+video_sample: DataSample = DataSample(video_label, [])
+start_time = time.time()
 
 while True:
     if not is_croping:
@@ -123,7 +124,7 @@ while True:
         og_frame = cv2.flip(frame, 1)
         frame = copy.deepcopy(og_frame)
 
-        result, _ = track_hand(frame, handland_marker)
+        result, _ = track_hand(frame, handland_marker, round((time.time() - start_time) * 1000))
 
         face_result = None
         if args.face:
@@ -166,9 +167,10 @@ while True:
 
         if is_recording:
             out.write(og_frame)
-            data_sample.insertGestureFromLandmarks(0, result)
             cv2.putText(frame, "Recording...", (10, 40),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            video_sample.gestures.insert(0, frame_history.gestures[0])
+
 
         instruction_image = create_instruction_image()
         combined_frame = np.hstack((frame, instruction_image))
@@ -179,30 +181,34 @@ while True:
 
         if key == SPACE:
             if not is_recording:
+                # Creating path for saving video
                 file_name = video_label + "_" + current_time + ".avi"
                 full_save_path = os.path.join(MEDIA_SAVE_FOLDER, video_label, SUB_FOLDER)
-                data_sample = DataSample(video_label, [])
+                output_file = os.path.join(full_save_path, file_name)
 
+                # Create directories if they do not exist
                 os.makedirs(full_save_path, exist_ok=True)
                 label_json_path = os.path.join(full_save_path, 'label.json')
                 if not os.path.exists(label_json_path):
                     with open(label_json_path, 'w') as f:
                         json.dump([], f)
 
-                output_file = os.path.join(full_save_path, file_name)
+                # Initialize video writer
                 out = cv2.VideoWriter(
                     output_file, fourcc, FPS, (frame_width, frame_height))
+                # Initialize video sample
+                video_sample.gestures = []
                 is_recording = True
             else:
                 is_recording = False
                 out.release()
-                if data_sample.isFullNone():
+                if video_sample.isFullNone():
                     print("No gestures recorded, skipping saving.")
                     continue
                 else:
                     tmp_path: str = os.path.join(SAVE_FOLDER, video_label, SUB_FOLDER)
                     os.makedirs(tmp_path, exist_ok=True)
-                    data_sample.toJsonFile(os.path.join(tmp_path ,f"{file_name}.json"))
+                    video_sample.toJsonFile(os.path.join(tmp_path ,f"{file_name.replace(".avi", "")}.json"))
                     update_json(label_json_path, {
                                 "filename": file_name, "label": video_label})
 
@@ -238,9 +244,7 @@ while True:
 
             if remaining_delay <= 0:
                 countdown_active = False
-                result, _ = track_hand(og_frame, handland_marker)
-                image_sample.insertGestureFromLandmarks(
-                    0, result, face_result, body_result)
+                image_sample.gestures = [frame_history.gestures[0]]
                 if image_sample.isFullNone():
                     print("No gestures recorded, skipping saving.")
                 else:
@@ -249,7 +253,7 @@ while True:
 
                     tmp_path: str = os.path.join(SAVE_FOLDER, image_label, SUB_FOLDER)
                     os.makedirs(tmp_path, exist_ok=True)
-                    image_sample.toJsonFile(os.path.join(tmp_path, f"{file_name}.json"))
+                    image_sample.toJsonFile(os.path.join(tmp_path, f"{file_name.replace(".png", "")}.json"))
 
 record.release()
 if out:

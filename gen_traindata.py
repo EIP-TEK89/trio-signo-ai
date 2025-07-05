@@ -126,40 +126,36 @@ def load_datasamples(dataset_labels: list[str],
                      ) -> dict[str, tuple[list[DataSample], list[DataSample]]]:
     data_samples: dict[str, tuple[list[DataSample], list[DataSample]]] = {}
     for label_name in dataset_labels:
-        label_path: str = f"{DATASETS_DIR}/{label_name}"
-        dataset_samples = os.listdir(label_path)
+        label_path: str = os.path.join(DATASETS_DIR, label_name)
         samples: list[DataSample] = []
         counter_examples: list[DataSample] = []
 
-        if len(dataset_samples) == 0:
-            print(f"Warning: {label_name} is empty")
-            continue
-        for dataset_sample in dataset_samples:
+        for label_kind in ["valid", "counter_examples"]:
             try:
-                sample: DataSample = DataSample.fromJsonFile(
-                    f"{label_path}/{dataset_sample}")
-                sample.label = label_name
-                if len(sample.gestures) > memory_frame:
-                    sample.reframe(memory_frame)
-                samples.append(sample)
-            except Exception as e:
-                if null_label is not None and dataset_sample == "counter_example" \
-                        and os.path.isdir(f"{label_path}/{dataset_sample}"):
-                    file_names = os.listdir(f"{label_path}/{dataset_sample}")
-                    for file_name in file_names:
-                        try:
-                            sample = DataSample.fromJsonFile(
-                                f"{label_path}/{dataset_sample}/{file_name}")
-                            sample.invalid = True
-                            if len(sample.gestures) > memory_frame:
-                                sample.reframe(memory_frame)
-                            counter_examples.append(sample)
-                        except Exception as e:
-                            print(f"Error: {
-                                  dataset_sample}/{file_name} is not a valid json file. {e}")
-                else:
-                    print(f"Error: {
-                          dataset_sample} is not a valid json file. {e}")
+                label_kind_path = os.path.join(label_path, label_kind)
+                samples = os.listdir(label_kind_path)
+                if len(samples) == 0:
+                    print(f"Warning: {label_kind} folder is empty in {label_path}")
+                    continue
+                for sample in samples:
+                    sample_path = os.path.join(label_kind_path, sample)
+                    try:
+                        sample_data: DataSample = DataSample.fromJsonFile(
+                            sample_path)
+                        if len(sample.gestures) > memory_frame:
+                            sample_data.reframe(memory_frame)
+                        if label_kind == "valid":
+                            sample_data.invalid = False
+                            samples.append(sample_data)
+                        else:
+                            sample_data.invalid = True
+                            counter_examples.append(sample_data)
+                    except Exception as e:
+                        print(f"Error: {sample} in {label_kind} folder is not a valid json file. {e}")
+            except:
+                print(f"Warning: {label_kind} folder not found in {label_path}")
+                continue
+
         data_samples[label_name] = (samples, counter_examples)
     return data_samples
 

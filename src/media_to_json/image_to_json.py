@@ -9,11 +9,9 @@ from src.video_recorder.cv_drawer import CVDrawer
 from typing import Any
 from src.draw_gestures import draw_gestures
 
-from src.run_model import load_hand_landmarker, track_hand, draw_land_marks
+from src.run_model import load_hand_landmarker, track_hand_image, draw_land_marks
 
 # Open the video file
-
-handland_marker: HandLandmarker = load_hand_landmarker(1)
 
 def image_to_json(path: str, label: str,
                   hand_landmarker: HandLandmarker | None = None,
@@ -27,7 +25,7 @@ def image_to_json(path: str, label: str,
     cv_drawer: CVDrawer = CVDrawer(0, 0)
     image_sample = DataSample(label, [])
 
-    hand_result: HandLandmarkerResult | None = track_hand(image, handland_marker)[0] if hand_landmarker else None
+    hand_result: HandLandmarkerResult | None = track_hand_image(image, hand_landmarker)[0] if hand_landmarker else None
     body_result: BodyLandmarkResult | None = track_body(image)[1] if body_landmarker else None
     face_result: FaceLandmarkResult | None = track_face(image)[1] if face_landmarker else None
 
