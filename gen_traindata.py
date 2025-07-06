@@ -90,8 +90,9 @@ def create_subset(sample: DataSample,
 
     # Create pure non valid data
     if null_set is not None:
+        tmp_sample: DataSample
         for _ in range(2):
-            tmp_sample: DataSample = DataSample(null_set, [])
+            tmp_sample = DataSample(null_set, [])
 
             target_nb_frame: int = random.randint(1, nb_frame)
             while len(tmp_sample.gestures) < target_nb_frame:
@@ -100,6 +101,12 @@ def create_subset(sample: DataSample,
                 else:
                     tmp_sample.gestures.insert(-1, rand_gesture())
             sub_sample.append(tmp_sample)
+
+        tmp_sample = DataSample(null_set, [])
+        target_nb_frame: int = random.randint(1, nb_frame)
+        while len(tmp_sample.gestures) < target_nb_frame:
+            tmp_sample.gestures.insert(-1, DataGestures())
+        sub_sample.append(tmp_sample)
 
     return list(sub_sample)
 
