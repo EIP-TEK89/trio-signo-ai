@@ -412,6 +412,22 @@ BODY_POINTS: ActiveGestures = ActiveGestures.buildWithPreset(
     [LEFT_BODY_POINTS, RIGHT_BODY_POINTS]
 )
 
+LEFT_ARM_POINTS: ActiveGestures = ActiveGestures(
+    l_shoulder=True,
+    l_elbow=True,
+    l_body_wrist=True
+)
+
+RIGHT_ARM_POINTS: ActiveGestures = ActiveGestures(
+    r_shoulder=True,
+    r_elbow=True,
+    r_body_wrist=True
+)
+
+ARM_POINTS: ActiveGestures = ActiveGestures.buildWithPreset(
+    [LEFT_ARM_POINTS, RIGHT_ARM_POINTS]
+)
+
 MID_FACE_POINTS: ActiveGestures = ActiveGestures(
     m_nose_point=True,
     m_top_nose=True,
@@ -496,6 +512,14 @@ HANDS_BODY_FACE_POINTS: ActiveGestures = ActiveGestures.buildWithPreset(
     [HANDS_POINTS, BODY_POINTS, FACE_POINTS]
 )
 
+HANDS_ARMS_POINTS: ActiveGestures = ActiveGestures.buildWithPreset(
+    [HANDS_POINTS, ARM_POINTS]
+)
+
+HANDS_FACE_ARMS_POINTS: ActiveGestures = ActiveGestures.buildWithPreset(
+    [HANDS_POINTS, FACE_POINTS, ARM_POINTS]
+)
+
 ALL_GESTURES: ActiveGestures = ActiveGestures()
 ALL_GESTURES.activateAllGesture()
 
@@ -548,6 +572,66 @@ ACTIVATED_GESTURES_PRESETS: dict[str, tuple[ActiveGestures, str]] = {
     "hands_full": (
         HANDS_FULL,
         "Will provide information about both hands finger position, hands rotation and position.",
+    ),
+    "left_body_points": (
+        LEFT_BODY_POINTS,
+        "Will only provide information about left body points such as shoulder, elbow, hip, knee, ankle and wrist.",
+    ),
+    "right_body_points": (
+        RIGHT_BODY_POINTS,
+        "Will only provide information about right body points such as shoulder, elbow, hip, knee, ankle and wrist.",
+    ),
+    "body_points": (
+        BODY_POINTS,
+        "Will only provide information about both body points such as shoulder, elbow, hip, knee, ankle and wrist.",
+    ),
+    "left_arm_points": (
+        LEFT_ARM_POINTS,
+        "Will only provide information about left arm points such as shoulder, elbow and wrist.",
+    ),
+    "right_arm_points": (
+        RIGHT_ARM_POINTS,
+        "Will only provide information about right arm points such as shoulder, elbow and wrist.",
+    ),
+    "arm_points": (
+        ARM_POINTS,
+        "Will only provide information about both arm points such as shoulder, elbow and wrist.",
+    ),
+    "mid_face_points": (
+        MID_FACE_POINTS,
+        "Will only provide information about middle face points such as nose, eyebrows, forehead, chin, lips.",
+    ),
+    "left_face_points": (
+        LEFT_FACE_POINTS,
+        "Will only provide information about left face points such as eye, temple, chin, lips, nostril, cheek, eyebrow.",
+    ),
+    "right_face_points": (
+        RIGHT_FACE_POINTS,
+        "Will only provide information about right face points such as eye, temple, chin, lips, nostril, cheek, eyebrow.",
+    ),
+    "face_points": (
+        FACE_POINTS,
+        "Will only provide information about face points such as eye, temple, chin, lips, nostril, cheek, eyebrow.",
+    ),
+    "hands_body_points": (
+        HANDS_BODY_POINTS,
+        "Will provide information about both hands finger position, hands rotation and body points such as shoulder, elbow, hip, knee, ankle and wrist.",
+    ),
+    "hands_face_points": (
+        HANDS_FACE_POINTS,
+        "Will provide information about both hands finger position, hands rotation and face points such as eye, temple, chin, lips, nostril, cheek, eyebrow.",
+    ),
+    "hands_body_face_points": (
+        HANDS_BODY_FACE_POINTS,
+        "Will provide information about both hands finger position, hands rotation, body points such as shoulder, elbow, hip, knee, ankle and wrist and face points such as eye, temple, chin, lips, nostril, cheek, eyebrow.",
+    ),
+    "hands_face_arms_points": (
+        HANDS_FACE_ARMS_POINTS,
+        "Will provide information about both hands finger position, hands rotation, face points such as eye, temple, chin, lips, nostril, cheek, eyebrow and arm points such as shoulder, elbow and wrist.",
+    ),
+    "hands_arms_points": (
+        HANDS_ARMS_POINTS,
+        "Will provide information about both hands finger position, hands rotation and arm points such as shoulder, elbow and wrist.",
     ),
 }
 
