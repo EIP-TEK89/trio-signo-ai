@@ -79,7 +79,7 @@ def gen_dynamic_data(sample: DataSample,
     # Create sample for each frame to make the model understand the movement
     if null_set is not None and null_set != sample.label:
         sub_samples.extend(
-            decompose_into_static_sample(sample, sample.label))
+            decompose_into_static_sample(sample, null_set))
 
     if null_set is not None and null_set != sample.label:
         # Create variations with with randomized filled frames but animation backward so its not correct
@@ -92,6 +92,7 @@ def gen_dynamic_data(sample: DataSample,
                 rand_fix_interval(1),
                 hands_positions)
             tmp_sample.gestures.reverse()
+            tmp_sample.label = null_set
             sub_samples.append(tmp_sample.noise_sample())
 
     return sub_samples

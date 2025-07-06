@@ -131,18 +131,21 @@ def load_datasamples(dataset_labels: list[str],
         counter_examples: list[DataSample] = []
 
         for label_kind in ["valid", "counter_examples"]:
+            # print(os.listdir(label_path))
             try:
-                label_kind_path = os.path.join(label_path, label_kind)
-                samples = os.listdir(label_kind_path)
-                if len(samples) == 0:
+                label_kind_path: str = os.path.join(label_path, label_kind)
+                print(f"Loading samples from {label_kind_path}")
+                samples_kind = os.listdir(label_kind_path)
+                if len(samples_kind) == 0:
                     print(f"Warning: {label_kind} folder is empty in {label_path}")
                     continue
-                for sample in samples:
+                for sample in samples_kind:
                     sample_path = os.path.join(label_kind_path, sample)
                     try:
                         sample_data: DataSample = DataSample.fromJsonFile(
                             sample_path)
-                        if len(sample.gestures) > memory_frame:
+                        sample_data.label = label_name
+                        if len(sample_data.gestures) > memory_frame:
                             sample_data.reframe(memory_frame)
                         if label_kind == "valid":
                             sample_data.invalid = False
@@ -151,9 +154,9 @@ def load_datasamples(dataset_labels: list[str],
                             sample_data.invalid = True
                             counter_examples.append(sample_data)
                     except Exception as e:
-                        print(f"Error: {sample} in {label_kind} folder is not a valid json file. {e}")
-            except:
-                print(f"Warning: {label_kind} folder not found in {label_path}")
+                        print(f"Error: {sample} in {label_kind}/ folder is not a valid json file. {e}")
+            except Exception as e:
+                print(f"Error: Failed to handle {label_kind}/ folder {label_path}: {e}")
                 continue
 
         data_samples[label_name] = (samples, counter_examples)
