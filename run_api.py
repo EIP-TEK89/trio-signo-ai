@@ -40,7 +40,7 @@ def main():
         '--model',
         help='Pick model.',
         required=False,
-        default="alphabet")
+        default="models/pytorch/alphabet")
 
     args = parser.parse_args()
     port = int(args.port)

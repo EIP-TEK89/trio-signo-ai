@@ -105,7 +105,7 @@ def create_subset(sample: DataSample,
         tmp_sample = DataSample(null_set, [])
         target_nb_frame: int = random.randint(1, nb_frame)
         while len(tmp_sample.gestures) < target_nb_frame:
-            tmp_sample.gestures.insert(-1, DataGestures())
+            tmp_sample.gestures.insert(-1, DataGestures().setAllPointsToZero())
         sub_sample.append(tmp_sample)
 
     return list(sub_sample)

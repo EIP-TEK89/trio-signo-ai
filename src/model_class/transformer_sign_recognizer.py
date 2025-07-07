@@ -1,7 +1,7 @@
 import time
 import os
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Self, cast, override
 from numbers import Number
 
@@ -16,6 +16,11 @@ from numpy.typing import NDArray
 from src.gesture import FIELD_DIMENSION, default_device
 from src.datasamples import DataSamplesInfo, TensorPair
 
+@dataclass
+class TrackingModel:
+    hand: int = 2
+    body: int = 1
+    face: int = 1
 
 @dataclass
 class ModelInfo(DataSamplesInfo):
@@ -24,6 +29,7 @@ class ModelInfo(DataSamplesInfo):
     num_heads: int
     num_layers: int
     ff_dim: int
+    tracking_model: TrackingModel = field(default_factory=TrackingModel)
 
     @classmethod
     def build(cls,
@@ -73,12 +79,29 @@ class ModelInfo(DataSamplesInfo):
         assert "ff_dim" in data, "ff_dim must be in the dict"
         assert isinstance(data["ff_dim"], int), "ff_dim must be an int"
 
-        return cls.build(info,
+        tracking_model: TrackingModel = TrackingModel()
+        if "tracking_model" in data:
+            assert isinstance(data["tracking_model"], dict), "tracking_model must be a dict"
+            assert "hand" in data["tracking_model"], "hand must be in the tracking_model dict"
+            assert isinstance(data["tracking_model"]["hand"], Number), "hand must be a Number"
+            assert "body" in data["tracking_model"], "body must be in the tracking_model dict"
+            assert isinstance(data["tracking_model"]["body"], Number), "body must be a Number"
+            assert "face" in data["tracking_model"], "face must be in the tracking_model dict"
+            assert isinstance(data["tracking_model"]["face"], Number), "face must be a Number"
+            tracking_model: TrackingModel = TrackingModel(
+                hand=int(data["tracking_model"]["hand"]),
+                body=int(data["tracking_model"]["body"]),
+                face=int(data["tracking_model"]["face"])
+            )
+
+        cls = cls.build(info,
                          data["name"],
                          data["d_model"],
                          data["num_heads"],
                          data["num_layers"],
                          data["ff_dim"])
+        cls.tracking_model = tracking_model
+        return cls
 
     @classmethod
     def fromJsonFile(cls,
@@ -96,6 +119,11 @@ class ModelInfo(DataSamplesInfo):
         _dict["num_heads"] = self.num_heads
         _dict["num_layers"] = self.num_layers
         _dict["ff_dim"] = self.ff_dim
+        _dict["tracking_model"] = {
+            "hand": self.tracking_model.hand,
+            "body": self.tracking_model.body,
+            "face": self.tracking_model.face
+        }
         return _dict
 
     def toJsonFile(self,
