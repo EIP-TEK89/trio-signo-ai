@@ -7,7 +7,8 @@ from flask import request, jsonify
 import numpy as np
 import io
 from PIL import Image, ImageOps
-from run_model import track_hand, recognize_sign
+from src.run_model import track_hand, recognize_sign
+from src.datasample import DataSample
 
 from src.model_class.transformer_sign_recognizer import *
 
@@ -57,7 +58,7 @@ def display_hand_tracked_image(image, recognition_result: HandLandmarkerResult):
     cv2.waitKey(1)
     # cv2.destroyAllWindows()
 
-def get_alphabet(hand_tracker: HandLandmarker, alphabet_recognizer: SignRecognizerTransformer, sample_history: dict[int, DataSample2]):
+def get_alphabet(hand_tracker: HandLandmarker, alphabet_recognizer: SignRecognizerTransformer, sample_history: dict[int, DataSample]):
     try:
         ip: int = ipaddress.ip_address(request.remote_addr)
     except:
@@ -97,9 +98,9 @@ def get_alphabet(hand_tracker: HandLandmarker, alphabet_recognizer: SignRecogniz
             return jsonify({'message': None}), 200
 
         if sample_history.get(ip) is None:
-            sample_history[ip] = DataSample2("", [])
+            sample_history[ip] = DataSample("", [])
 
-        sample_history[ip].insert_gesture_from_landmarks(0, recognition_result)
+        sample_history[ip].insertGestureFromLandmarks(0, recognition_result)
         while len(sample_history[ip].gestures) > alphabet_recognizer.info.memory_frame:
             sample_history[ip].gestures.pop(-1)
         if alphabet_recognizer.info.one_side:

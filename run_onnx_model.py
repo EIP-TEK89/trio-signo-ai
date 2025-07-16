@@ -1,5 +1,5 @@
 from src.model_class.transformer_sign_recognizer import *
-from run_model import *
+from src.run_model import *
 import cv2
 
 sign_rec: SignRecognizerTransformerONNX = SignRecognizerTransformerONNX("onnx_models")
@@ -25,7 +25,7 @@ frame_width = int(record.get(3))
 frame_height = int(record.get(4))
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 
-frame_history: DataSample2 = DataSample2("", [])
+frame_history: DataSample = DataSample("", [])
 prev_sign = -1
 prev_display = -1
 
@@ -40,7 +40,7 @@ while True:
     result, _ = track_hand(frame, hand_landmarker)
     frame = draw_land_marks(frame, result)
 
-    frame_history.insert_gesture_from_landmarks(0, result)
+    frame_history.insertGestureFromLandmarks(0, result)
     while len(frame_history.gestures) > sign_rec.info.memory_frame:
         frame_history.gestures.pop(-1)
     if sign_rec.info.one_side:

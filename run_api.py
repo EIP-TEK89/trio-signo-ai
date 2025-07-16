@@ -22,7 +22,7 @@ from mediapipe.tasks.python import vision
 from mediapipe.tasks.python.vision.hand_landmarker import *
 
 from src.model_class.transformer_sign_recognizer import *
-from run_model import load_hand_landmarker
+from src.run_model import load_hand_landmarker
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -40,7 +40,7 @@ def main():
         '--model',
         help='Pick model.',
         required=False,
-        default="alphabet")
+        default="models/pytorch/alphabet")
 
     args = parser.parse_args()
     port = int(args.port)
@@ -74,7 +74,7 @@ def main():
 
     # Endpoints
     app.add_url_rule('/ping', view_func=ping, methods=['GET'])
-    datasamples_instance: dict[int, DataSample2] = {}
+    datasamples_instance: dict[int, DataSample] = {}
     app.add_url_rule('/get-alphabet', view_func=get_alphabet, methods=['POST'],
                      defaults={"hand_tracker": hand_tracker,
                                "alphabet_recognizer": alphabet_recognizer,

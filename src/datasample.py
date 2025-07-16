@@ -1,22 +1,21 @@
 import copy
 import math
 import json
-import random
 from dataclasses import dataclass, fields
-from mediapipe.tasks.python.vision.hand_landmarker import *
-from mediapipe.tasks.python.components.containers.landmark import *
-from src.rot_3d import *
-import cbor2
+from mediapipe.tasks.python.vision.hand_landmarker import HandLandmarkerResult
 import torch
 import numpy as np
+from numpy.typing import NDArray
+from typing import Self, cast
+from src.gesture import DataGestures, FIELD_DIMENSION, FIELDS, default_device, FaceLandmarkResult
 
-from src.gesture import *
 
-def clamp(value, min_value, max_value):
+def clamp(value: float, min_value: float, max_value: float):
     return max(min_value, min(value, max_value))
 
+
 @dataclass
-class DataSample2:
+class DataSample:
     label: str
     gestures: list[DataGestures]
     framerate: int = 30
@@ -25,47 +24,85 @@ class DataSample2:
     invalid: bool = False
 
     @classmethod
-    def from_dict(cls, json_data: dict):
-        tmp = cls(label=json_data['label'],
-                  gestures=[DataGestures(**gesture) for gesture in json_data['gestures']])
-        tmp.framerate = json_data.get('framerate', tmp.framerate)
-        tmp.mirrorable = json_data.get('mirrorable', tmp.mirrorable)
+    def fromDict(cls, json_data: dict[str, object]) -> Self:
+        assert "gestures" in json_data, "Invalid JSON data, missing 'gestures' key"
+        assert isinstance(
+            json_data["gestures"], list), "Invalid JSON data, 'gestures' must be a list"
+        dict_gestures: list[dict[str, list[float] | None]
+                            ] = json_data["gestures"]
+        gestures: list[DataGestures] = []
+        for gesture in dict_gestures:
+            assert isinstance(
+                gesture, dict), "Invalid JSON data, 'gestures' must be a list of dict"
+            gestures.append(DataGestures.fromDict(gesture))
+
+        tmp: DataSample = cls(
+            label=str(json_data["label"]),
+            gestures=gestures,
+        )
+
+        if "framerate" in json_data:
+            assert isinstance(
+                json_data["framerate"], int), "Invalid JSON data, 'framerate' must be an integer"
+            tmp.framerate = int(json_data["framerate"])
+
+        if "mirrorable" in json_data:
+            assert isinstance(
+                json_data["mirrorable"], bool), "Invalid JSON data, 'mirrorable' must be a boolean"
+            tmp.mirrorable = bool(json_data["mirrorable"])
+        tmp.mirrorable = bool(json_data.get("mirrorable", tmp.mirrorable))
+
         tmp.computeHandVelocity()
         return tmp
 
     @classmethod
-    def from_json_file(cls, file_path: str, label_id: int = None):
-        with open(file_path, 'r', encoding="utf-8") as f:
-            data = json.load(f)
-        return cls.from_dict(data)
+    def fromJsonFile(cls, file_path: str):
+        with open(file_path, "r", encoding="utf-8") as f:
+            data: dict[str, object] = json.load(f)
+        return cls.fromDict(data)
 
     @classmethod
-    def unflat(cls, label: str, raw_data: list[float], valid_fields: list[str] = None):
+    def unflat(
+        cls, label: str, raw_data: list[float], valid_fields: list[str] = FIELDS
+    ):
         tmp = cls(label=label, gestures=[])
-        len_valid_fields = (len(valid_fields) if valid_fields is not None else len(FIELDS)) * FIELD_DIMENSION
+        len_valid_fields: int = (len(valid_fields)) * FIELD_DIMENSION
         for i in range(0, len(raw_data), len_valid_fields):
-            tmp.gestures.append(DataGestures.from1DArray(raw_data[i:i + len_valid_fields], valid_fields))
+            tmp.gestures.append(
+                DataGestures.from1DArray(
+                    raw_data[i: i + len_valid_fields], valid_fields
+                )
+            )
         tmp.computeHandVelocity()
         return tmp
 
-    def to_dict(self):
-        tmp: dict = copy.deepcopy(self).__dict__
-        tmp['gestures'] = [gesture.__dict__ for gesture in self.gestures]
+    def toDict(self) -> dict[str, object]:
+        tmp: dict[str, object] = copy.deepcopy(self).__dict__
+        tmp["gestures"] = [gesture.__dict__ for gesture in self.gestures]
+        # print(tmp["gestures"])
         return tmp
 
-    def to_json_file(self, file_path: str, indent: bool = False):
-        with open(file_path, 'w', encoding="utf-8") as f:
-            json.dump(self.to_dict(), f, indent=indent)
+    def toJsonFile(self, file_path: str, indent: bool = False):
+        with open(file_path, "w", encoding="utf-8") as f:
+            json.dump(self.toDict(), f, indent=indent)
 
-    def to_tensor(self, sequence_length: int, valid_fields: list[str] = FIELDS, device: torch.device = torch.device("cpu")) -> torch.Tensor:
-        data = torch.zeros(sequence_length, len(valid_fields) * FIELD_DIMENSION, device=device)
+    def toTensor(
+        self,
+        sequence_length: int,
+        valid_fields: list[str] = FIELDS,
+        device: torch.device | None = None,
+    ) -> torch.Tensor:
+        data: torch.Tensor = torch.zeros(
+            sequence_length, len(valid_fields) * FIELD_DIMENSION)
         for i in range(min(sequence_length, len(self.gestures))):
-            data[i] = self.gestures[i].toTensor(valid_fields, device)
-        return data
+            data[i] = self.gestures[i].toTensor(valid_fields)
+        return data.to(default_device(device))
 
-    def to_onnx_tensor(self, sequence_length: int, valid_fields: list[str] = FIELDS) -> np.ndarray:
+    def to_onnx_tensor(
+        self, sequence_length: int, valid_fields: list[str] = FIELDS
+    ) -> NDArray[np.float32]:
         """
-        Converts the DataSample2 object into an ONNX-compatible NumPy tensor.
+        Converts the DataSample object into an ONNX-compatible NumPy tensor.
 
         Args:
             sequence_length (int): The number of frames (sequence length) expected by the model.
@@ -86,7 +123,7 @@ class DataSample2:
 
         return data
 
-    def flat(self, valid_fields: list[str] = None) -> list[float]:
+    def flat(self, valid_fields: list[str] = FIELDS) -> list[float]:
         """Transform the gesture data into a 1D array
         WARNING: This function will not store the framerate information nor the label
         """
@@ -95,31 +132,55 @@ class DataSample2:
             raw_data.extend(gesture.get1DArray(valid_fields))
         return raw_data
 
-    def insert_gesture_from_landmarks(self, position: int, hand_landmarks: HandLandmarkerResult) -> 'DataSample2':
-        self.gestures.insert(position, DataGestures.buildFromHandLandmarkerResult(hand_landmarks))
+    def insertGestureFromLandmarks(
+        self, position: int,
+        handmark: HandLandmarkerResult | None = None,
+        facemark: FaceLandmarkResult | None = None,
+        bodymark: object = None
+    ) -> Self:
+        self.gestures.insert(
+            position, DataGestures.buildFromLandmarkerResult(
+                handmark, facemark, bodymark)
+        )
         self.computeHandVelocity()
         return self
 
-    def samples_to_1d_array(self, valid_fields: list[str] | None = None) -> list[float]:
+    def samples_to_1d_array(self, valid_fields: list[str] = FIELDS) -> list[float]:
         raw_data = []
         for gesture in self.gestures:
             raw_data.extend(gesture.get1DArray(valid_fields))
         return raw_data
 
-    def setNonePointsRandomlyToRandomOrZero(self, proba: float = 0.1) -> 'DataSample2':
+    def setNonePointsRandomlyToRandomOrZero(self, proba: float = 0.1) -> Self:
         for gest in self.gestures:
             gest.setNonePointsRandomlyToRandomOrZero(proba)
         return self
 
-    def computeHandVelocity(self) -> 'DataSample2':
+    def computeHandVelocity(self) -> Self:
         for i in range(len(self.gestures) - 1):
-            if self.gestures[i].r_hand_position is not None and self.gestures[i + 1].r_hand_position is not None:
-                self.gestures[i].r_hand_velocity = [self.gestures[i].r_hand_position[k] - self.gestures[i + 1].r_hand_position[k] for k in range(3)]
-            if self.gestures[i].l_hand_position is not None and self.gestures[i + 1].l_hand_position is not None:
-                self.gestures[i].l_hand_velocity = [self.gestures[i].l_hand_position[k] - self.gestures[i + 1].l_hand_position[k] for k in range(3)]
+            if (
+                self.gestures[i].r_hand_position is not None
+                and self.gestures[i + 1].r_hand_position is not None
+            ):
+                r1 = cast(list[float], self.gestures[i].r_hand_position)
+                r2 = cast(list[float], self.gestures[i + 1].r_hand_position)
+
+                self.gestures[i].r_hand_velocity = [r1[k] - r2[k]
+                                                    for k in range(3)]
+            if (
+                self.gestures[i].l_hand_position is not None
+                and self.gestures[i + 1].l_hand_position is not None
+            ):
+                r1 = cast(list[float], self.gestures[i].l_hand_position)
+                r2 = cast(list[float], self.gestures[i + 1].l_hand_position)
+
+                self.gestures[i].l_hand_velocity = [r1[k] - r2[k]
+                                                    for k in range(3)]
         return self
 
-    def noise_sample(self, range: float = 0.004, valid_fields: list[str] = None) -> 'DataSample2':
+    def noise_sample(
+        self, range: float = 0.004, valid_fields: list[str] = FIELDS
+    ) -> Self:
         """Will randomize the sample gesture points by doing `new_val = old_val + rand_val(-range, range)` to each selected point.
 
         Args:
@@ -127,33 +188,41 @@ class DataSample2:
             valid_fields (list[str], optional): Let you pick which fields should be randomized. Defaults to None (All point affected).
 
         Returns:
-            DataSample2: Return this class instance for chaining
+            DataSample: Return this class instance for chaining
         """
         for gesture in self.gestures:
             gesture.noise(range, valid_fields)
         return self
 
-    def mirror_sample(self, x: bool = True, y: bool = False, z: bool = False) -> 'DataSample2':
+    def mirror_sample(
+        self, x: bool = True, y: bool = False, z: bool = False
+    ) -> Self:
         for gesture in self.gestures:
             gesture.mirror(x, y, z)
         return self
 
-    def rotate_sample(self, x: float = 0, y: float = 0, z: float = 0, valid_fields: list[str] = None) -> 'DataSample2':
+    def rotate_sample(
+        self, x: float = 0, y: float = 0, z: float = 0, valid_fields: list[str] = FIELDS
+    ) -> Self:
         for gesture in self.gestures:
             gesture.rotate(x, y, z, valid_fields)
         return self
 
-    def scale_sample(self, x: float = 1, y: float = 1, z: float = 1, valid_fields: list[str] = None) -> 'DataSample2':
+    def scale_sample(
+        self, x: float = 1, y: float = 1, z: float = 1, valid_fields: list[str] = FIELDS
+    ) -> Self:
         for gesture in self.gestures:
             gesture.scale(x, y, z, valid_fields)
         return self
 
-    def translate_sample(self, x: float = 0, y: float = 0, z: float = 0, valid_fields: list[str] = None) -> 'DataSample2':
+    def translate_sample(
+        self, x: float = 0, y: float = 0, z: float = 0, valid_fields: list[str] = FIELDS
+    ) -> Self:
         for gesture in self.gestures:
             gesture.translate(x, y, z, valid_fields)
         return self
 
-    def reframe(self, target_frame: int) -> 'DataSample2':
+    def reframe(self, target_frame: int) -> Self:
         """Change the number of frame to execute the full gesture sequence
         Be careful, if frame are reducedn reincresing the frame will not restore the original gesture
 
@@ -163,7 +232,7 @@ class DataSample2:
         if target_frame <= 1:
             raise ValueError("Target frame must be greater than 1")
 
-        def list_lerp(a: list[float, float, float], b: list[float, float, float], t):
+        def list_lerp(a: list[float] | None, b: list[float] | None, t: float):
             if a is None or b is None:
                 return None
             return [a[i] + (b[i] - a[i]) * t for i in range(len(a))]
@@ -172,7 +241,9 @@ class DataSample2:
 
         for i in range(target_frame):
             progression = i / (target_frame - 1)
-            frame_scaled_value = min(progression * (len(self.gestures) - 1), len(self.gestures) - 1)
+            frame_scaled_value = min(
+                progression * (len(self.gestures) - 1), len(self.gestures) - 1
+            )
             # print(i, frame_scaled_value, len(self.gestures))
             start_frame = math.floor(frame_scaled_value)
             end_frame = math.ceil(frame_scaled_value)
@@ -181,7 +252,19 @@ class DataSample2:
             new_gesture: DataGestures = DataGestures()
 
             for field in fields(new_gesture):
-                setattr(new_gesture, field.name, list_lerp(getattr(self.gestures[start_frame], field.name), getattr(self.gestures[end_frame], field.name), interpolation_coef))
+                field_start: list[float] | None = getattr(
+                    self.gestures[start_frame], field.name)
+                field_end: list[float] | None = getattr(
+                    self.gestures[end_frame], field.name)
+                setattr(
+                    new_gesture,
+                    field.name,
+                    list_lerp(
+                        field_start,
+                        field_end,
+                        interpolation_coef,
+                    ),
+                )
 
             new_gestures.append(new_gesture)
 
@@ -190,24 +273,32 @@ class DataSample2:
         self.computeHandVelocity()
         return self
 
-    def set_sample_gestures_point_to(self, point_field_name: str, value: list[float]) -> 'DataSample2':
+    def set_sample_gestures_point_to(
+        self, point_field_name: str, value: list[float]
+    ) -> Self:
         for gesture in self.gestures:
             setattr(gesture, point_field_name, value)
         return self
 
-    def swap_hands(self) -> 'DataSample2':
+    def swap_hands(self) -> Self:
         """Should not be used.<br>
         This function is used to swap the left hand and right hand data,
         in case the hands are mirrored or the data is not in the right order.
 
         Returns:
-            DataSample2: _description_
+            DataSample: _description_
         """
         for gesture in self.gestures:
             gesture.swapHands()
         return self
 
-    def move_to_one_side(self, right_side: bool = True) -> 'DataSample2':
+    def move_to_one_side(self, right_side: bool = True) -> Self:
         for gesture in self.gestures:
             gesture.moveToOneSide(right_side)
         return self
+
+    def isFullNone(self) -> bool:
+        for gesture in self.gestures:
+            if not gesture.isFullNone():
+                return False
+        return True

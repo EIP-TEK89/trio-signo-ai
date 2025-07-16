@@ -3,34 +3,29 @@ from dataclasses import dataclass, field
 
 import torch
 
+
 @dataclass
 class Args:
     trainset_path: str = None
-    # arch: str = "v1"
     memory_frame: int = None
     name: str = None
     epoch: int = 20
     device_type: str = "gpu"
     device: torch.device = None
     balance_weights: bool = True
-    # min_neuron: int = 16
-    # max_neuron: int = 256
-    # min_layer: int = 1
-    # max_layer: int = 3
     validation_set_ratio: float = 0.2
-    # min_dropout: float = 0.3
-    # max_dropout: float = 0.5
     dropout: float = 0.3
-    # research: bool = False
-    # research_trial: int = 50
     model_path: str = None
     d_model: int = 32
     num_heads: int = 8
     num_layers: int = 3
-    ff_dim: int = None
+    ff_dim: int | None = None
     confusing_label: dict[str, str] = field(default_factory=dict)
     class_weights: dict[str, float] = field(default_factory=dict)
     batch_size: int = 32
+    embedding_optimization_threshold: float = -1
+    embedding_optimization_alpha: float = 0.03
+    satisfactory_accuracy: float = 1
 
 
 def parse_args() -> Args:
@@ -43,12 +38,6 @@ def parse_args() -> Args:
         help='File path to the training set.',
         required=True,
         type=str)
-    # parser.add_argument(
-    #     '--arch',
-    #     help='(Unused at the moment) Model architecture to use. (Available: v1)',
-    #     required=False,
-    #     default=args.arch,
-    #     type=str)
     parser.add_argument(
         '--memory-frame',
         help='Number of frame in the past the model will see (Default: None (Maximum possible frame in the past the trainset have))',
@@ -78,30 +67,6 @@ def parse_args() -> Args:
         help='Balance the weight for the loss function so no label is overrepresented.',
         required=False,
         action='store_true')
-    # parser.add_argument(
-    #     '--min-neuron',
-    #     help='(Only with research mode) Minimum number of neuron per layer.',
-    #     required=False,
-    #     default=args.min_neuron,
-    #     type=int)
-    # parser.add_argument(
-    #     '--max-neuron',
-    #     help='(Only with research mode) Maximum number of neuron per layer.',
-    #     required=False,
-    #     default=args.max_neuron,
-    #     type=int)
-    # parser.add_argument(
-    #     '--min-layer',
-    #     help='(Only with research mode) Minimum number of layer.',
-    #     required=False,
-    #     default=args.min_layer,
-    #     type=int)
-    # parser.add_argument(
-    #     '--max-layer',
-    #     help='(Only with research mode) Maximum number of layer.',
-    #     required=False,
-    #     default=args.max_layer,
-    #     type=int)
     parser.add_argument(
         '--validation-set-ratio',
         help='Ratio of the trainset that will be used for the validation set.',
@@ -114,30 +79,6 @@ def parse_args() -> Args:
         required=False,
         default=args.dropout,
         type=float)
-    # parser.add_argument(
-    #     '--min-dropout',
-    #     help='(Only with research mode) Minimum dropout value for the model.',
-    #     required=False,
-    #     default=args.min_dropout,
-    #     type=float)
-    # parser.add_argument(
-    #     '--max-dropout',
-    #     help='(Only with research mode) Maximum dropout value for the model.',
-    #     required=False,
-    #     default=args.max_dropout,
-    #     type=float)
-    # parser.add_argument(
-    #     '--research',
-    #     help='Change the training mode to research mode.',
-    #     required=False,
-    #     default=args.research,
-    #     action='store_true')
-    # parser.add_argument(
-    #     '--research-trial',
-    #     help='Number of trial',
-    #     required=args.model_path,
-    #     default=args.research_trial,
-    #     type=int)
     parser.add_argument(
         '--model',
         help='Path to the model. (Must be a folder containing a .json and a .pth file)',
@@ -190,6 +131,14 @@ def parse_args() -> Args:
         default=None,
         type=str,
         nargs=2)
+    parser.add_argument(
+        '--embedding-optimization-threshold',
+        help="Activate the embedding optimization when the accuracy is higher than the set thresold.\n"
+             "Admitted values are between 0 and 1.\n"
+             "-1 disable this feature.",
+        required=False,
+        default=args.embedding_optimization_threshold,
+        type=float)
 
     term_args: argparse.Namespace = parser.parse_args()
 
@@ -207,7 +156,8 @@ def parse_args() -> Args:
         c_label = term_args.confusing_label[i]
         c_label2 = term_args.confusing_label[i+1]
         try:
-            assert args.confusing_label.get(c_label) is None, f"Label \"{c_label}\" already in the list. If the \"{c_label}\" is responsible of more than one label, do something like this:\n-c \"{c_label2}\" \"{c_label}\"\nInstead of:\n-c \"{c_label}\" \"{c_label2}\""
+            assert args.confusing_label.get(c_label) is None, f"Label \"{c_label}\" already in the list. If the \"{
+                c_label}\" is responsible of more than one label, do something like this:\n-c \"{c_label2}\" \"{c_label}\"\nInstead of:\n-c \"{c_label}\" \"{c_label2}\""
         except AssertionError as e:
             print("AssertionError:", e)
             exit(1)
@@ -235,12 +185,15 @@ def parse_args() -> Args:
         # Check for CUDA (NVIDIA GPU)
         args.device = torch.device("cuda")
         print("Using NVIDIA GPU with CUDA")
-        print("GPU Name:", torch.cuda.get_device_name(torch.cuda.current_device()), "ID:", torch.cuda.current_device())
-    elif args.device_type in ["gpu", "mps"] and torch.backends.mps.is_available():  # On ROCm-enabled PyTorch builds
+        print("GPU Name:", torch.cuda.get_device_name(
+            torch.cuda.current_device()), "ID:", torch.cuda.current_device())
+    # On ROCm-enabled PyTorch builds
+    elif args.device_type in ["gpu", "mps"] and torch.backends.mps.is_available():
         # Check for ROCm (AMD GPU)
         args.device = torch.device("mps")
         print("Using AMD GPU with ROCm")
-        print("GPU Name:", torch.cuda.get_device_name(torch.cuda.current_device()), "ID:", torch.cuda.current_device())
+        print("GPU Name:", torch.cuda.get_device_name(
+            torch.cuda.current_device()), "ID:", torch.cuda.current_device())
     else:
         # Default to CPU
         print("Using CPU")
@@ -263,4 +216,6 @@ def parse_args() -> Args:
     if term_args.ff_dim is not None:
         args.ff_dim = int(term_args.ff_dim)
     args.batch_size = int(term_args.batch_size)
+    args.embedding_optimization_threshold = float(
+        term_args.embedding_optimization_threshold)
     return args
