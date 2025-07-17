@@ -26,6 +26,7 @@ class Args:
     embedding_optimization_threshold: float = -1
     embedding_optimization_alpha: float = 0.03
     satisfactory_accuracy: float = 1
+    sign_detector: bool = False
 
 
 def parse_args() -> Args:
@@ -139,6 +140,11 @@ def parse_args() -> Args:
         required=False,
         default=args.embedding_optimization_threshold,
         type=float)
+    parser.add_argument(
+        '--sign-detector',
+        help='Train a sign detector model.',
+        required=False,
+        action='store_true')
 
     term_args: argparse.Namespace = parser.parse_args()
 
@@ -218,4 +224,5 @@ def parse_args() -> Args:
     args.batch_size = int(term_args.batch_size)
     args.embedding_optimization_threshold = float(
         term_args.embedding_optimization_threshold)
+    args.sign_detector = term_args.sign_detector
     return args

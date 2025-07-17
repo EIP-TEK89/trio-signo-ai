@@ -49,7 +49,7 @@ class AccuracyCalculator:
                 if (k < len(color_chart) - 1 and accuracies[i] >= color_chart[k][0] and accuracies[i] <= color_chart[k + 1][0]) \
                 or (k >= len(color_chart) - 1 and accuracies[i] >= color_chart[k][0]):
                     print(f"\033[38;2;{r};{g};{b}m", end="")
-            print(f"{pre_str}{label}: {(accuracies[i] * 100):.2f}%\033[0m")
+            print(f"{pre_str}{label}: {(accuracies[i] * 100):.2f}% {self.correct_per_class[i]}/{self.total_per_class[i]}\033[0m")
 
     def add(self, other: "AccuracyCalculator"):
         for i in range(self.num_classes):

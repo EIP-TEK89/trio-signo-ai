@@ -521,6 +521,42 @@ class DataSamplesTensors:
                           torch.cat(validation_out, dim=0))
         return ((torch.cat(train_in, dim=0), torch.cat(train_out, dim=0)), validation)
 
+    def toTensorsForDetection(
+        self,
+        split_ratio: float = 0,
+    ) -> tuple[TensorPair, TensorPair | None]:
+        train_in: list[torch.Tensor] = []
+        train_out: list[torch.Tensor] = []
+        validation_in: list[torch.Tensor] = []
+        validation_out: list[torch.Tensor] = []
+
+        torch.manual_seed(0)
+        for i in range(len(self.samples)):
+            sample: torch.Tensor = self.getTensorsOfLabel(i)
+            # Random permutation of row indices so sample are evenly reparted between train and validation
+            indices = torch.randperm(sample.size(0))
+            shuffled_tensor: torch.Tensor = sample[indices]
+
+            sample_count = shuffled_tensor.shape[0]
+            split_index = int(sample_count * (1 - split_ratio))
+
+            out_label: int = 0 if self.info.null_sample_id == i else 1
+
+            train_in.append(shuffled_tensor[:split_index])
+            train_out.append(torch.full((split_index,), out_label))
+
+            validation_in.append(shuffled_tensor[split_index:])
+            validation_out.append(torch.full(
+                (sample_count - split_index,), out_label))
+
+            del shuffled_tensor
+
+        validation: TensorPair | None = None
+        if split_ratio > 0:
+            validation = (torch.cat(validation_in, dim=0),
+                          torch.cat(validation_out, dim=0))
+        return ((torch.cat(train_in, dim=0), torch.cat(train_out, dim=0)), validation)
+
     def getClassWeights(
         self,
         balance_weight: bool = True,

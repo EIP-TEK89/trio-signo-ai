@@ -3,6 +3,8 @@ import shutil
 import time
 
 from src.model_class.transformer_sign_recognizer import SignRecognizerTransformer
+from src.model_class.transformer_sign_detector import SignDetectorTransformer
+
 from src.train_model.train import train_model
 from src.train_model.parse_args import parse_args, Args
 from src.train_model.init_train_data import init_train_set
@@ -18,8 +20,12 @@ copy_previous_model: bool = False
 if args.model_path:
     print("Loading model...", end="", flush=True)
     copy_previous_model = True
-    model = SignRecognizerTransformer.loadModelFromDir(
-        args.model_path, args.device)
+    if not args.sign_detector:
+        model = SignRecognizerTransformer.loadModelFromDir(
+            args.model_path, args.device)
+    else:
+        model = SignDetectorTransformer.loadModelFromDir(
+            args.model_path, args.device)
     print("[DONE]")
 
 
@@ -29,8 +35,10 @@ dataloaders, confused_sets, model_info, train_stats, weights = init_train_set(
     args)
 
 if model is None:
-    model = SignRecognizerTransformer(model_info, device=args.device)
-
+    if not args.sign_detector:
+        model = SignRecognizerTransformer(model_info, device=args.device)
+    else:
+        model = SignDetectorTransformer(model_info, device=args.device)
 assert model is not None, "Model is None"
 
 print("Starting training...")
