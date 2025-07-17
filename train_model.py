@@ -5,7 +5,8 @@ import time
 from src.model_class.transformer_sign_recognizer import SignRecognizerTransformer
 from src.model_class.transformer_sign_detector import SignDetectorTransformer
 
-from src.train_model.train import train_model
+from src.train_model.recognition.train_recognition import train_recognition_model
+from src.train_model.detection.train_detection import train_detection_model
 from src.train_model.parse_args import parse_args, Args
 from src.train_model.init_train_data import init_train_set
 from src.train_model.TrainStat import TrainStat
@@ -13,7 +14,7 @@ from src.train_model.TrainStat import TrainStat
 
 args: Args = parse_args()
 
-model: SignRecognizerTransformer | None = None
+model: SignRecognizerTransformer | SignDetectorTransformer | None = None
 
 copy_previous_model: bool = False
 
@@ -42,10 +43,19 @@ if model is None:
 assert model is not None, "Model is None"
 
 print("Starting training...")
-train_stats = train_model(model, dataloaders, confused_sets, train_stats,
-                          weights, args.embedding_optimization_threshold,
-                          num_epochs=args.epoch,
-                          device=args.device)
+if not args.sign_detector:
+    train_stats = train_recognition_model(model, dataloaders,
+                                                   confused_sets, train_stats,
+                                                   weights,
+                                                   args.embedding_optimization_threshold,
+                                                   num_epochs=args.epoch,
+                                                   device=args.device)
+else:
+    train_stats = train_detection_model(model, dataloaders,
+                                                   train_stats,
+                                                   weights,
+                                                   num_epochs=args.epoch,
+                                                   device=args.device)
 
 nb_prev_model: int = 0
 if copy_previous_model:

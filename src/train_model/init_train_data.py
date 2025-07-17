@@ -9,8 +9,8 @@ from src.train_model.ConfusedSets import ConfusedSets
 from src.train_model.parse_args import Args
 from src.train_model.TrainStat import TrainStat
 
-from src.train_model.init_recognition_train_data import init_recognition_train_data
-from src.train_model.init_detection_train_data import init_detection_train_data
+from src.train_model.recognition.init_recognition_train_data import init_recognition_train_data
+from src.train_model.detection.init_detection_train_data import init_detection_train_data
 
 from src.train_model.train_dataloader import TrainDataLoader
 

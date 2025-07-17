@@ -292,6 +292,7 @@ class SignRecognizerTransformer(nn.Module):
             int: Predicted label id
         """
         with torch.no_grad():
+            print(self.getLabelID(self.forward(x)))
             return self.getLabelID(self.forward(x))[0]
 
 

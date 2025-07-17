@@ -1,4 +1,5 @@
 import torch
+from typing import Self
 
 class AccuracyCalculator:
     def __init__(self, labels: list[str]):
@@ -51,7 +52,7 @@ class AccuracyCalculator:
                     print(f"\033[38;2;{r};{g};{b}m", end="")
             print(f"{pre_str}{label}: {(accuracies[i] * 100):.2f}% {self.correct_per_class[i]}/{self.total_per_class[i]}\033[0m")
 
-    def add(self, other: "AccuracyCalculator"):
+    def add(self, other: Self):
         for i in range(self.num_classes):
             self.correct_per_class[i] += other.correct_per_class[i]
             self.total_per_class[i] += other.total_per_class[i]

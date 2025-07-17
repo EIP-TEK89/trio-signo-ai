@@ -12,7 +12,7 @@ from torch.utils.data import Dataset, DataLoader
 
 from src.datasample import *
 from src.datasamples import *
-from src.train_model.AccuracyCalculator import AccuracyCalculator
+from src.train_model.recognition.AccuracyCalculator import AccuracyCalculator
 
 @dataclass
 class ModelInfo(DataSamplesInfo):

@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch
 
-from src.train_model.AccuracyCalculator import AccuracyCalculator
+from src.train_model.recognition.AccuracyCalculator import AccuracyCalculator
 from src.model_class.transformer_sign_recognizer import SignRecognizerTransformer
 from src.train_model.ConfusedSets import ConfusedSets
 from src.train_model.TrainStat import TrainStat, TrainStatEpoch, TrainStatEpochResult
@@ -229,7 +229,7 @@ def run_validation(model: SignRecognizerTransformer,
     return validation_epoch_stats, duration
 
 
-def train_model(model: SignRecognizerTransformer,
+def train_recognition_model(model: SignRecognizerTransformer,
                 dataloaders: TrainDataLoader,
                 confused_sets: ConfusedSets,
                 train_stats: TrainStat,
