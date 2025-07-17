@@ -1,6 +1,8 @@
 import os
 import shutil
 import time
+import signal
+import sys
 
 from src.model_class.transformer_sign_recognizer import SignRecognizerTransformer
 from src.model_class.transformer_sign_detector import SignDetectorTransformer
@@ -10,6 +12,36 @@ from src.train_model.detection.train_detection import train_detection_model
 from src.train_model.parse_args import parse_args, Args
 from src.train_model.init_train_data import init_train_set
 from src.train_model.TrainStat import TrainStat
+
+def save_model(model: SignRecognizerTransformer | SignDetectorTransformer, train_stats: TrainStat, copy_previous_model: bool, args: Args):
+    nb_prev_model: int = 0
+    if copy_previous_model:
+        path: str = args.model_path + "/previous_models/"
+        os.makedirs(path, exist_ok=True)
+
+        nb_prev_model = len(os.listdir(path))
+
+        pth_file = model.info.name + ".pth"
+        shutil.copy(args.model_path + "/" + pth_file, path)
+        os.rename(path + pth_file, f"{path}/{model.info.name}_{nb_prev_model}.pth")
+
+        model.saveModel(args.model_path)
+        nb_prev_model += 1
+    else:
+        args.model_path = model.saveModel("./models/pytorch/")
+        try:
+            shutil.rmtree(args.model_path + "/train_stats")
+        except Exception as e:
+            print(e)
+        try:
+            shutil.rmtree(args.model_path + "/previous_models")
+        except Exception as e:
+            print(e)
+
+    train_stats.rename(model.info.name, nb_prev_model)
+    os.makedirs(args.model_path + "/train_stats/", exist_ok=True)
+    train_stats.save(f"{args.model_path}/train_stats/{train_stats.name}.json")
+
 
 
 args: Args = parse_args()
@@ -42,7 +74,18 @@ if model is None:
         model = SignDetectorTransformer(model_info, device=args.device)
 assert model is not None, "Model is None"
 
+def signal_handler(sig, frame):
+    answer: str = ""
+    print()
+    while answer not in ["y", "n"]:
+        answer = input(
+            f"Do you want to save the model before exiting? (y/n) [default: y]: ") or "y"
+    if answer == "y":
+        save_model(model, train_stats, copy_previous_model, args)
+    sys.exit(0)
+
 print("Starting training...")
+signal.signal(signal.SIGINT, signal_handler)
 if not args.sign_detector:
     train_stats = train_recognition_model(model, dataloaders,
                                                    confused_sets, train_stats,
@@ -56,31 +99,3 @@ else:
                                                    weights,
                                                    num_epochs=args.epoch,
                                                    device=args.device)
-
-nb_prev_model: int = 0
-if copy_previous_model:
-    path: str = args.model_path + "/previous_models/"
-    os.makedirs(path, exist_ok=True)
-
-    nb_prev_model = len(os.listdir(path))
-
-    pth_file = model.info.name + ".pth"
-    shutil.copy(args.model_path + "/" + pth_file, path)
-    os.rename(path + pth_file, f"{path}/{model.info.name}_{nb_prev_model}.pth")
-
-    model.saveModel(args.model_path)
-    nb_prev_model += 1
-else:
-    args.model_path = model.saveModel()
-    try:
-        shutil.rmtree(args.model_path + "/train_stats")
-    except Exception as e:
-        print(e)
-    try:
-        shutil.rmtree(args.model_path + "/previous_models")
-    except Exception as e:
-        print(e)
-
-train_stats.rename(model.info.name, nb_prev_model)
-os.makedirs(args.model_path + "/train_stats/", exist_ok=True)
-train_stats.save(f"{args.model_path}/train_stats/{train_stats.name}.json")

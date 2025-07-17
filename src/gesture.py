@@ -10,8 +10,8 @@ from numpy.typing import NDArray
 from mediapipe.tasks.python.vision.hand_landmarker import HandLandmarkerResult
 from mediapipe.tasks.python.components.containers.landmark import NormalizedLandmark, Landmark
 from typings.mediapipe.framework.formats.landmark_pb2 import NormalizedLandmarkList
-from src.rot_3d import rot_3d_x, rot_3d_y, rot_3d_z
-from src.tools import rand_fix_interval
+from src.misc.rot_3d import rot_3d_x, rot_3d_y, rot_3d_z
+from src.misc.tools import rand_fix_interval
 
 
 def is_valid_field(field_name: str, valid_fields: list[str] | None) -> bool:

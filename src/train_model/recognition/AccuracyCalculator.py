@@ -1,5 +1,7 @@
 import torch
 from typing import Self
+from src.misc.color_terminal import print_color, print_color_reset
+from src.train_model.pick_color import pick_color
 
 class AccuracyCalculator:
     def __init__(self, labels: list[str]):
@@ -45,12 +47,9 @@ class AccuracyCalculator:
         _, accuracies = self.get_accuracy()
 
         for i, label in enumerate(self.labels):
-            for k in range(len(color_chart)):
-                r, g, b = color_chart[k][1]
-                if (k < len(color_chart) - 1 and accuracies[i] >= color_chart[k][0] and accuracies[i] <= color_chart[k + 1][0]) \
-                or (k >= len(color_chart) - 1 and accuracies[i] >= color_chart[k][0]):
-                    print(f"\033[38;2;{r};{g};{b}m", end="")
-            print(f"{pre_str}{label}: {(accuracies[i] * 100):.2f}% {self.correct_per_class[i]}/{self.total_per_class[i]}\033[0m")
+            print_color(pick_color(accuracies[i], color_chart))
+            print(f"{pre_str}{label}: {(accuracies[i] * 100):.2f}% {self.correct_per_class[i]}/{self.total_per_class[i]}")
+            print_color_reset()
 
     def add(self, other: Self):
         for i in range(self.num_classes):

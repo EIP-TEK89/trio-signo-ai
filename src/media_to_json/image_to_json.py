@@ -7,9 +7,9 @@ from src.video_recorder.face_detection import track_face
 from src.video_recorder.body_detection import track_body
 from src.video_recorder.cv_drawer import CVDrawer
 from typing import Any
-from src.draw_gestures import draw_gestures
+from src.misc.draw_gestures import draw_gestures
 
-from src.run_model import load_hand_landmarker, track_hand_image, draw_land_marks
+from src.video_recorder.hand_detection import track_hand_image
 
 # Open the video file
 

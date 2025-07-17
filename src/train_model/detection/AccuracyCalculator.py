@@ -1,5 +1,7 @@
 import torch
 from typing import Self
+from src.misc.color_terminal import print_color, print_color_reset
+from src.train_model.pick_color import pick_color
 
 class AccuracyCalculator:
     correct_results: list[int]
@@ -32,7 +34,7 @@ class AccuracyCalculator:
         self.results.extend(predictions.tolist())
         self.correct_results.extend(labels.tolist())
 
-    def get_accuracy(self, separation: float = 0.5) -> tuple[float, tuple[tuple[int, int, float], tuple[int, int, float]]]:
+    def get_accuracy(self, separation: float = 0.5) -> tuple[float, float, tuple[tuple[int, int, float], tuple[int, int, float]]]:
         """_summary_
 
         Args:
@@ -43,8 +45,10 @@ class AccuracyCalculator:
 
             *All value are based on the separation value*
             float: Average accuracy [0, 1]
-            tuple[tuple[int, int, float], tuple[int, int, float]]:
+            float: Average accuracy normalized [0, 1]
+            tuple[int, int, float]:
                 - (correct_correct, correct_total, correct_accuracy [0, 1])
+            tuple[int, int, float]:
                 - (correct_incorect, incorrect_total, incorrect_accuracy [0, 1])
         """
 
@@ -62,10 +66,14 @@ class AccuracyCalculator:
             elif not self.correct_results[i] and self.results[i] < separation:
                 correct_incorect += 1
 
+        correct_acc: float = correct_correct / correct_total if correct_total > 0 else 0
+        incorrect_acc: float = correct_incorect / incorrect_total if incorrect_total > 0 else 0
+        total_values: int = correct_total + incorrect_total
         return (
-            (correct_correct + correct_incorect) / (correct_total + incorrect_total) if (correct_total + incorrect_total) > 0 else 0,
-            (correct_correct, correct_total, correct_correct / correct_total if correct_total > 0 else 0),
-            (correct_incorect, incorrect_total, correct_incorect / incorrect_total if incorrect_total > 0 else 0)
+            (correct_correct + correct_incorect) / total_values if total_values > 0 else 0,
+            (correct_acc + incorrect_acc) / 2,
+            (correct_correct, correct_total, correct_acc),
+            (correct_incorect, incorrect_total, incorrect_acc)
         )
 
     def print_accuracy_table(self, pre_str: str = "\t",
@@ -79,19 +87,20 @@ class AccuracyCalculator:
                               (0.99, (0, 200, 128)),
                               (1, (0, 0, 255))]):
 
+
         for separation in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
             accuracies: tuple[float, tuple[int, int, float], tuple[int, int, float]] = self.get_accuracy(separation)
-            for k in range(len(color_chart)):
-                r, g, b = color_chart[k][1]
-                if (k < len(color_chart) - 1 and accuracies[0] >= color_chart[k][0] and accuracies[0] <= color_chart[k + 1][0]) \
-                or (k >= len(color_chart) - 1 and accuracies[0] >= color_chart[k][0]):
-                    print(f"\033[38;2;{r};{g};{b}m", end="")
 
             # print(accuracies)
+            print_color(pick_color(accuracies[0], color_chart))
             print(f"{pre_str}{separation}: {(accuracies[0] * 100):.2f}%", end="")
-            print(f" V: {(accuracies[1][2] * 100):.2f}% {accuracies[1][0]}/{accuracies[1][1]}", end="")
-            print(f" X: {(accuracies[2][2] * 100):.2f}% {accuracies[2][0]}/{accuracies[2][1]}", end="")
-            print("\033[0m")
+            print_color(pick_color(accuracies[1], color_chart))
+            print(f" ({(accuracies[1] * 100):.2f}%)", end="")
+            print_color(pick_color(accuracies[2][2], color_chart))
+            print(f" V: {(accuracies[2][2] * 100):.2f}% {accuracies[2][0]}/{accuracies[2][1]}", end="")
+            print_color(pick_color(accuracies[3][2], color_chart))
+            print(f" X: {(accuracies[3][2] * 100):.2f}% {accuracies[3][0]}/{accuracies[3][1]}", end="")
+            print_color_reset()
 
     def add(self, other: Self):
         """Add another AccuracyCalculator to this one."""

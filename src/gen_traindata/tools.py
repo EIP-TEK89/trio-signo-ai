@@ -3,7 +3,7 @@ import math
 
 from src.gesture import DataGestures
 from src.datasample import DataSample
-from src.tools import rand_fix_interval
+from src.misc.tools import rand_fix_interval
 
 ROT_ANGLE = math.pi / 4
 

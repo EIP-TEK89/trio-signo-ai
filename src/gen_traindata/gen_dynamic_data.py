@@ -3,7 +3,7 @@ from collections import deque
 
 from src.datasample import DataSample
 from src.gen_traindata.tools import make_new_sample_variation
-from src.tools import rand_fix_interval
+from src.misc.tools import rand_fix_interval
 from src.gesture import HANDS_POSITION
 
 

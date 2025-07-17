@@ -12,7 +12,7 @@ from src.train_model.ConfusedSets import ConfusedSets
 from src.train_model.TrainStat import TrainStat, TrainStatEpoch, TrainStatEpochResult
 from src.datasamples import TensorPair
 from src.train_model.init_train_data import TrainDataLoader
-from src.tools import from_1d_tensor_to_list_int
+from src.misc.tools import from_1d_tensor_to_list_int
 
 
 def train_epoch_optimize(optimizer: optim.Optimizer, loss: torch.Tensor):

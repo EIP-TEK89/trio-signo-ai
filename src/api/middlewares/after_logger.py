@@ -2,7 +2,7 @@ import logging
 
 from werkzeug.wrappers import Request
 
-from src.logger import *
+from src.api.logger import *
 
 
 class AfterLoggerMiddleware:

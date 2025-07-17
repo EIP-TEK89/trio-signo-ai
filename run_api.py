@@ -5,7 +5,7 @@ from flask import Flask
 from flask_cors import CORS
 from waitress import serve
 
-from src.logger import setup_logger
+from src.api.logger import setup_logger
 
 from src.api.middlewares.after_logger import AfterLoggerMiddleware
 from src.api.middlewares.logger import LoggerMiddleware
@@ -22,7 +22,7 @@ from mediapipe.tasks.python import vision
 from mediapipe.tasks.python.vision.hand_landmarker import *
 
 from src.model_class.transformer_sign_recognizer import *
-from src.run_model import load_hand_landmarker
+from src.video_recorder.hand_detection import load_hand_landmarker
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)

@@ -1,5 +1,5 @@
 from src.model_class.transformer_sign_recognizer import *
-from src.run_model import *
+from src.video_recorder.hand_detection import *
 import cv2
 
 sign_rec: SignRecognizerTransformerONNX = SignRecognizerTransformerONNX("onnx_models")

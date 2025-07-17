@@ -3,7 +3,7 @@ import json
 import os
 import pygame
 from src.datasample import *
-from src.rot_3d import *
+from src.misc.rot_3d import *
 import copy
 import time
 from dataclasses import fields

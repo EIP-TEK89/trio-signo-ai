@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 from src.datasample import DataSample
 from src.datasample import dataclass
-from src.run_model import load_hand_landmarker, track_hand
+from src.video_recorder.hand_detection import load_hand_landmarker, track_hand
 from src.video_recorder.face_detection import track_face
 from src.video_recorder.body_detection import track_body
 from src.media_to_json.video_to_json import video_to_json

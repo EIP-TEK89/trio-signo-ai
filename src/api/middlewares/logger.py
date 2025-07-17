@@ -2,7 +2,7 @@ import logging
 
 from flask import Flask, Request
 
-from src.logger import *
+from src.api.logger import *
 
 class LoggerMiddleware:
     def __init__(self, app, logger: logging.Logger):
