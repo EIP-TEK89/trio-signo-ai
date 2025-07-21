@@ -8,59 +8,64 @@ from collections import deque
 from src.gen_traindata.gen_static_data import gen_static_data
 from src.gen_traindata.gen_dynamic_data import gen_dynamic_data
 from src.gen_traindata.tools import rand_gesture
+from src.gen_traindata.parse_args import parse_args, Args
 
 from src.gesture import DataGestures, ActiveGestures, ALL_GESTURES, ACTIVATED_GESTURES_PRESETS
 from src.datasample import DataSample
 from src.datasamples import IDX_VALID_SAMPLE, DataSamples, DataSamplesInfo, IDX_INVALID_SAMPLE
 
-DATASETS_DIR = "datasets"
+VALID_LABEL: str = "_valid"
 
+class ProgressionLogger:
+    dataset_labels: list[str] = []
+    label_id: int = 0
 
-def print_help():
-    a_param_description: str = ""
-    for key, value in ACTIVATED_GESTURES_PRESETS.items():
-        a_param_description += f"\n\t\t{key}: {value[1]}"
+    treated_label_samples: int = 0
+    to_treat_label_samples: int = 0
 
-    print(f"""USAGE:
-\t{sys.argv[0]} [OPTIONS] [DATASET1 DATASET2 ...]
-OPTIONS:
-\t-h: Display this help message
-\t-s: (-s [integer]) Number of subset to generate for each sample
-\t-n: (-n [string]) Name of the dataset
-\t-f: (-f [integer]) Number of frame in the past in the training set
-\t-x: (-s [string (label)]) NULL dataset: Define the null labeled output for the model further training data.
-\t-b: (-b (enables)) Balance the number of element between label in the training dataset
-\t-o: (-o (enables)) One sides all the sign making left and right hand the same
-\t-a: (-a [string]) Active point: Let you define which point to activate in the training dataset
-\t    (e.g: only the right hand points can be set to active) (Default: all points are active):{a_param_description}
-\t[DATASET1 DATASET2 ...]: List of dataset to use to generate the training dataset, the program will take the corresponding folder in the \"datasets\" directory.
-""")
+    data_augmentation_iteration: int = 0
+    total_data_augmentation_iterations: int = 0
 
+    created_samples: int = 0
+    start_time: float = 0.0
 
-def print_progression(dataset_labels: list[str], label_id: int,
-                      treated_sample: int, label_total_samples: int,
-                      subset: int, total_subset: int,
-                      created_sample: int,
-                      start_time: float, completed_cycle: int, total_cycle: int):
-    elapsed_time = time.time() - start_time
-    one_cycle_time = 1
-    if completed_cycle != 0:
-        one_cycle_time = elapsed_time / completed_cycle
-    remaining_time = one_cycle_time * (total_cycle - completed_cycle)
-    remaining_time_str = time.strftime("%H:%M:%S", time.gmtime(remaining_time))
-    dataset_labels_len = len(dataset_labels)
+    completed_cycle: int = 0
+    total_cycle: int = 0
 
-    string: str = f"\r\033[KCreating dataset: " + \
-          f"[Label ({dataset_labels[label_id]}): {str(label_id).zfill(
+    def setStartTime(self):
+        self.start_time = time.time()
+
+    def getElapsedTime(self) -> float:
+        return time.time() - self.start_time
+
+    def __repr__(self):
+        elapsed_time = self.getElapsedTime()
+        one_cycle_time = 1
+        if self.completed_cycle != 0:
+            one_cycle_time = elapsed_time / self.completed_cycle
+        remaining_time = one_cycle_time * (self.total_cycle - self.completed_cycle)
+        remaining_time_str = time.strftime("%H:%M:%S", time.gmtime(remaining_time))
+        dataset_labels_len = len(self.dataset_labels)
+
+        string: str = \
+          f"[Label ({self.dataset_labels[self.label_id]}): {str(self.label_id).zfill(
               len(str(dataset_labels_len)))}/{dataset_labels_len}] " + \
-          f"[Datasample: {str(treated_sample).zfill(
-              len(str(label_total_samples)))}/{label_total_samples}] " + \
-          f"[Subset Generation: {str(subset).zfill(
-              len(str(total_subset)))}/{total_subset}] " + \
-          f"[Sample generated: {created_sample}] " + \
-          f"Remain time: {remaining_time_str} {str(completed_cycle).zfill(len(str(total_cycle)))}/{total_cycle}"
-    print(string, end="\r", flush=True)
+          f"[Sample: {str(self.treated_label_samples).zfill(
+              len(str(self.to_treat_label_samples)))}/{self.to_treat_label_samples}] " + \
+          f"[Subset: {str(self.data_augmentation_iteration).zfill(
+              len(str(self.total_data_augmentation_iterations)))}/{self.total_data_augmentation_iterations}] " + \
+          f"[Sample created: {self.created_samples}] " + \
+          f"Time left: {remaining_time_str} {str(self.completed_cycle).zfill(
+              len(str(self.total_cycle)))}/{self.total_cycle}"
 
+        return string
+
+    def print(self):
+        print(f"\r\033[K{self.__repr__()}", end="\r", flush=True)
+
+def getFormatedTime(seconds: float) -> str:
+    """Format seconds into a string of the form HH:MM:SS."""
+    return time.strftime("%H:%M:%S", time.gmtime(seconds))
 
 def create_subset(sample: DataSample,
                   nb_frame: int,
@@ -127,13 +132,10 @@ def summary_checker(dataset_name: str, null_label: str | None, labels: list[str]
             exit(0)
 
 
-def load_datasamples(dataset_labels: list[str],
-                     memory_frame: int,
-                     null_label: str | None = None,
-                     ) -> dict[str, tuple[list[DataSample], list[DataSample]]]:
+def load_datasamples(args: Args) -> dict[str, tuple[list[DataSample], list[DataSample]]]:
     data_samples: dict[str, tuple[list[DataSample], list[DataSample]]] = {}
-    for label_name in dataset_labels:
-        label_path: str = os.path.join(DATASETS_DIR, label_name)
+    for label_name in args.sample_label:
+        label_path: str = os.path.join(args.dataset_dir, label_name)
         samples: list[DataSample] = []
         counter_examples: list[DataSample] = []
 
@@ -152,8 +154,8 @@ def load_datasamples(dataset_labels: list[str],
                         sample_data: DataSample = DataSample.fromJsonFile(
                             sample_path)
                         sample_data.label = label_name
-                        if len(sample_data.gestures) > memory_frame:
-                            sample_data.reframe(memory_frame)
+                        if len(sample_data.gestures) > args.memory_frame:
+                            sample_data.reframe(args.memory_frame)
                         if label_kind == "valid":
                             sample_data.invalid = False
                             samples.append(sample_data)
@@ -171,185 +173,106 @@ def load_datasamples(dataset_labels: list[str],
 
 
 def main():
-    i = 1
-    dataset_labels: list[str] = []
-    total_subsets: int = 1
-    dataset_name: str | None = None
-    nb_frame = 15
-    null_set: str | None = None
-    active_gesture: ActiveGestures | None = None
-    requested_active_gesture: list[ActiveGestures] = []
-    balance: bool = False
-    one_side: bool = False
-    while i < len(sys.argv):
-        args = sys.argv[i]
-        # print(args)
-        if args.startswith("-"):
-            match args[1]:
-                case "h":
-                    print_help()
-                    exit()
-                case "s":
-                    i += 1
-                    total_subsets = int(sys.argv[i])
-                case "n":
-                    i += 1
-                    dataset_name = sys.argv[i]
-                case "f":
-                    i += 1
-                    nb_frame = int(sys.argv[i])
-                case "x":
-                    i += 1
-                    null_set = sys.argv[i]
-                    dataset_labels.append(null_set)
-                case "a":
-                    i += 1
-                    tmp: tuple[ActiveGestures, str] | None = ACTIVATED_GESTURES_PRESETS.get(
-                        sys.argv[i])
-                    if tmp is None:
-                        print("Invalid active gesture preset")
-                        exit(1)
-                    requested_active_gesture.append(tmp[0])
-                case "b":
-                    balance = True
-                case "o":
-                    one_side = True
-                case _:
-                    print(f"Invalid argument: {args}")
-                    exit(1)
-        else:
-            dataset_labels.append(args)
-        i += 1
 
-    if len(requested_active_gesture):
-        active_gesture = ActiveGestures.buildWithPreset(
-            requested_active_gesture)
-    else:
-        active_gesture = ALL_GESTURES
-
-    folders = os.listdir(DATASETS_DIR)
-
-    valid = True
-    for dataset in dataset_labels:
-        if dataset not in folders:
-            print(f"Dataset\"{dataset}\" not found in {DATASETS_DIR}")
-            valid = False
-    if not valid:
-        exit(1)
-
-    if dataset_name is None:
-        timestamp = time.time()
-        # Convert the timestamp to local time (struct_time object)
-        local_time = time.localtime(timestamp)
-        # Format the local time as a string
-        formatted_date = time.strftime("%d-%m-%Y_%H-%M-%S", local_time)
-        dataset_name = f"trainset_{formatted_date}"
-
-    summary_checker(dataset_name, null_set, dataset_labels,
-                    total_subsets, nb_frame, dataset_name, one_side, active_gesture)
+    args: Args = parse_args()
+    summary_checker(args.name, args.null_label, args.sample_label,
+                    args.data_augmentation, args.memory_frame, args.name, args.one_sided, args.active_points)
 
     print("Loading samples into memory...", end=" ")
-    data_samples: dict[str, tuple[list[DataSample], list[DataSample]]] = load_datasamples(
-        dataset_labels, memory_frame=nb_frame, null_label=null_set)
+    # dict[Label, tuple[list[valid samples], list[counter examples]]]
+    data_samples: dict[str, tuple[list[DataSample], list[DataSample]]] = load_datasamples(args)
     print("[DONE]")
 
+    final_labels: list[str] = args.sample_label
+    _tmp_info = DataSamplesInfo(
+        final_labels, args.memory_frame, args.active_points, one_side=args.one_sided)
+    if args.sign_detector:
+        final_labels = [args.null_label, VALID_LABEL]
     train_data: DataSamples = DataSamples(DataSamplesInfo(
-        dataset_labels, nb_frame, active_gesture, one_side=one_side))
-    if null_set is not None:
-        train_data.info.null_sample_id = train_data.info.label_map[null_set]
-    print(train_data.info.label_map)
-    total_cycle: int = sum([len(samples[IDX_VALID_SAMPLE]) + len(samples[IDX_INVALID_SAMPLE])
-                           for samples in data_samples.values()]) * total_subsets
-    completed_cycle = 0
+        final_labels, args.memory_frame, args.active_points, one_side=args.one_sided))
+    if args.null_label is not None:
+        train_data.info.null_sample_id = train_data.info.label_map[args.null_label]
 
-    subset: int = 0
-    start_time = time.time()
-    label_id: int = 0
-    label_total_samples: int = 0
-    treated_sample: int = 0
+    progress_log: ProgressionLogger = ProgressionLogger()
+
+    progress_log.total_cycle = sum([len(samples[IDX_VALID_SAMPLE]) + len(samples[IDX_INVALID_SAMPLE])
+                           for samples in data_samples.values()]) * args.data_augmentation
+    progress_log.total_data_augmentation_iterations = args.data_augmentation
+    progress_log.dataset_labels = args.sample_label
+
+    progress_log.setStartTime()
+    initial_start_time: float = progress_log.start_time
     for label, samples in data_samples.items():
 
-        treated_sample = 0
-        label_id = train_data.info.label_map[label]
-        label_total_samples = len(
+        progress_log.treated_label_samples = 0
+        progress_log.label_id = _tmp_info.label_map[label]
+        progress_log.to_treat_label_samples = len(
             samples[IDX_VALID_SAMPLE]) + len(samples[IDX_INVALID_SAMPLE])
 
-        print_progression(train_data.info.labels, label_id, treated_sample,
-                          label_total_samples, subset, total_subsets,
-                          train_data.sample_count, start_time, completed_cycle,
-                          total_cycle)
+        progress_log.print()
 
         for sample in samples[IDX_VALID_SAMPLE]:
-            sample.label = label
+            sample.label = label if not args.sign_detector else VALID_LABEL
             train_data.addDataSample(sample)
 
-            subset = 0
-            while subset < total_subsets:
+            progress_log.data_augmentation_iteration = 0
+            while progress_log.data_augmentation_iteration < args.data_augmentation:
 
-                print_progression(train_data.info.labels, label_id, treated_sample,
-                                  label_total_samples, subset, total_subsets,
-                                  train_data.sample_count, start_time, completed_cycle,
-                                  total_cycle)
+                progress_log.print()
 
                 train_data.addDataSamples(
-                    create_subset(sample, nb_frame, null_set, active_gesture))
-                completed_cycle += 1
-                subset += 1
+                    create_subset(sample, args.memory_frame, args.null_label, args.active_points))
+                progress_log.completed_cycle += 1
+                progress_log.data_augmentation_iteration += 1
 
-            treated_sample += 1
-
-            print_progression(train_data.info.labels, label_id, treated_sample,
-                              label_total_samples, subset, total_subsets,
-                              train_data.sample_count, start_time, completed_cycle,
-                              total_cycle)
+            progress_log.treated_label_samples += 1
+            progress_log.print()
 
         for sample in samples[IDX_INVALID_SAMPLE]:
-            sample.label = label
+            sample.label = label if not args.sign_detector else VALID_LABEL
             train_data.addDataSample(sample)
-            subset = 0
-            while subset < total_subsets:
+            progress_log.data_augmentation_iteration = 0
+            while progress_log.data_augmentation_iteration < args.data_augmentation:
 
-                print_progression(train_data.info.labels, label_id, treated_sample,
-                                  label_total_samples, subset, total_subsets,
-                                  train_data.sample_count, start_time, completed_cycle,
-                                  total_cycle)
+                progress_log.print()
 
                 train_data.addDataSamples(
-                    create_subset(sample, nb_frame, None, active_gesture), False)
-                completed_cycle += 1
-                subset += 1
+                    create_subset(sample, args.memory_frame, None, args.active_points), False)
+                progress_log.completed_cycle += 1
+                progress_log.data_augmentation_iteration += 1
 
-            print_progression(train_data.info.labels, label_id, treated_sample,
-                              label_total_samples, subset, total_subsets,
-                              train_data.sample_count, start_time, completed_cycle,
-                              total_cycle)
+            progress_log.treated_label_samples += 1
+            progress_log.print()
 
-        print_progression(train_data.info.labels, label_id, treated_sample,
-                          label_total_samples, subset, total_subsets,
-                          train_data.sample_count, start_time, completed_cycle,
-                          total_cycle)
+        progress_log.print()
 
-    print_progression(train_data.info.labels, label_id, treated_sample,
-                      label_total_samples, subset, total_subsets,
-                      train_data.sample_count, start_time, completed_cycle,
-                      total_cycle)
+    progress_log.print()
 
     print()
-    if balance:
-        print("Base generation duration: ", time.strftime(
-            "%H:%M:%S", time.gmtime(time.time() - start_time)))
+    if args.balance_samples:
+        def pick_samples(label: str, data_samples: dict[str, tuple[list[DataSample], list[DataSample]]]) -> list[DataSample]:
+            if args.sign_detector and label == VALID_LABEL:
+                samples: list[DataSample] = []
+                for key_label, sample_pair in data_samples.items():
+                    if key_label != args.null_label:
+                        samples.extend(sample_pair[IDX_VALID_SAMPLE])
+                return samples
+            return data_samples[label][IDX_VALID_SAMPLE]
+
+        print("Base generation duration: ", getFormatedTime(progress_log.getElapsedTime()))
+        progress_log.setStartTime()
         print("Balancing dataset...")
         biggest_label_count: int = max(
             [train_data.getNumberOfSamplesOfLabel(label_id) for label_id in train_data.info.label_map.values()])
-        start_time2 = time.time()
-        print("Biggest label count: ", biggest_label_count)
+        # print("Biggest label count: ", biggest_label_count)
 
         label_id = 0
-        completed_cycle: int = 0
-        total_cycle = (biggest_label_count * len(train_data.info.labels)
+        progress_log.completed_cycle = 0
+        progress_log.total_cycle = (biggest_label_count * len(train_data.info.labels)
                        ) - train_data.getNumberOfSamples()
         while label_id < len(train_data.samples):
-            current_data_samples: list[DataSample] = data_samples[train_data.info.labels[label_id]][IDX_VALID_SAMPLE]
+            # current_data_samples: list[DataSample] = data_samples[train_data.info.labels[label_id]][IDX_VALID_SAMPLE]
+            current_data_samples: list[DataSample] = pick_samples(train_data.info.labels[label_id], data_samples)
 
             if len(current_data_samples) == 0:
                 print(f"Warning: {train_data.info.labels[label_id]} is empty")
@@ -361,26 +284,24 @@ def main():
                 sample: DataSample = current_data_samples[sample_idx]
                 sample.label = train_data.info.labels[label_id]
                 generated_subset: list[DataSample] = create_subset(
-                    sample, nb_frame, None, active_gesture)
-                completed_cycle += len(generated_subset)
+                    sample, args.memory_frame, None, args.active_points)
                 train_data.addDataSamples(generated_subset)
+
+                progress_log.completed_cycle += len(generated_subset)
                 sample_idx = (sample_idx + 1) % data_sample_len
-                print_progression(dataset_labels, label_id, sample_idx, data_sample_len,
-                                  len(train_data.samples[label_id]
-                                      ), biggest_label_count, train_data.sample_count,
-                                  start_time2, completed_cycle, total_cycle)
+                progress_log.label_id = label_id
+                progress_log.print()
+
             label_id += 1
 
-        print("Balance generation duration: ", time.strftime(
-            "%H:%M:%S", time.gmtime(time.time() - start_time2)))
+        print("Balance generation duration: ", getFormatedTime(progress_log.getElapsedTime()))
 
     train_data.getNumberOfSamples()
     print()
-    print("Generation duration: ", time.strftime(
-        "%H:%M:%S", time.gmtime(time.time() - start_time)))
+    print("Generation duration: ", getFormatedTime(time.time() - initial_start_time))
     print("Total unique sample created: ", train_data.getNumberOfSamples())
     print("Saving dataset...")
-    train_data.toCborFile(f"./{dataset_name}.cbor")
+    train_data.toCborFile(f"./{args.name}.cbor")
     # train_data.toJsonFile(f"./{dataset_name}.json", indent=4)
 
 # import cProfile

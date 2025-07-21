@@ -152,7 +152,8 @@ class DataSamples:
         return cls.fromCbor(data)
 
     def getNumberOfSamples(self):
-        self.sample_count = sum([len(label_samples)
+        self.sample_count = sum([len(label_samples[IDX_VALID_SAMPLE]) +
+                                 len(label_samples[IDX_INVALID_SAMPLE])
                                 for label_samples in self.samples])
         return self.sample_count
 

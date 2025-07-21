@@ -88,7 +88,7 @@ class AccuracyCalculator:
                               (1, (0, 0, 255))]):
 
 
-        for separation in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
+        for separation in [0.5]:
             accuracies: tuple[float, tuple[int, int, float], tuple[int, int, float]] = self.get_accuracy(separation)
 
             # print(accuracies)
@@ -101,6 +101,7 @@ class AccuracyCalculator:
             print_color(pick_color(accuracies[3][2], color_chart))
             print(f" X: {(accuracies[3][2] * 100):.2f}% {accuracies[3][0]}/{accuracies[3][1]}", end="")
             print_color_reset()
+            print()
 
     def add(self, other: Self):
         """Add another AccuracyCalculator to this one."""
