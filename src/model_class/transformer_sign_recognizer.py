@@ -15,6 +15,10 @@ from numpy.typing import NDArray
 
 from src.gesture import FIELD_DIMENSION, default_device
 from src.datasamples import DataSamplesInfo, TensorPair
+from typing import Literal, TypeAlias
+
+
+ModelType: TypeAlias = Literal["recognition", "detection"]
 
 @dataclass
 class TrackingModel:
@@ -29,6 +33,7 @@ class ModelInfo(DataSamplesInfo):
     num_heads: int
     num_layers: int
     ff_dim: int
+    type: ModelType = "classifier"
     tracking_model: TrackingModel = field(default_factory=TrackingModel)
 
     @classmethod
@@ -93,6 +98,11 @@ class ModelInfo(DataSamplesInfo):
                 body=int(data["tracking_model"]["body"]),
                 face=int(data["tracking_model"]["face"])
             )
+
+        if "type" in data:
+            assert isinstance(data["type"], str), "type must be a str"
+            assert data["type"] in ["recognition", "detection"], "type must be 'recognition' or 'detection'"
+            type: ModelType = cast(ModelType, data["type"])
 
         cls = cls.build(info,
                          data["name"],

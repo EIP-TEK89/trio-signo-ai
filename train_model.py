@@ -92,10 +92,14 @@ if not args.sign_detector:
                                                    weights,
                                                    args.embedding_optimization_threshold,
                                                    num_epochs=args.epoch,
+                                                   learning_rate=args.learning_rate,
                                                    device=args.device)
 else:
     train_stats = train_detection_model(model, dataloaders,
                                                    train_stats,
                                                    weights,
                                                    num_epochs=args.epoch,
+                                                   learning_rate=args.learning_rate,
                                                    device=args.device)
+
+save_model(model, train_stats, copy_previous_model, args)

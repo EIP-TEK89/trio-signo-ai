@@ -1,0 +1,3469 @@
+{
+    "name": "alphabet_detect_1",
+    "trainset_name": ".\\alphabet_detect.cbor",
+    "labels": [
+        "_null",
+        "_valid"
+    ],
+    "label_map": {
+        "_null": 0,
+        "_valid": 1
+    },
+    "sample_quantity": [
+        2,
+        2
+    ],
+    "validation_ratio": 0.2,
+    "epochs": [
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.14224563632160425,
+                "accuracy": [],
+                "duration": 2.991734743118286
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.08602095721289515,
+                "accuracy": [],
+                "duration": 2.380884885787964
+            },
+            "validation": {
+                "loss": 0.14632076025009155,
+                "accuracy": 0,
+                "duration": 0.34734034538269043
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.07506784936413169,
+                "accuracy": [],
+                "duration": 2.3985157012939453
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.07020816602744162,
+                "accuracy": [],
+                "duration": 2.3181204795837402
+            },
+            "validation": {
+                "loss": 0.12753884308040142,
+                "accuracy": 0,
+                "duration": 0.33299970626831055
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.067575789289549,
+                "accuracy": [],
+                "duration": 2.394075870513916
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.0646582436747849,
+                "accuracy": [],
+                "duration": 2.3609580993652344
+            },
+            "validation": {
+                "loss": 0.11952597089111805,
+                "accuracy": 0,
+                "duration": 0.3324899673461914
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.06287324521690607,
+                "accuracy": [],
+                "duration": 2.3586480617523193
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.06124966312199831,
+                "accuracy": [],
+                "duration": 2.3625426292419434
+            },
+            "validation": {
+                "loss": 0.11491057649254799,
+                "accuracy": 0,
+                "duration": 0.34200024604797363
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.06031735776923597,
+                "accuracy": [],
+                "duration": 2.2928812503814697
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.05806133709847927,
+                "accuracy": [],
+                "duration": 2.3960282802581787
+            },
+            "validation": {
+                "loss": 0.11206438019871712,
+                "accuracy": 0,
+                "duration": 0.34399938583374023
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.05748984683305025,
+                "accuracy": [],
+                "duration": 2.380666971206665
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.056571712251752615,
+                "accuracy": [],
+                "duration": 2.3762011528015137
+            },
+            "validation": {
+                "loss": 0.10699056461453438,
+                "accuracy": 0,
+                "duration": 0.3360002040863037
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.055448029190301895,
+                "accuracy": [],
+                "duration": 2.3072993755340576
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.05467114062048495,
+                "accuracy": [],
+                "duration": 2.3802504539489746
+            },
+            "validation": {
+                "loss": 0.10816825367510319,
+                "accuracy": 0,
+                "duration": 0.33700084686279297
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.05343367112800479,
+                "accuracy": [],
+                "duration": 2.3636763095855713
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.05287937447428703,
+                "accuracy": [],
+                "duration": 2.4166758060455322
+            },
+            "validation": {
+                "loss": 0.10311725363135338,
+                "accuracy": 0,
+                "duration": 0.40599918365478516
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.05268825893290341,
+                "accuracy": [],
+                "duration": 2.4754698276519775
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.051000341307371855,
+                "accuracy": [],
+                "duration": 2.457052707672119
+            },
+            "validation": {
+                "loss": 0.10199757479131222,
+                "accuracy": 0,
+                "duration": 0.3510007858276367
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.050560667645186186,
+                "accuracy": [],
+                "duration": 2.4024658203125
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.04975633230060339,
+                "accuracy": [],
+                "duration": 2.3795151710510254
+            },
+            "validation": {
+                "loss": 0.1001843623816967,
+                "accuracy": 0,
+                "duration": 0.34821557998657227
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.04902123427018523,
+                "accuracy": [],
+                "duration": 2.3940412998199463
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.048602586379274726,
+                "accuracy": [],
+                "duration": 2.385507106781006
+            },
+            "validation": {
+                "loss": 0.09994347766041756,
+                "accuracy": 0,
+                "duration": 0.342998743057251
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.04851146205328405,
+                "accuracy": [],
+                "duration": 2.3931920528411865
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.04871729458682239,
+                "accuracy": [],
+                "duration": 2.395291805267334
+            },
+            "validation": {
+                "loss": 0.09688359126448631,
+                "accuracy": 0,
+                "duration": 0.3430001735687256
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.0472667939029634,
+                "accuracy": [],
+                "duration": 2.3940162658691406
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.0469016230199486,
+                "accuracy": [],
+                "duration": 2.371466636657715
+            },
+            "validation": {
+                "loss": 0.09852001443505287,
+                "accuracy": 0,
+                "duration": 0.272003173828125
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.04624764295294881,
+                "accuracy": [],
+                "duration": 2.3922555446624756
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.044873397797346115,
+                "accuracy": [],
+                "duration": 2.3760955333709717
+            },
+            "validation": {
+                "loss": 0.09421302936971188,
+                "accuracy": 0,
+                "duration": 0.3410007953643799
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.044824333395808935,
+                "accuracy": [],
+                "duration": 2.3964130878448486
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.04450830654241145,
+                "accuracy": [],
+                "duration": 2.407205581665039
+            },
+            "validation": {
+                "loss": 0.09252455085515976,
+                "accuracy": 0,
+                "duration": 0.36197948455810547
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.04370879428461194,
+                "accuracy": [],
+                "duration": 2.324495553970337
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.04413503408432007,
+                "accuracy": [],
+                "duration": 2.378866672515869
+            },
+            "validation": {
+                "loss": 0.09178334288299084,
+                "accuracy": 0,
+                "duration": 0.33700013160705566
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.043975419364869595,
+                "accuracy": [],
+                "duration": 2.377239465713501
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.04270592168904841,
+                "accuracy": [],
+                "duration": 2.389805793762207
+            },
+            "validation": {
+                "loss": 0.09296062774956226,
+                "accuracy": 0,
+                "duration": 0.3364264965057373
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.0424019112251699,
+                "accuracy": [],
+                "duration": 2.324157476425171
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.04283971549011767,
+                "accuracy": [],
+                "duration": 2.397890567779541
+            },
+            "validation": {
+                "loss": 0.08993037603795528,
+                "accuracy": 0,
+                "duration": 0.3430004119873047
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.04261188698001206,
+                "accuracy": [],
+                "duration": 2.3662643432617188
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.04177814559079707,
+                "accuracy": [],
+                "duration": 2.3849310874938965
+            },
+            "validation": {
+                "loss": 0.0905888918787241,
+                "accuracy": 0,
+                "duration": 0.34200024604797363
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.041817283956333995,
+                "accuracy": [],
+                "duration": 2.3830654621124268
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.04174845106899738,
+                "accuracy": [],
+                "duration": 2.3095383644104004
+            },
+            "validation": {
+                "loss": 0.09223706088960171,
+                "accuracy": 0,
+                "duration": 0.3429992198944092
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.041332590859383345,
+                "accuracy": [],
+                "duration": 2.4031405448913574
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.04001883533783257,
+                "accuracy": [],
+                "duration": 2.3784339427948
+            },
+            "validation": {
+                "loss": 0.08881350047886372,
+                "accuracy": 0,
+                "duration": 0.3390014171600342
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.039941803785040975,
+                "accuracy": [],
+                "duration": 2.401738405227661
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.04056889354251325,
+                "accuracy": [],
+                "duration": 2.317685127258301
+            },
+            "validation": {
+                "loss": 0.08699790015816689,
+                "accuracy": 0,
+                "duration": 0.33500123023986816
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03955640201456845,
+                "accuracy": [],
+                "duration": 2.381197452545166
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03912450815550983,
+                "accuracy": [],
+                "duration": 2.374615430831909
+            },
+            "validation": {
+                "loss": 0.08685896545648575,
+                "accuracy": 0,
+                "duration": 0.34200191497802734
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03912667743861675,
+                "accuracy": [],
+                "duration": 2.385650157928467
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03905535861849785,
+                "accuracy": [],
+                "duration": 2.428466320037842
+            },
+            "validation": {
+                "loss": 0.08940289169549942,
+                "accuracy": 0,
+                "duration": 0.35686278343200684
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03853135509416461,
+                "accuracy": [],
+                "duration": 2.347017526626587
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.037974135018885136,
+                "accuracy": [],
+                "duration": 2.4208264350891113
+            },
+            "validation": {
+                "loss": 0.08582169935107231,
+                "accuracy": 0,
+                "duration": 0.3579988479614258
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.037759672151878476,
+                "accuracy": [],
+                "duration": 2.414520025253296
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03700212249532342,
+                "accuracy": [],
+                "duration": 2.479250192642212
+            },
+            "validation": {
+                "loss": 0.08469684980809689,
+                "accuracy": 0,
+                "duration": 0.3449995517730713
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03729064669460058,
+                "accuracy": [],
+                "duration": 2.315342903137207
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.037216931115835905,
+                "accuracy": [],
+                "duration": 2.395139694213867
+            },
+            "validation": {
+                "loss": 0.0845479778945446,
+                "accuracy": 0,
+                "duration": 0.3540000915527344
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03740765526890755,
+                "accuracy": [],
+                "duration": 2.410432815551758
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03785678232088685,
+                "accuracy": [],
+                "duration": 2.3820786476135254
+            },
+            "validation": {
+                "loss": 0.08401520363986492,
+                "accuracy": 0,
+                "duration": 0.3450005054473877
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.037044808734208345,
+                "accuracy": [],
+                "duration": 2.402266025543213
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03643844509497285,
+                "accuracy": [],
+                "duration": 2.325464963912964
+            },
+            "validation": {
+                "loss": 0.08317481353878975,
+                "accuracy": 0,
+                "duration": 0.3392791748046875
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03580458788201213,
+                "accuracy": [],
+                "duration": 2.404052495956421
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.0360254452098161,
+                "accuracy": [],
+                "duration": 2.3930654525756836
+            },
+            "validation": {
+                "loss": 0.0845706257969141,
+                "accuracy": 0,
+                "duration": 0.3430004119873047
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03498655161820352,
+                "accuracy": [],
+                "duration": 2.4090847969055176
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03515873127616942,
+                "accuracy": [],
+                "duration": 2.3224799633026123
+            },
+            "validation": {
+                "loss": 0.0823567844927311,
+                "accuracy": 0,
+                "duration": 0.35471343994140625
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.034731094376184046,
+                "accuracy": [],
+                "duration": 2.4161453247070312
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03446544660255313,
+                "accuracy": [],
+                "duration": 2.4032866954803467
+            },
+            "validation": {
+                "loss": 0.08519035950303078,
+                "accuracy": 0,
+                "duration": 0.3359999656677246
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.034379139076918364,
+                "accuracy": [],
+                "duration": 2.3900935649871826
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03455194435082376,
+                "accuracy": [],
+                "duration": 2.389500856399536
+            },
+            "validation": {
+                "loss": 0.08362209983170033,
+                "accuracy": 0,
+                "duration": 0.3410007953643799
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03439850255381316,
+                "accuracy": [],
+                "duration": 2.3053321838378906
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03455217706505209,
+                "accuracy": [],
+                "duration": 2.4349184036254883
+            },
+            "validation": {
+                "loss": 0.08607572689652443,
+                "accuracy": 0,
+                "duration": 0.34200096130371094
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03464311012066901,
+                "accuracy": [],
+                "duration": 2.4252984523773193
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.034400952397845685,
+                "accuracy": [],
+                "duration": 2.417384624481201
+            },
+            "validation": {
+                "loss": 0.08335962146520615,
+                "accuracy": 0,
+                "duration": 0.3500049114227295
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03421204746700823,
+                "accuracy": [],
+                "duration": 2.3220696449279785
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.033056552056223154,
+                "accuracy": [],
+                "duration": 2.375087261199951
+            },
+            "validation": {
+                "loss": 0.08150134608149529,
+                "accuracy": 0,
+                "duration": 0.3379979133605957
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.032832374214194715,
+                "accuracy": [],
+                "duration": 2.3949344158172607
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03329837729688734,
+                "accuracy": [],
+                "duration": 2.3873565196990967
+            },
+            "validation": {
+                "loss": 0.08003595285117626,
+                "accuracy": 0,
+                "duration": 0.34800267219543457
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03282292769290507,
+                "accuracy": [],
+                "duration": 2.382153272628784
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.033415947924368083,
+                "accuracy": [],
+                "duration": 2.3146955966949463
+            },
+            "validation": {
+                "loss": 0.08135592937469482,
+                "accuracy": 0,
+                "duration": 0.3452422618865967
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03237052995245904,
+                "accuracy": [],
+                "duration": 2.430400848388672
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03294872597325593,
+                "accuracy": [],
+                "duration": 2.403911590576172
+            },
+            "validation": {
+                "loss": 0.08794541284441948,
+                "accuracy": 0,
+                "duration": 0.33899998664855957
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.033810762339271605,
+                "accuracy": [],
+                "duration": 2.403627395629883
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03278241853695363,
+                "accuracy": [],
+                "duration": 2.324554443359375
+            },
+            "validation": {
+                "loss": 0.07883752882480621,
+                "accuracy": 0,
+                "duration": 0.34400081634521484
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03144192241597921,
+                "accuracy": [],
+                "duration": 2.415370464324951
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03097344096750021,
+                "accuracy": [],
+                "duration": 2.412198305130005
+            },
+            "validation": {
+                "loss": 0.08180844597518444,
+                "accuracy": 0,
+                "duration": 0.3549997806549072
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.031193235772661865,
+                "accuracy": [],
+                "duration": 2.399242877960205
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.031257089343853295,
+                "accuracy": [],
+                "duration": 2.330786943435669
+            },
+            "validation": {
+                "loss": 0.08229894004762173,
+                "accuracy": 0,
+                "duration": 0.3619997501373291
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03092673234641552,
+                "accuracy": [],
+                "duration": 2.5096535682678223
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03143276309128851,
+                "accuracy": [],
+                "duration": 2.4757871627807617
+            },
+            "validation": {
+                "loss": 0.08115501888096333,
+                "accuracy": 0,
+                "duration": 0.3665952682495117
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.032099524512887,
+                "accuracy": [],
+                "duration": 2.463460683822632
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.031075732898898423,
+                "accuracy": [],
+                "duration": 2.4646213054656982
+            },
+            "validation": {
+                "loss": 0.08156304806470871,
+                "accuracy": 0,
+                "duration": 0.3490002155303955
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.031431668903678656,
+                "accuracy": [],
+                "duration": 2.3817172050476074
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.030719463247805834,
+                "accuracy": [],
+                "duration": 2.400583267211914
+            },
+            "validation": {
+                "loss": 0.08037872985005379,
+                "accuracy": 0,
+                "duration": 0.3409996032714844
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03032785328105092,
+                "accuracy": [],
+                "duration": 2.4233009815216064
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.03073771740309894,
+                "accuracy": [],
+                "duration": 2.4280717372894287
+            },
+            "validation": {
+                "loss": 0.08053379133343697,
+                "accuracy": 0,
+                "duration": 0.34200000762939453
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.030533484765328467,
+                "accuracy": [],
+                "duration": 2.3165578842163086
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.030559877515770495,
+                "accuracy": [],
+                "duration": 2.3881022930145264
+            },
+            "validation": {
+                "loss": 0.07803118973970413,
+                "accuracy": 0,
+                "duration": 0.34400057792663574
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.029840057715773582,
+                "accuracy": [],
+                "duration": 2.47342848777771
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.029830643441528082,
+                "accuracy": [],
+                "duration": 2.399420738220215
+            },
+            "validation": {
+                "loss": 0.07834085077047348,
+                "accuracy": 0,
+                "duration": 0.34911632537841797
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.0290242814226076,
+                "accuracy": [],
+                "duration": 2.3981196880340576
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.029938824707642198,
+                "accuracy": [],
+                "duration": 2.324610710144043
+            },
+            "validation": {
+                "loss": 0.07597642578184605,
+                "accuracy": 0,
+                "duration": 0.3599996566772461
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.02933845983352512,
+                "accuracy": [],
+                "duration": 2.402923345565796
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.028803287888877094,
+                "accuracy": [],
+                "duration": 2.4164204597473145
+            },
+            "validation": {
+                "loss": 0.08140766806900501,
+                "accuracy": 0,
+                "duration": 0.34199976921081543
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.028673272929154336,
+                "accuracy": [],
+                "duration": 2.3952255249023438
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.028653858578763902,
+                "accuracy": [],
+                "duration": 2.321962356567383
+            },
+            "validation": {
+                "loss": 0.07873817346990108,
+                "accuracy": 0,
+                "duration": 0.3360002040863037
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.029316260130144656,
+                "accuracy": [],
+                "duration": 2.401123046875
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.028855726588517427,
+                "accuracy": [],
+                "duration": 2.403484582901001
+            },
+            "validation": {
+                "loss": 0.07889190874993801,
+                "accuracy": 0,
+                "duration": 0.337998628616333
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.028641967452131212,
+                "accuracy": [],
+                "duration": 2.4051706790924072
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.028567471425049007,
+                "accuracy": [],
+                "duration": 2.4026594161987305
+            },
+            "validation": {
+                "loss": 0.07775208167731762,
+                "accuracy": 0,
+                "duration": 0.3409996032714844
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.029116628342308104,
+                "accuracy": [],
+                "duration": 2.342118740081787
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.02818068803753704,
+                "accuracy": [],
+                "duration": 2.390778064727783
+            },
+            "validation": {
+                "loss": 0.07577604427933693,
+                "accuracy": 0,
+                "duration": 0.3429996967315674
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.027512611472047865,
+                "accuracy": [],
+                "duration": 2.411811590194702
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.027014469727873802,
+                "accuracy": [],
+                "duration": 2.3954997062683105
+            },
+            "validation": {
+                "loss": 0.07857591286301613,
+                "accuracy": 0,
+                "duration": 0.33881688117980957
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.027669619536027312,
+                "accuracy": [],
+                "duration": 2.3450632095336914
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.028296508477069438,
+                "accuracy": [],
+                "duration": 2.3803505897521973
+            },
+            "validation": {
+                "loss": 0.07805316895246506,
+                "accuracy": 0,
+                "duration": 0.3379998207092285
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.027305932948365808,
+                "accuracy": [],
+                "duration": 2.398226499557495
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.0277698440477252,
+                "accuracy": [],
+                "duration": 2.3833041191101074
+            },
+            "validation": {
+                "loss": 0.07706552185118198,
+                "accuracy": 0,
+                "duration": 0.3469998836517334
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.001,
+            "train": {
+                "loss": 0.02801518829073757,
+                "accuracy": [],
+                "duration": 2.38919734954834
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.027139413519762456,
+                "accuracy": [],
+                "duration": 2.3353586196899414
+            },
+            "validation": {
+                "loss": 0.07890121638774872,
+                "accuracy": 0,
+                "duration": 0.34199976921081543
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.02562224806752056,
+                "accuracy": [],
+                "duration": 2.427147626876831
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.024502816377207637,
+                "accuracy": [],
+                "duration": 2.4298198223114014
+            },
+            "validation": {
+                "loss": 0.07412595674395561,
+                "accuracy": 0,
+                "duration": 0.34200215339660645
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.024367940961383283,
+                "accuracy": [],
+                "duration": 2.3988075256347656
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.024406235432252288,
+                "accuracy": [],
+                "duration": 2.3505449295043945
+            },
+            "validation": {
+                "loss": 0.0740750040858984,
+                "accuracy": 0,
+                "duration": 0.33700013160705566
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.024500620900653303,
+                "accuracy": [],
+                "duration": 2.408281087875366
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.024345489451661706,
+                "accuracy": [],
+                "duration": 2.39544939994812
+            },
+            "validation": {
+                "loss": 0.07336962409317493,
+                "accuracy": 0,
+                "duration": 0.3399996757507324
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.02445144474040717,
+                "accuracy": [],
+                "duration": 2.4074552059173584
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.024096563458442688,
+                "accuracy": [],
+                "duration": 2.3326756954193115
+            },
+            "validation": {
+                "loss": 0.07357529178261757,
+                "accuracy": 0,
+                "duration": 0.34690332412719727
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.024094317806884646,
+                "accuracy": [],
+                "duration": 2.3876490592956543
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.024073657346889377,
+                "accuracy": [],
+                "duration": 2.3945281505584717
+            },
+            "validation": {
+                "loss": 0.07447986304759979,
+                "accuracy": 0,
+                "duration": 0.3419990539550781
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.02422708284575492,
+                "accuracy": [],
+                "duration": 2.4246249198913574
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.024324891273863614,
+                "accuracy": [],
+                "duration": 2.3927321434020996
+            },
+            "validation": {
+                "loss": 0.07339954748749733,
+                "accuracy": 0,
+                "duration": 0.35700035095214844
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.023908630246296525,
+                "accuracy": [],
+                "duration": 2.3352866172790527
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.024175351951271296,
+                "accuracy": [],
+                "duration": 2.389507532119751
+            },
+            "validation": {
+                "loss": 0.07303179241716862,
+                "accuracy": 0,
+                "duration": 0.3380002975463867
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.023583470028825104,
+                "accuracy": [],
+                "duration": 2.401149272918701
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.024268103297799826,
+                "accuracy": [],
+                "duration": 2.401135206222534
+            },
+            "validation": {
+                "loss": 0.07395388558506966,
+                "accuracy": 0,
+                "duration": 0.3430001735687256
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.024038152303546667,
+                "accuracy": [],
+                "duration": 2.3269248008728027
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.023777809226885438,
+                "accuracy": [],
+                "duration": 2.380427598953247
+            },
+            "validation": {
+                "loss": 0.07485434599220753,
+                "accuracy": 0,
+                "duration": 0.3416907787322998
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.02380615088623017,
+                "accuracy": [],
+                "duration": 2.3740458488464355
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.024064333643764257,
+                "accuracy": [],
+                "duration": 2.4037773609161377
+            },
+            "validation": {
+                "loss": 0.07389264553785324,
+                "accuracy": 0,
+                "duration": 0.34600114822387695
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.023534941603429615,
+                "accuracy": [],
+                "duration": 2.4032599925994873
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.02358234068378806,
+                "accuracy": [],
+                "duration": 2.3513472080230713
+            },
+            "validation": {
+                "loss": 0.07404690608382225,
+                "accuracy": 0,
+                "duration": 0.3444511890411377
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.024116302374750376,
+                "accuracy": [],
+                "duration": 2.4114303588867188
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.02376027626451105,
+                "accuracy": [],
+                "duration": 2.418999433517456
+            },
+            "validation": {
+                "loss": 0.07442346587777138,
+                "accuracy": 0,
+                "duration": 0.3410000801086426
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.02394458116032183,
+                "accuracy": [],
+                "duration": 2.404238224029541
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 0.0001,
+            "train": {
+                "loss": 0.02394088509026915,
+                "accuracy": [],
+                "duration": 2.3211669921875
+            },
+            "validation": {
+                "loss": 0.07424106448888779,
+                "accuracy": 0,
+                "duration": 0.3399984836578369
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1e-05,
+            "train": {
+                "loss": 0.023603917914442718,
+                "accuracy": [],
+                "duration": 2.4028239250183105
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1e-05,
+            "train": {
+                "loss": 0.02350609318818897,
+                "accuracy": [],
+                "duration": 2.375105619430542
+            },
+            "validation": {
+                "loss": 0.07393540441989899,
+                "accuracy": 0,
+                "duration": 0.3430006504058838
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1e-05,
+            "train": {
+                "loss": 0.02310038811992854,
+                "accuracy": [],
+                "duration": 2.3998727798461914
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1e-05,
+            "train": {
+                "loss": 0.02362160454504192,
+                "accuracy": [],
+                "duration": 2.4215807914733887
+            },
+            "validation": {
+                "loss": 0.0740021076053381,
+                "accuracy": 0,
+                "duration": 0.3399999141693115
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1e-05,
+            "train": {
+                "loss": 0.023717158706858754,
+                "accuracy": [],
+                "duration": 2.343958854675293
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1e-05,
+            "train": {
+                "loss": 0.023804332362487912,
+                "accuracy": [],
+                "duration": 2.420656204223633
+            },
+            "validation": {
+                "loss": 0.07418892346322536,
+                "accuracy": 0,
+                "duration": 0.3502671718597412
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1e-05,
+            "train": {
+                "loss": 0.023843242321163416,
+                "accuracy": [],
+                "duration": 2.386691093444824
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1e-05,
+            "train": {
+                "loss": 0.0233437157003209,
+                "accuracy": [],
+                "duration": 2.4018807411193848
+            },
+            "validation": {
+                "loss": 0.0742189297452569,
+                "accuracy": 0,
+                "duration": 0.3399999141693115
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000002e-06,
+            "train": {
+                "loss": 0.023529021185822785,
+                "accuracy": [],
+                "duration": 2.3248701095581055
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000002e-06,
+            "train": {
+                "loss": 0.023195670102722943,
+                "accuracy": [],
+                "duration": 2.41530442237854
+            },
+            "validation": {
+                "loss": 0.07371036522090435,
+                "accuracy": 0,
+                "duration": 0.34056639671325684
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000002e-06,
+            "train": {
+                "loss": 0.023678244091570377,
+                "accuracy": [],
+                "duration": 2.398101329803467
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000002e-06,
+            "train": {
+                "loss": 0.023977525415830314,
+                "accuracy": [],
+                "duration": 2.5346438884735107
+            },
+            "validation": {
+                "loss": 0.0738554447889328,
+                "accuracy": 0,
+                "duration": 0.3599998950958252
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000002e-06,
+            "train": {
+                "loss": 0.023482941323891282,
+                "accuracy": [],
+                "duration": 2.449768304824829
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000002e-06,
+            "train": {
+                "loss": 0.023714046692475677,
+                "accuracy": [],
+                "duration": 2.3583481311798096
+            },
+            "validation": {
+                "loss": 0.07368933223187923,
+                "accuracy": 0,
+                "duration": 0.34399986267089844
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000002e-07,
+            "train": {
+                "loss": 0.023587621515616775,
+                "accuracy": [],
+                "duration": 2.4143383502960205
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000002e-07,
+            "train": {
+                "loss": 0.023488407023251057,
+                "accuracy": [],
+                "duration": 2.3645730018615723
+            },
+            "validation": {
+                "loss": 0.07426043413579464,
+                "accuracy": 0,
+                "duration": 0.34550023078918457
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000002e-07,
+            "train": {
+                "loss": 0.023704600636847317,
+                "accuracy": [],
+                "duration": 2.395864486694336
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000002e-07,
+            "train": {
+                "loss": 0.023746364982798696,
+                "accuracy": [],
+                "duration": 2.3274948596954346
+            },
+            "validation": {
+                "loss": 0.0742217730730772,
+                "accuracy": 0,
+                "duration": 0.3359997272491455
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000002e-07,
+            "train": {
+                "loss": 0.023372436524368823,
+                "accuracy": [],
+                "duration": 2.395609140396118
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000002e-07,
+            "train": {
+                "loss": 0.023744980106130242,
+                "accuracy": [],
+                "duration": 2.384312629699707
+            },
+            "validation": {
+                "loss": 0.0742801520973444,
+                "accuracy": 0,
+                "duration": 0.3464620113372803
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023389149107970297,
+                "accuracy": [],
+                "duration": 2.498102903366089
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.02361699426546693,
+                "accuracy": [],
+                "duration": 2.4432995319366455
+            },
+            "validation": {
+                "loss": 0.07363292947411537,
+                "accuracy": 0,
+                "duration": 0.3580012321472168
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023429753724485636,
+                "accuracy": [],
+                "duration": 2.4239559173583984
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023709417087957263,
+                "accuracy": [],
+                "duration": 2.4716320037841797
+            },
+            "validation": {
+                "loss": 0.07387714646756649,
+                "accuracy": 0,
+                "duration": 0.3560006618499756
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.02331684937234968,
+                "accuracy": [],
+                "duration": 2.5740997791290283
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023464333382435143,
+                "accuracy": [],
+                "duration": 2.908949613571167
+            },
+            "validation": {
+                "loss": 0.07376844808459282,
+                "accuracy": 0,
+                "duration": 0.5992941856384277
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.0235860466491431,
+                "accuracy": [],
+                "duration": 4.7504189014434814
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023380624130368233,
+                "accuracy": [],
+                "duration": 4.809122323989868
+            },
+            "validation": {
+                "loss": 0.07402713038027287,
+                "accuracy": 0,
+                "duration": 0.772202730178833
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.02334285934921354,
+                "accuracy": [],
+                "duration": 5.058818340301514
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.02336975431535393,
+                "accuracy": [],
+                "duration": 4.987404108047485
+            },
+            "validation": {
+                "loss": 0.07395335286855698,
+                "accuracy": 0,
+                "duration": 0.6161832809448242
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023087581852450967,
+                "accuracy": [],
+                "duration": 4.914851903915405
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.02363739674910903,
+                "accuracy": [],
+                "duration": 4.991150856018066
+            },
+            "validation": {
+                "loss": 0.07394480891525745,
+                "accuracy": 0,
+                "duration": 0.8376290798187256
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023692879360169172,
+                "accuracy": [],
+                "duration": 5.205581188201904
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023303308989852667,
+                "accuracy": [],
+                "duration": 5.060141086578369
+            },
+            "validation": {
+                "loss": 0.07379069365561008,
+                "accuracy": 0,
+                "duration": 0.6017570495605469
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023329733521677554,
+                "accuracy": [],
+                "duration": 5.1379616260528564
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023262345581315458,
+                "accuracy": [],
+                "duration": 5.13724422454834
+            },
+            "validation": {
+                "loss": 0.07407642155885696,
+                "accuracy": 0,
+                "duration": 0.7046587467193604
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023206699988804758,
+                "accuracy": [],
+                "duration": 5.251347541809082
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023389308946207166,
+                "accuracy": [],
+                "duration": 5.028839588165283
+            },
+            "validation": {
+                "loss": 0.073887063190341,
+                "accuracy": 0,
+                "duration": 0.6128814220428467
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023629412753507495,
+                "accuracy": [],
+                "duration": 5.28088116645813
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.02366281987633556,
+                "accuracy": [],
+                "duration": 5.237844467163086
+            },
+            "validation": {
+                "loss": 0.07423580810427666,
+                "accuracy": 0,
+                "duration": 0.6301310062408447
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023719641845673323,
+                "accuracy": [],
+                "duration": 5.249027252197266
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023621607339009643,
+                "accuracy": [],
+                "duration": 4.871801137924194
+            },
+            "validation": {
+                "loss": 0.07368955947458744,
+                "accuracy": 0,
+                "duration": 0.5708398818969727
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023340872605331242,
+                "accuracy": [],
+                "duration": 4.680398941040039
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.02373983128927648,
+                "accuracy": [],
+                "duration": 5.383086681365967
+            },
+            "validation": {
+                "loss": 0.07402381859719753,
+                "accuracy": 0,
+                "duration": 0.6559658050537109
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.02380304376129061,
+                "accuracy": [],
+                "duration": 4.874000549316406
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.02341265615541488,
+                "accuracy": [],
+                "duration": 4.886478424072266
+            },
+            "validation": {
+                "loss": 0.07411442697048187,
+                "accuracy": 0,
+                "duration": 0.6809768676757812
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023918589809909463,
+                "accuracy": [],
+                "duration": 5.03638768196106
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023120726575143635,
+                "accuracy": [],
+                "duration": 5.017992734909058
+            },
+            "validation": {
+                "loss": 0.07400931976735592,
+                "accuracy": 0,
+                "duration": 0.5904924869537354
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023299668915569782,
+                "accuracy": [],
+                "duration": 4.749848127365112
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.02332642232067883,
+                "accuracy": [],
+                "duration": 4.992234230041504
+            },
+            "validation": {
+                "loss": 0.07398048229515553,
+                "accuracy": 0,
+                "duration": 0.6057257652282715
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.02333937375806272,
+                "accuracy": [],
+                "duration": 5.033886909484863
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023806959856301546,
+                "accuracy": [],
+                "duration": 5.064537525177002
+            },
+            "validation": {
+                "loss": 0.07398615777492523,
+                "accuracy": 0,
+                "duration": 0.5975522994995117
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023204458644613624,
+                "accuracy": [],
+                "duration": 4.888165235519409
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023658636957406998,
+                "accuracy": [],
+                "duration": 3.5935893058776855
+            },
+            "validation": {
+                "loss": 0.07445529289543629,
+                "accuracy": 0,
+                "duration": 0.3830862045288086
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.02354298555292189,
+                "accuracy": [],
+                "duration": 2.582801103591919
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023443909594789147,
+                "accuracy": [],
+                "duration": 2.513306140899658
+            },
+            "validation": {
+                "loss": 0.07390943542122841,
+                "accuracy": 0,
+                "duration": 0.38916659355163574
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023359246319159865,
+                "accuracy": [],
+                "duration": 2.5155980587005615
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023527840967290103,
+                "accuracy": [],
+                "duration": 2.365191698074341
+            },
+            "validation": {
+                "loss": 0.07402009889483452,
+                "accuracy": 0,
+                "duration": 0.3742852210998535
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.023234906140714884,
+                "accuracy": [],
+                "duration": 2.478015899658203
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.02368553460109979,
+                "accuracy": [],
+                "duration": 2.5597376823425293
+            },
+            "validation": {
+                "loss": 0.07407266832888126,
+                "accuracy": 0,
+                "duration": 0.36656928062438965
+            },
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        },
+        {
+            "learning_rate": 1.0000000000000004e-08,
+            "train": {
+                "loss": 0.02311504678800702,
+                "accuracy": [],
+                "duration": 4.7043280601501465
+            },
+            "validation": null,
+            "confusing_pairs": {},
+            "batch_size": 0,
+            "weights_balance": [
+                0.5,
+                0.5
+            ]
+        }
+    ],
+    "final_accuracy": null
+}
