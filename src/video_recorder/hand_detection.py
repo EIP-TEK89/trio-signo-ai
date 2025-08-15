@@ -31,6 +31,7 @@ from mediapipe.tasks.python.components.containers.landmark import *
 
 from src.datasample import *
 from src.model_class.transformer_sign_recognizer import *
+from src.model_class.transformer_sign_detector import SignDetectorTransformer
 
 HAND_TRACKING_MODEL_PATH = "models/hand_tracking/google/hand_landmarker.task"
 
@@ -99,4 +100,11 @@ def recognize_sign(sample: DataSample, sign_recognition_model: SignRecognizerTra
     start_time = time.time()
     out = sign_recognition_model.predict(sample.toTensor(
         sign_recognition_model.info.memory_frame, valid_fields))
+    return out, time.time() - start_time
+
+
+def detect_sign(sample: DataSample, sign_detection_model: SignDetectorTransformer, valid_fields: list[str] = None) -> tuple[float, float]:
+    start_time = time.time()
+    out = sign_detection_model.predict(sample.toTensor(
+        sign_detection_model.info.memory_frame, valid_fields))
     return out, time.time() - start_time

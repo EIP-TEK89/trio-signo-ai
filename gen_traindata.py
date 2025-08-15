@@ -139,7 +139,12 @@ def load_datasamples(args: Args) -> dict[str, tuple[list[DataSample], list[DataS
         samples: list[DataSample] = []
         counter_examples: list[DataSample] = []
 
-        for label_kind in ["valid", "counter_examples"]:
+        label_kinds: list[str] = ["valid", "counter_examples"]
+        if not args.null_label:
+            label_kinds.remove("counter_examples")
+
+
+        for label_kind in label_kinds:
             # print(os.listdir(label_path))
             try:
                 label_kind_path: str = os.path.join(label_path, label_kind)
@@ -200,6 +205,7 @@ def main():
     progress_log.total_data_augmentation_iterations = args.data_augmentation
     progress_log.dataset_labels = args.sample_label
 
+    sub_samples: list[DataSample]
     progress_log.setStartTime()
     initial_start_time: float = progress_log.start_time
     for label, samples in data_samples.items():
@@ -219,9 +225,10 @@ def main():
             while progress_log.data_augmentation_iteration < args.data_augmentation:
 
                 progress_log.print()
+                sub_samples = create_subset(sample, args.memory_frame, args.null_label, args.active_points)
+                train_data.addDataSamples(sub_samples)
 
-                train_data.addDataSamples(
-                    create_subset(sample, args.memory_frame, args.null_label, args.active_points))
+                progress_log.created_samples += len(sub_samples)
                 progress_log.completed_cycle += 1
                 progress_log.data_augmentation_iteration += 1
 
@@ -235,9 +242,9 @@ def main():
             while progress_log.data_augmentation_iteration < args.data_augmentation:
 
                 progress_log.print()
-
-                train_data.addDataSamples(
-                    create_subset(sample, args.memory_frame, None, args.active_points), False)
+                sub_samples = create_subset(sample, args.memory_frame, args.null_label, args.active_points)
+                train_data.addDataSamples(sub_samples, False)
+                progress_log.created_samples += len(sub_samples)
                 progress_log.completed_cycle += 1
                 progress_log.data_augmentation_iteration += 1
 
@@ -288,12 +295,14 @@ def main():
                 train_data.addDataSamples(generated_subset)
 
                 progress_log.completed_cycle += len(generated_subset)
+                progress_log.created_samples += len(generated_subset)
                 sample_idx = (sample_idx + 1) % data_sample_len
                 progress_log.label_id = label_id
                 progress_log.print()
 
             label_id += 1
 
+        print()
         print("Balance generation duration: ", getFormatedTime(progress_log.getElapsedTime()))
 
     train_data.getNumberOfSamples()

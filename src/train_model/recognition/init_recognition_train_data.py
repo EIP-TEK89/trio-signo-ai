@@ -20,7 +20,7 @@ def init_recognition_train_data(args: Args, train_data: DataSamplesTensors, conf
     )
     if validation_tensor is not None:
         dataloaders.validation = DataLoader(SignRecognizerTransformerDataset(
-            validation_tensor[0], validation_tensor[1]), batch_size=args.batch_size, shuffle=True)
+            validation_tensor[0], validation_tensor[1]), batch_size=args.validation_batch_size, shuffle=True)
     print("[DONE]")
 
     print("Converting confused labels to tensor...", end="", flush=True)

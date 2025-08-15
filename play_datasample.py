@@ -7,6 +7,7 @@ from src.misc.rot_3d import *
 import copy
 import time
 from dataclasses import fields
+import argparse
 
 
 BASE_FPS = 15  # Do not change this value
@@ -15,20 +16,24 @@ WIDTH, HEIGHT = 500, 500
 scale = 10000
 object_position = [WIDTH//2, HEIGHT//2]
 
-if len(sys.argv) < 2:
-    print("Usage: python play_datasample.py <json_file/dir>")
-    exit(1)
+parser = argparse.ArgumentParser(
+    description="Datasample player.")
+parser.add_argument("-s", "--samples", type=str, required=True)
+parser.add_argument("-m", "--media-datasets", type=str, default="media_datasets",)
 
+args = parser.parse_args()
+SAMPLES: str = args.samples
+MEDIA_DATASETS: str = args.media_datasets
 selected_sample: int = 0
 samples: list[tuple[DataSample, str]] = []
 
 try:
-    samples = [(DataSample.fromJsonFile(sys.argv[1]), sys.argv[1])]
+    samples = [(DataSample.fromJsonFile(SAMPLES), SAMPLES)]
 except:
-    for file in os.listdir(sys.argv[1]):
+    for file in os.listdir(SAMPLES):
         if file.endswith(".json"):
             samples.append((DataSample.fromJsonFile(
-                f"{sys.argv[1]}/{file}"), f"{sys.argv[1]}/{file}"))
+                f"{SAMPLES}/{file}"), f"{SAMPLES}/{file}"))
             # samples[-1][0].noise_sample()
 
 # for sample in samples:
@@ -227,10 +232,42 @@ while run:
             if event.key == pygame.K_m:
                 sample.swap_hands()
             if event.key == pygame.K_DELETE:
+                print()
+                original_path = samples[selected_sample][1]
+                print(f"Attempting to delete sample {original_path}")
                 try:
-                    os.remove(samples[selected_sample][1])
+                    os.remove(original_path)
                 except:
                     print("Error deleting file")
+                try:
+                    split_path: list[str] = []
+                    if "/" in original_path:
+                        for elem in original_path.split('/'):
+                            split_path += elem.split('\\')
+                    split_path = [elem for elem in split_path if elem != ""]
+                    # print(split_path)
+                    if split_path[0] == ".":
+                        split_path = split_path[1:]
+                    split_path[0] = MEDIA_DATASETS
+                    reassembled_path: str = os.path.join(*split_path)
+
+                    i: int = len(reassembled_path) - 1
+                    while i > 0:
+                        if reassembled_path[i] == ".":
+                            reassembled_path = reassembled_path[:i]
+                            break
+                        elif reassembled_path[i] == "\\" or reassembled_path[i] == "/":
+                            break
+                        i -= 1
+                    print(f"Attempting to delete media sample {reassembled_path}")
+                    for extension in [".avi", ".png", ".jpg", ".jpeg"]:
+                        try:
+                            os.remove(reassembled_path + extension)
+                            break
+                        except:
+                            print(f"Error deleting media sample {reassembled_path + extension}")
+                except:
+                    print("Error deleting media sample")
 
     if pygame.key.get_pressed()[pygame.K_LEFT]:
         rot_y -= 0.2 * BASE_FPS / FPS
@@ -268,7 +305,9 @@ while run:
     if play_animation:
         if pause_animation == 0 and frame >= len(sample_cpy.gestures) - 1:
             pause_animation = time.time()
-        elif time.time() - pause_animation > 2:
+        elif time.time() - pause_animation > 1:
+            if pause_animation != 0:
+                frame = 0
             pause_animation = 0
             frame += 1
     pygame.display.update()

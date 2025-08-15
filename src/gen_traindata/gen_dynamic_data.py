@@ -55,13 +55,14 @@ def gen_dynamic_data(sample: DataSample,
                      ) -> deque[DataSample]:
     sub_samples: deque[DataSample] = deque()
     hands_positions: list[str] = HANDS_POSITION.getActiveFields()
+    min_val: int = min(5, nb_frame)
 
     tmp_sample: DataSample
 
     for i in range(2):
         # Create variation that is translated and reframed
         tmp_sample = make_new_sample_variation(sample).reframe(
-            random.randint(2, nb_frame)
+            random.randint(min_val, nb_frame)
         ).translate_sample(
             rand_fix_interval(1),
             rand_fix_interval(1),
@@ -85,7 +86,7 @@ def gen_dynamic_data(sample: DataSample,
         # Create variations with with randomized filled frames but animation backward so its not correct
         if is_a_hand_position_set(sample):
             tmp_sample = make_new_sample_variation(sample).reframe(
-                random.randint(2, nb_frame)
+                random.randint(min_val, nb_frame)
             ).translate_sample(
                 rand_fix_interval(1),
                 rand_fix_interval(1),

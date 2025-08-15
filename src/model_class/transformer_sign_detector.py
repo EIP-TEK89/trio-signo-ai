@@ -33,7 +33,7 @@ class SignDetectorTransformer(SignRecognizerTransformer):
         self.to(self.device)
 
     def getConfidence(self, x: torch.Tensor) -> float:
-        return float(torch.sigmoid(self.fc(x), dim=1)[0])
+        return float(torch.sigmoid(x)[0])
 
     def predict(self, x: torch.Tensor):
         with torch.no_grad():

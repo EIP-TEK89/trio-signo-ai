@@ -7,7 +7,6 @@ import torch
 @dataclass
 class Args:
     trainset_path: str = None
-    memory_frame: int = None
     name: str = None
     epoch: int = 20
     device_type: str = "gpu"
@@ -28,6 +27,8 @@ class Args:
     satisfactory_accuracy: float = 1
     sign_detector: bool = False
     learning_rate: float = 0.001
+    learning_rate_stop: float | None = None
+    validation_batch_size: int = 16384
 
 
 def parse_args() -> Args:
@@ -40,12 +41,6 @@ def parse_args() -> Args:
         help='File path to the training set.',
         required=True,
         type=str)
-    parser.add_argument(
-        '--memory-frame',
-        help='Number of frame in the past the model will see (Default: None (Maximum possible frame in the past the trainset have))',
-        required=False,
-        default=args.memory_frame,
-        type=int)
     parser.add_argument(
         '--name',
         help='Name of the model',
@@ -152,12 +147,23 @@ def parse_args() -> Args:
         required=False,
         default=args.learning_rate,
         type=float)
+    parser.add_argument(
+        '--learning-rate-stop',
+        help='Stop training if the learning reach the set value or below.',
+        required=False,
+        default=args.learning_rate_stop,
+        type=float)
+    parser.add_argument(
+        '--validation-batch-size',
+        help='Batch size for the validation set. (Bigger batch size will use more memory but will validate faster) -1 Will use --batch-size value.',
+        required=False,
+        default=args.validation_batch_size,
+        type=int)
 
     term_args: argparse.Namespace = parser.parse_args()
 
     args.trainset_path = term_args.trainset
     # args.arch = term_args.arch
-    args.memory_frame = term_args.memory_frame
     args.name = term_args.name
     args.epoch = term_args.epoch
 
@@ -169,8 +175,8 @@ def parse_args() -> Args:
         c_label = term_args.confusing_label[i]
         c_label2 = term_args.confusing_label[i+1]
         try:
-            assert args.confusing_label.get(c_label) is None, f"Label \"{c_label}\" already in the list. If the \"{
-                c_label}\" is responsible of more than one label, do something like this:\n-c \"{c_label2}\" \"{c_label}\"\nInstead of:\n-c \"{c_label}\" \"{c_label2}\""
+            assert args.confusing_label.get(c_label) is None, f"Label \"{c_label}\" already in the list. If the \"{c_label}\""
+            "is responsible of more than one label, do something like this:\n-c \"{c_label2}\" \"{c_label}\"\nInstead of:\n-c \"{c_label}\" \"{c_label2}\""
         except AssertionError as e:
             print("AssertionError:", e)
             exit(1)
@@ -234,5 +240,11 @@ def parse_args() -> Args:
     args.sign_detector = term_args.sign_detector
 
     args.learning_rate = float(term_args.learning_rate)
+    args.learning_rate_stop = float(term_args.learning_rate_stop) if term_args.learning_rate_stop is not None else None
+
+    if term_args.validation_batch_size == -1:
+        args.validation_batch_size = args.batch_size
+    else:
+        args.validation_batch_size = int(term_args.validation_batch_size)
 
     return args

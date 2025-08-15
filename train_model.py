@@ -28,7 +28,7 @@ def save_model(model: SignRecognizerTransformer | SignDetectorTransformer, train
         model.saveModel(args.model_path)
         nb_prev_model += 1
     else:
-        args.model_path = model.saveModel("./models/pytorch/")
+        args.model_path = model.saveModel(f"./models/pytorch/{model.info.name}")
         try:
             shutil.rmtree(args.model_path + "/train_stats")
         except Exception as e:
@@ -90,16 +90,11 @@ if not args.sign_detector:
     train_stats = train_recognition_model(model, dataloaders,
                                                    confused_sets, train_stats,
                                                    weights,
-                                                   args.embedding_optimization_threshold,
-                                                   num_epochs=args.epoch,
-                                                   learning_rate=args.learning_rate,
-                                                   device=args.device)
+                                                   args)
 else:
     train_stats = train_detection_model(model, dataloaders,
                                                    train_stats,
                                                    weights,
-                                                   num_epochs=args.epoch,
-                                                   learning_rate=args.learning_rate,
-                                                   device=args.device)
+                                                   args)
 
 save_model(model, train_stats, copy_previous_model, args)

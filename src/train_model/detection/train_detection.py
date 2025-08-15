@@ -11,6 +11,7 @@ from src.model_class.transformer_sign_detector import SignDetectorTransformer
 from src.train_model.TrainStat import TrainStat, TrainStatEpoch, TrainStatEpochResult
 from src.datasamples import TensorPair
 from src.train_model.init_train_data import TrainDataLoader
+from src.train_model.parse_args import Args
 
 
 def train_epoch_optimize(optimizer: optim.Optimizer, loss: torch.Tensor):
@@ -192,22 +193,20 @@ def train_detection_model(model: SignDetectorTransformer,
                 dataloaders: TrainDataLoader,
                 train_stats: TrainStat,
                 weights_balance: torch.Tensor,
-                num_epochs: int = 20,
-                learning_rate: float = 0.001,
-                device: torch.device | None = None,
+                args: Args,
                 validation_interval: int = 2,
                 silent: bool = False
                 ) -> TrainStat:
 
-    model.to(device)
+    model.to(args.device)
 
     # Use BCEWithLogitsLoss for binary classification
     binary_criterion: nn.BCEWithLogitsLoss = nn.BCEWithLogitsLoss()
-    binary_criterion.to(device)
+    binary_criterion.to(args.device)
     total_loss: float = 0
 
     optimizer: optim.Optimizer = optim.Adam(
-        model.parameters(), lr=learning_rate)
+        model.parameters(), lr=args.learning_rate)
     scheduler: optim.lr_scheduler.ReduceLROnPlateau = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode='min', factor=0.1, patience=5)
 
@@ -218,7 +217,7 @@ def train_detection_model(model: SignDetectorTransformer,
 
     remain_time: str = "Estimating..."
 
-    for epoch in range(num_epochs):
+    for epoch in range(args.epoch):
         cumulated_loss: int = 1
         start_time: float = time.time()
         total_loss = 0
@@ -237,10 +236,14 @@ def train_detection_model(model: SignDetectorTransformer,
         train_epoch_durations.append(time.time() - start_time)
         lr: float = optimizer.param_groups[0]['lr']
 
+        if args.learning_rate_stop is not None and lr <= args.learning_rate_stop:
+            print(f"Stopping training because learning rate reached {lr:.6f} which is below the threshold {args.learning_rate_stop:.6f}.")
+            break
+
         # Print the training information
         if not silent:
             log_train_info(
-                train_acc, total_loss, lr, epoch, num_epochs, remain_time)
+                train_acc, total_loss, lr, epoch, args.epoch, remain_time)
 
         # Run model on a validation set if it exists
         validation_epoch_stats = None
@@ -268,7 +271,7 @@ def train_detection_model(model: SignDetectorTransformer,
         # Estimating remaining time
         remain_time = time.strftime(
             '%H:%M:%S', time.gmtime(get_remain_time(
-                epoch, num_epochs, train_epoch_durations, validation_epoch_durations, validation_interval)))
+                epoch, args.epoch, train_epoch_durations, validation_epoch_durations, validation_interval)))
 
     if dataloaders.validation is not None and \
             validation_epoch_stats is None:

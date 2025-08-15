@@ -6,9 +6,10 @@ import numpy as np
 import copy
 from datetime import datetime
 from src.datasample import DataSample
-from src.video_recorder.hand_detection import load_hand_landmarker, track_hand, recognize_sign
+from src.video_recorder.hand_detection import load_hand_landmarker, track_hand, recognize_sign, detect_sign
 from src.model_class.sign_recognizer_v1 import *
 from src.model_class.transformer_sign_recognizer import *
+from src.model_class.transformer_sign_detector import SignDetectorTransformer
 from src.misc.draw_gestures import draw_gestures
 
 from src.video_recorder.face_detection import track_face
@@ -32,6 +33,8 @@ parser.add_argument("--label", type=str, nargs="?", default="undefined",
                     help="Label for the video files (default: undefined)")
 parser.add_argument("--model", required=True,
                     help="Path to the folder containing the sign recognition model.")
+parser.add_argument("--detector",
+                    help="Path to the folder containing the sign detection model.")
 parser.add_argument("--counter-example", action='store_true',
                     help="Will save the sign as a counter example of the label set in --label.")
 parser.add_argument("--face", action='store_true',
@@ -53,6 +56,10 @@ screenshot_delay = args.screenshot_delay
 print("Loading sign recognition model...")
 sign_rec: SignRecognizerTransformer = SignRecognizerTransformer.loadModelFromDir(
     args.model)
+sign_detect: SignDetectorTransformer | None = None
+if args.detector:
+    print("Loading sign detection model...")
+    sign_detect = SignDetectorTransformer.loadModelFromDir(args.detector)
 
 print("Loading hand landmarker...")
 handland_marker = load_hand_landmarker(2)
@@ -83,8 +90,8 @@ remaining_delay = 0
 countdown_active = False
 
 frame_history: DataSample = DataSample("", [])
-prev_sign = -1
-prev_display = -1
+prev_sign = ""
+sign_name_minus_1 = ""
 
 instructions = """Instructions:
 Space: Record
@@ -147,17 +154,26 @@ while True:
         if sign_rec.info.one_side:
             frame_history.move_to_one_side()
 
-        recognized_sign, sign_rec_time = recognize_sign(
-            frame_history, sign_rec, sign_rec.info.active_gestures.getActiveFields()
-        )
+        detection_confidence: float = 1
+        if sign_detect:
+            detection_confidence, sign_detect_time = detect_sign(
+                frame_history, sign_detect, sign_rec.info.active_gestures.getActiveFields())
+            # cv2.putText(frame, f"Detected: {detection_confidence:.2f} ({sign_detect_time:.2f}s)",
+            #             (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
-        text = "undefined"
-        if prev_sign != recognized_sign:
-            prev_display = prev_sign
-            prev_sign = recognized_sign
+        recognized_sign: int = -1
+        if detection_confidence > 0.5:
+            recognized_sign, sign_rec_time = recognize_sign(
+                frame_history, sign_rec, sign_rec.info.active_gestures.getActiveFields()
+            )
+
+        sign_name: str = "_"
         if recognized_sign != -1:
-            text = f"{sign_rec.info.labels[recognized_sign]} prev({
-                sign_rec.info.labels[prev_display]})"
+            sign_name = sign_rec.info.labels[recognized_sign]
+        if sign_name_minus_1 != sign_name:
+            prev_sign = sign_name_minus_1
+        text: str = f"{detection_confidence:.2f} {sign_name} prev({prev_sign})"
+        sign_name_minus_1 = sign_name
 
         cv2.putText(frame, text, (49, 50), cv2.FONT_HERSHEY_SIMPLEX,
                     1.01, (0, 0, 0), 2, cv2.LINE_AA)
@@ -176,7 +192,7 @@ while True:
         cv2.imshow("Video recorder", combined_frame)
 
         key = cv2.waitKey(1)
-        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")[:-3]
 
         if key == SPACE:
             if not is_recording:
@@ -250,6 +266,7 @@ while True:
                     cv2.imwrite(output_file, og_frame)
                     update_json(label_json_path, {"filename": file_name, "label": image_label})
 
+                    print(image_label)
                     tmp_path: str = os.path.join(SAVE_FOLDER, image_label, SUB_FOLDER)
                     os.makedirs(tmp_path, exist_ok=True)
                     image_sample.toJsonFile(os.path.join(tmp_path, f"{file_name.replace(".png", "")}.json"))

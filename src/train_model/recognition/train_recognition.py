@@ -13,6 +13,7 @@ from src.train_model.TrainStat import TrainStat, TrainStatEpoch, TrainStatEpochR
 from src.datasamples import TensorPair
 from src.train_model.init_train_data import TrainDataLoader
 from src.misc.tools import from_1d_tensor_to_list_int
+from src.train_model.parse_args import Args
 
 
 def train_epoch_optimize(optimizer: optim.Optimizer, loss: torch.Tensor):
@@ -234,25 +235,22 @@ def train_recognition_model(model: SignRecognizerTransformer,
                 confused_sets: ConfusedSets,
                 train_stats: TrainStat,
                 weights_balance: torch.Tensor,
-                embedding_optimization_threshold: float,
-                num_epochs: int = 20,
-                learning_rate: float = 0.001,
-                device: torch.device | None = None,
+                args: Args,
                 validation_interval: int = 2,
                 silent: bool = False
                 ) -> TrainStat:
 
-    model.to(device)
+    model.to(args.device)
 
     cross_entropy_criterion: nn.CrossEntropyLoss = nn.CrossEntropyLoss()
     triplet_margin_criterion: nn.TripletMarginLoss = nn.TripletMarginLoss(
         margin=1.0)
-    cross_entropy_criterion.to(device)
-    triplet_margin_criterion.to(device)
+    cross_entropy_criterion.to(args.device)
+    triplet_margin_criterion.to(args.device)
     total_loss: float = 0
 
     optimizer: optim.Optimizer = optim.Adam(
-        model.parameters(), lr=learning_rate)
+        model.parameters(), lr=args.learning_rate)
     scheduler: optim.lr_scheduler.ReduceLROnPlateau = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode='min', factor=0.1, patience=5)
 
@@ -283,7 +281,7 @@ def train_recognition_model(model: SignRecognizerTransformer,
     #     return confused_sets.getCounterExamplePosNegPair(model, non_counter_label,
                                                          # anchor_embeddings, anchor_outputs)
 
-    for epoch in range(num_epochs):
+    for epoch in range(args.epoch):
         cumulated_loss: int = 1
         start_time: float = time.time()
         total_loss = 0
@@ -310,7 +308,7 @@ def train_recognition_model(model: SignRecognizerTransformer,
         # e.g a sign and a slightly wrong a sign
         counter_example_run = False
         if dataloaders.counter_example is not None \
-                and train_avg_acc >= embedding_optimization_threshold:
+                and train_avg_acc >= args.embedding_optimization_threshold:
             counter_example_run = True
             tm_loss = triplet_margin_train_epoch(
                 model, dataloaders.counter_example, triplet_margin_criterion, optimizer, confused_sets.getCounterExamplePosNegPair)
@@ -325,10 +323,14 @@ def train_recognition_model(model: SignRecognizerTransformer,
         train_epoch_durations.append(time.time() - start_time)
         lr: float = optimizer.param_groups[0]['lr']
 
+        if args.learning_rate_stop is not None and lr <= args.learning_rate_stop:
+            print(f"Stopping training because learning rate reached {lr:.6f} which is below the threshold {args.learning_rate_stop:.6f}.")
+            break
+
         # Print the training information
         if not silent:
             log_train_info(
-                train_acc, total_loss, lr, epoch, num_epochs, remain_time, confused_run, counter_example_run)
+                train_acc, total_loss, lr, epoch, args.epoch, remain_time, confused_run, counter_example_run)
 
         # Run model on a validation set if it exists
         validation_epoch_stats = None
@@ -356,7 +358,7 @@ def train_recognition_model(model: SignRecognizerTransformer,
         # Estimating remaining time
         remain_time = time.strftime(
             '%H:%M:%S', time.gmtime(get_remain_time(
-                epoch, num_epochs, train_epoch_durations, validation_epoch_durations, validation_interval)))
+                epoch, args.epoch, train_epoch_durations, validation_epoch_durations, validation_interval)))
 
     if dataloaders.validation is not None and \
             validation_epoch_stats is None:

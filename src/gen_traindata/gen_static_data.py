@@ -12,7 +12,6 @@ def gen_static_data(sample: DataSample,
     sub_sample: deque[DataSample] = deque()
 
     tmp_sample: DataSample
-    iterations: int = nb_frame * 1
 
     for _ in range(1):
         # Create a single framed variation

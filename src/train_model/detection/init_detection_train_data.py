@@ -21,7 +21,7 @@ def init_detection_train_data(args: Args, train_data: DataSamplesTensors) -> Tra
     )
     if validation_tensor is not None:
         dataloaders.validation = DataLoader(SignDetectorTransformerDataset(
-            validation_tensor[0], validation_tensor[1]), batch_size=args.batch_size, shuffle=True)
+            validation_tensor[0], validation_tensor[1]), batch_size=args.validation_batch_size, shuffle=True)
     print("[DONE]")
 
     print("Converting confused labels to tensor... [NOT SUPPORTED FOR DETECTION]")
